@@ -1,0 +1,34 @@
+.circle-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+  }
+  
+  .circle {
+    width: 100px;
+    height: 100px;
+    margin: 10px;
+    border-radius: 50%;
+    background-color: #ddd;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    cursor: pointer;
+  }
+  
+  .circle.highlight {
+    background-color: #4caf50;
+    color: white;
+  }
+
+  .circle.correct {
+    background-color: yellow;
+  }
+  
+  .circle.incorrect {
+    background-color: red;
+  }
+  
+  
