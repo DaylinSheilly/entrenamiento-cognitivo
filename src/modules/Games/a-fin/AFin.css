@@ -1,11 +1,9 @@
-html, body {
-    height: 100%;
-    margin: 0;
+.centered-game {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #e0e0e0;
-    font-family: Arial, sans-serif;
+    height: 100vh; 
+    background-color: #e0e0e0; 
 }
 
 .game-container {

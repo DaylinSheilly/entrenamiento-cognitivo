@@ -80,15 +80,19 @@ const SynonymGame = () => {
 
   if (gameOver) {
     return (
-      <div className="game-container game-over">
-        <h2>¡Juego terminado!</h2>
-        <p>Tu puntuación final es: {score}</p>
-        <button className="restart-button" onClick={restartGame}>Jugar de nuevo</button>
+      <div className="centered-game">
+        <div className="game-container game-over">
+          <h2>¡Juego terminado!</h2>
+          <p>Tu puntuación final es: {score}</p>
+          <button className="restart-button" onClick={restartGame}>Jugar de nuevo</button>
+        </div>
       </div>
+
     );
   }
 
   return (
+    <div className="centered-game">
     <div className="game-container">
       <h2>Juego de Sinónimos</h2>
       <div className="game-info">
@@ -107,6 +111,7 @@ const SynonymGame = () => {
           </button>
         ))}
       </div>
+    </div>
     </div>
   );
 };
