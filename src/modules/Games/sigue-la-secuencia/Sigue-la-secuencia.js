@@ -9,6 +9,7 @@ const MemoriaSecuencial = () => {
   const [isGameOver, setIsGameOver] = useState(false);
   const [highlightIndex, setHighlightIndex] = useState(-1); // Índice del número resaltado
   const [selectedIndices, setSelectedIndices] = useState([]); // Índices de los números seleccionados por el usuario
+  const [maxErrors, setMaxErrors] = useState(2); // Número máximo de errores permitido
 
   useEffect(() => {
     generateSequence(stage);
@@ -45,6 +46,7 @@ const MemoriaSecuencial = () => {
 
   const showSequence = () => {
     let index = 0;
+    const timeInterval = Math.max(500, 2000 - stage * 200); // Ajusta el tiempo según la etapa
     const intervalId = setInterval(() => {
       setHighlightIndex(sequence[index]); // Resalta el número actual en la secuencia
       index++;
@@ -52,7 +54,7 @@ const MemoriaSecuencial = () => {
         clearInterval(intervalId);
         setHighlightIndex(-1); // Deja de resaltar después de mostrar la secuencia
       }
-    }, 1000); // Tiempo de espera entre cada número (1 segundo)
+    }, timeInterval); // Tiempo de espera entre cada número (ajustado por etapa)
   };
 
   const handleUserInput = (number) => {
@@ -64,17 +66,17 @@ const MemoriaSecuencial = () => {
 
     if (!isCorrect) {
       setErrorCount(errorCount + 1);
-      if (errorCount === 1) {
+      if (errorCount >= maxErrors) {
+        // Retrasa el fin del juego para que el usuario pueda ver el error
+        setTimeout(() => {
+          setIsGameOver(true);
+        }, 1000);
+      } else {
         // Retrasa el reinicio de la secuencia para que el usuario pueda ver el error
         setTimeout(() => {
           setUserInput([]);
           setSelectedIndices([]);
           generateSequence(stage);
-        }, 1000);
-      } else {
-        // Retrasa el fin del juego para que el usuario pueda ver el error
-        setTimeout(() => {
-          setIsGameOver(true);
         }, 1000);
       }
     } else if (currentInputIndex + 1 === sequence.length) {
@@ -86,6 +88,7 @@ const MemoriaSecuencial = () => {
       } else {
         // Retrasa el avance a la siguiente etapa
         setTimeout(() => {
+          alert("¡Correcto! Pasas a la siguiente etapa.");
           setStage(stage + 1);
         }, 1000);
       }
@@ -113,7 +116,8 @@ const MemoriaSecuencial = () => {
   }
 
   return (
-    <div>
+    <div className="centered-game">
+    <div className="game-container">
       <h1>Memoria Secuencial</h1>
       <p>Etapa: {stage}</p>
       <div className="circle-container">
@@ -138,6 +142,7 @@ const MemoriaSecuencial = () => {
           </div>
         ))}
       </div>
+    </div>
     </div>
   );
 };
