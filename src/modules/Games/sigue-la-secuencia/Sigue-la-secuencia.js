@@ -116,7 +116,8 @@ const MemoriaSecuencial = () => {
   }
 
   return (
-    <div>
+    <div className="centered-game">
+    <div className="game-container">
       <h1>Memoria Secuencial</h1>
       <p>Etapa: {stage}</p>
       <div className="circle-container">
@@ -141,6 +142,7 @@ const MemoriaSecuencial = () => {
           </div>
         ))}
       </div>
+    </div>
     </div>
   );
 };
