@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './SopaDeLetras.css';
+import wordsData from './words-data.json';
 
 const WordSearch = () => {
   const [level, setLevel] = useState(1);
@@ -17,18 +18,28 @@ const WordSearch = () => {
   const getLevelConfig = useCallback((level) => {
     switch(level) {
       case 1:
-        return { gridSize: 7, wordCount: 10, wordLengthRange: [4, 5] };
+        return { gridSize: 7, wordCount: 10 };
       case 2:
-        return { gridSize: 11, wordCount: 15, wordLengthRange: [4, 10] };
+        return { gridSize: 11, wordCount: 15 };
       case 3:
-        return { gridSize: 14, wordCount: 20, wordLengthRange: [4, 10] };
+        return { gridSize: 14, wordCount: 20 };
       default:
-        return { gridSize: 7, wordCount: 10, wordLengthRange: [4, 5] };
+        return { gridSize: 7, wordCount: 10 };
     }
   }, []);
 
-  const generateWords = useCallback((count, lengthRange) => {
-    return ["CASA", "CAER", "SOL", "MAR", "LUNA", "LUZ", "PEZ", "ROSA", "AGUA", "PIE"].slice(0, count);
+  // Función para obtener palabras aleatorias
+  const getRandomWords = (words, count) => {
+    const shuffled = words.sort(() => 0.5 - Math.random()); // Mezcla las palabras
+    return shuffled.slice(0, count); // Toma la cantidad requerida
+  };
+
+  const generateWords = useCallback((count, nivel) => {
+    // Obtener las palabras del nivel especificado
+    const palabrasNivel = wordsData.niveles.find(n => n.nivel === nivel).palabras;
+    
+    // Seleccionar aleatoriamente 'count' palabras de ese nivel
+    return getRandomWords(palabrasNivel, count);
   }, []);
 
   const generateEmptyGrid = useCallback((size) => {
@@ -112,8 +123,8 @@ const WordSearch = () => {
   };
 
   const startNewGame = useCallback(() => {
-    const { gridSize, wordCount, wordLengthRange } = getLevelConfig(level);
-    const newWords = generateWords(wordCount, wordLengthRange);
+    const { gridSize, wordCount } = getLevelConfig(level);
+    const newWords = generateWords(wordCount, level);
     const { grid, placedWords } = placeWordsInGrid(newWords, gridSize);
     
     setWordGrid(grid);

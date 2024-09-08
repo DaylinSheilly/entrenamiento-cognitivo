@@ -36,9 +36,9 @@ body {
   
   #wordSearchContainer {
     display: grid;
-    gap: 2px;
-    margin: 0 auto 20px;
-    justify-content: center;
+    grid-template-columns: repeat(auto-fit, 30px);
+    grid-gap: 2px;
+    margin: 10px 0;
   }
   
   .cell {
@@ -47,11 +47,10 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #e0e0e0;
-    border: 1px solid #ccc;
+    background-color: #ffffff;
+    border: 1px solid #000;
     cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.3s ease;
+    user-select: none;
   }
   
   .cell:hover {
