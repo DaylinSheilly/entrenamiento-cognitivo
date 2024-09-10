@@ -14,6 +14,7 @@ const WordSearch = () => {
   const [time, setTime] = useState(0);
   const [errors, setErrors] = useState(0);
   const [lastErrorTime, setLastErrorTime] = useState(null);
+  const [wordCoordinates, setWordCoordinates] = useState({});
 
   const getLevelConfig = useCallback((level) => {
     switch(level) {
@@ -72,60 +73,74 @@ const WordSearch = () => {
     [0, 1], [1, 0], [1, 1], [-1, 1] // horizontal, vertical, diagonal down, diagonal up
   ];
 
-  const placeWordsInGrid = useCallback((words, gridSize) => {
+  const placeWordsInGrid = useCallback((words, gridSize, setWordCoordinates) => {
     const grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill('_'));
     const placedWords = [];
-
+  
     const directions = [
       [0, 1], [1, 0], [1, 1], [-1, 1], // horizontal, vertical, diagonal down, diagonal up
       [0, -1], [-1, 0], [-1, -1], [1, -1] // reverse directions
     ];
-
+  
     const shuffledWords = words.sort(() => Math.random() - 0.5);
-
+  
     for (const word of shuffledWords) {
       let placed = false;
       const shuffledDirections = directions.sort(() => Math.random() - 0.5);
-
+  
       for (const [dx, dy] of shuffledDirections) {
         if (placed) break;
-
-        for (let attempt = 0; attempt < 100; attempt++) {
+  
+        for (let attempt = 0; attempt < 1000; attempt++) {
           const row = Math.floor(Math.random() * gridSize);
           const col = Math.floor(Math.random() * gridSize);
-
+  
           if (canPlaceWord(word, grid, row, col, dx, dy)) {
             placeWord(word, grid, row, col, dx, dy);
             placedWords.push(word);
+  
+            // Almacenar las coordenadas de la primera letra
+            setWordCoordinates((prevCoords) => ({
+              ...prevCoords,
+              [word]: [row, col],
+            }));
+  
             placed = true;
             break;
           }
         }
       }
-
+  
       if (!placed) {
         console.warn(`Could not place word: ${word}`);
       }
     }
-
+  
     fillEmptyCells(grid);
     return { grid, placedWords };
-  }, []);
+  }, []);  
 
-  const fillEmptyCells = (grid) => {
+  const fillEmptyCells = (grid, level) => {
     for (let row = 0; row < grid.length; row++) {
       for (let col = 0; col < grid[row].length; col++) {
         if (grid[row][col] === '_') {
-          grid[row][col] = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+          if (level === 3) {
+            // Llenar con números del 0 al 9 en el nivel 3
+            grid[row][col] = Math.floor(Math.random() * 10).toString();
+          } else {
+            // Llenar con letras mayúsculas (A-Z) en niveles 1 y 2
+            grid[row][col] = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+          }
         }
       }
     }
   };
+  
 
   const startNewGame = useCallback(() => {
     const { gridSize, wordCount } = getLevelConfig(level);
     const newWords = generateWords(wordCount, level);
-    const { grid, placedWords } = placeWordsInGrid(newWords, gridSize);
+    const { grid, placedWords } = placeWordsInGrid(newWords, gridSize, setWordCoordinates);
     
     setWordGrid(grid);
     setWords(placedWords);
@@ -193,30 +208,41 @@ const WordSearch = () => {
     return foundCoordinates.some(coord => coord.rowIndex === rowIndex && coord.colIndex === colIndex);
   }, [foundCoordinates]);
 
+  const findWordCoordinate = useCallback((word) => {
+    if (wordCoordinates[word]) {
+      return wordCoordinates[word]; // Devuelve las coordenadas si la palabra existe en el diccionario
+    } else {
+      return null; // Devuelve null si la palabra no está almacenada
+    }
+  }, [wordGrid]);
+
   const giveHint = useCallback(() => {
     const unFoundWords = words.filter(word => !wordsFound.includes(word));
     if (unFoundWords.length > 0) {
       const randomWord = unFoundWords[Math.floor(Math.random() * unFoundWords.length)];
       const hintCoord = findWordCoordinate(randomWord);
+  
       if (hintCoord) {
-        alert(`Pista: La palabra "${randomWord}" comienza en la fila ${hintCoord.row + 1}, columna ${hintCoord.col + 1}`);
-      }
-    }
-  }, [words, wordsFound]);
-
-  const findWordCoordinate = useCallback((word) => {
-    for (let row = 0; row < wordGrid.length; row++) {
-      for (let col = 0; col < wordGrid[row].length; col++) {
-        if (wordGrid[row][col] === word[0]) {
-          if (checkDirection(word, row, col, 0, 1) || checkDirection(word, row, col, 1, 0) ||
-              checkDirection(word, row, col, 1, 1) || checkDirection(word, row, col, -1, 1)) {
-            return { row, col };
-          }
+        const [row, col] = hintCoord;
+  
+        // Selecciona la celda en el tablero
+        const cellId = `${row}-${col}`;
+        const cellElement = document.getElementById(cellId);
+  
+        if (cellElement) {
+          // Añade la clase 'highlight' para aplicar el color
+          cellElement.classList.add('highlight');
+  
+          // Remueve la clase 'highlight' después de 1.5 segundos (coincide con la transición)
+          setTimeout(() => {
+            cellElement.classList.remove('highlight');
+          }, 1500);
         }
+      } else {
+        alert(`La palabra "${randomWord}" no está en el tablero.`);
       }
     }
-    return null;
-  }, [wordGrid]);
+  }, [words, wordsFound, findWordCoordinate]);  
 
   const checkDirection = useCallback((word, row, col, rowDir, colDir) => {
     for (let i = 0; i < word.length; i++) {
@@ -263,13 +289,16 @@ const WordSearch = () => {
       <h1>Sopa de Letras - Nivel {level}</h1>
       <div className="game-info">
         <div>Puntuación: {score}</div>
-        <div>Tiempo: {time} segundos</div>
         <div>Errores: {errors}</div>
+      </div>
+      <div className="game-info">
+        <div>Tiempo: {time} segundos</div>
       </div>
       <div id="wordSearchContainer" onMouseUp={handleMouseUp}>
         {wordGrid.map((row, rowIndex) =>
           row.map((cell, colIndex) => (
             <div
+              id={`${rowIndex}-${colIndex}`}  // Añadir id basado en las coordenadas
               key={`${rowIndex}-${colIndex}`}
               className={`cell ${
                 isCellFound(rowIndex, colIndex) ? 'found' : 
