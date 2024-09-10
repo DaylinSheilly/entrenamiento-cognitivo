@@ -100,8 +100,49 @@ body {
     transition: background-color 0.3s ease;
   }
   
-  button:hover {
-    opacity: 0.9;
+  /* Estilo para hint-button */
+  .hint-button {
+    background-color: #3498db;  /* Azul */
+    color: white;
+  }
+
+  /* Efecto hover para hint-button */
+  .hint-button:hover {
+    background-color: #2980b9;  /* Azul más oscuro */
+    transform: translateY(-3px);  /* Pequeño levantamiento */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);  /* Sombra suave */
+  }
+
+  /* Efecto click (active) para hint-button */
+  .hint-button:active {
+    background-color: #1c5986;  /* Azul aún más oscuro */
+    transform: translateY(1px);  /* Baja un poco al hacer click */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);  /* Sombra suave */
+  }
+
+  /* Estilo para reveal-button */
+  .reveal-button {
+    background-color: #e74c3c;  /* Rojo */
+    color: white;
+  }
+
+  /* Efecto hover para reveal-button */
+  .reveal-button:hover {
+    background-color: #c0392b;  /* Rojo más oscuro */
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Efecto click (active) para reveal-button */
+  .reveal-button:active {
+    background-color: #a93226;  /* Rojo aún más oscuro */
+    transform: translateY(1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Transiciones adicionales para suavizar los cambios */
+  .button {
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
   }
   
   button:active {
@@ -111,11 +152,6 @@ body {
   .hint-button {
     background-color: #ffd54f;
     color: #333;
-  }
-  
-  .reveal-button {
-    background-color: #ff8a65;
-    color: white;
   }
   
   .new-game-button {
