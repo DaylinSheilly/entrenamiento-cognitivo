@@ -51,6 +51,7 @@ body {
     border: 1px solid #000;
     cursor: pointer;
     user-select: none;
+    transition: background-color 0.5s ease; /* Transición suave */
   }
   
   .cell:hover {
@@ -63,6 +64,11 @@ body {
   
   .cell.found {
     background-color: #a5d6a7;
+  }
+
+  .cell.highlight {
+    background-color: #ffeb3b; /* Amarillo brillante */
+    transition: background-color 1s ease; /* Transición suave en 1 segundo */
   }
   
   .wordsList {

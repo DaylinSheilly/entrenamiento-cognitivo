@@ -208,19 +208,6 @@ const WordSearch = () => {
     return foundCoordinates.some(coord => coord.rowIndex === rowIndex && coord.colIndex === colIndex);
   }, [foundCoordinates]);
 
-  const giveHint = useCallback(() => {
-    const unFoundWords = words.filter(word => !wordsFound.includes(word));
-    if (unFoundWords.length > 0) {
-      const randomWord = unFoundWords[Math.floor(Math.random() * unFoundWords.length)];
-      const hintCoord = findWordCoordinate(randomWord);
-      if (hintCoord) {
-        const [row, col] = hintCoord; // Desestructurar el array de coordenadas
-        alert(`Pista: La palabra "${randomWord}" comienza en la fila ${row + 1}, columna ${col + 1}`);
-      }
-      else{alert(`mejora esto sexo "${randomWord}"`);}
-    }
-  }, [words, wordsFound]);
-
   const findWordCoordinate = useCallback((word) => {
     if (wordCoordinates[word]) {
       return wordCoordinates[word]; // Devuelve las coordenadas si la palabra existe en el diccionario
@@ -228,6 +215,34 @@ const WordSearch = () => {
       return null; // Devuelve null si la palabra no está almacenada
     }
   }, [wordGrid]);
+
+  const giveHint = useCallback(() => {
+    const unFoundWords = words.filter(word => !wordsFound.includes(word));
+    if (unFoundWords.length > 0) {
+      const randomWord = unFoundWords[Math.floor(Math.random() * unFoundWords.length)];
+      const hintCoord = findWordCoordinate(randomWord);
+  
+      if (hintCoord) {
+        const [row, col] = hintCoord;
+  
+        // Selecciona la celda en el tablero
+        const cellId = `${row}-${col}`;
+        const cellElement = document.getElementById(cellId);
+  
+        if (cellElement) {
+          // Añade la clase 'highlight' para aplicar el color
+          cellElement.classList.add('highlight');
+  
+          // Remueve la clase 'highlight' después de 1.5 segundos (coincide con la transición)
+          setTimeout(() => {
+            cellElement.classList.remove('highlight');
+          }, 1500);
+        }
+      } else {
+        alert(`La palabra "${randomWord}" no está en el tablero.`);
+      }
+    }
+  }, [words, wordsFound, findWordCoordinate]);  
 
   const checkDirection = useCallback((word, row, col, rowDir, colDir) => {
     for (let i = 0; i < word.length; i++) {
@@ -283,6 +298,7 @@ const WordSearch = () => {
         {wordGrid.map((row, rowIndex) =>
           row.map((cell, colIndex) => (
             <div
+              id={`${rowIndex}-${colIndex}`}  // Añadir id basado en las coordenadas
               key={`${rowIndex}-${colIndex}`}
               className={`cell ${
                 isCellFound(rowIndex, colIndex) ? 'found' : 
