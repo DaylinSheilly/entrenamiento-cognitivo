@@ -114,7 +114,7 @@ body {
 
   /* Efecto hover para hint-button */
   .hint-button:hover {
-    background-color: #2980b9;  /* Azul más oscuro */
+    background-color: #e2be1f;  /* Azul más oscuro */
     transform: translateY(-3px);  /* Pequeño levantamiento */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);  /* Sombra suave */
   }
