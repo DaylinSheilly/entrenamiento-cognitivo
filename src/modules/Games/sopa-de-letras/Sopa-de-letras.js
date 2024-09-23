@@ -3,7 +3,7 @@ import './SopaDeLetras.css';
 import wordsData from './words-data.json';
 
 const WordSearch = () => {
-  const [level, setLevel] = useState(1);
+  const [level, setLevel] = useState(3);
   const [wordGrid, setWordGrid] = useState([]);
   const [words, setWords] = useState([]);
   const [currentSelection, setCurrentSelection] = useState([]);
@@ -142,7 +142,7 @@ const WordSearch = () => {
       }
     }
   
-    fillEmptyCells(grid);
+    fillEmptyCells(grid, level);
     return { grid, placedWords };
   }, []);
 
@@ -151,7 +151,7 @@ const WordSearch = () => {
     for (let row = 0; row < grid.length; row++) {
       for (let col = 0; col < grid[row].length; col++) {
         if (grid[row][col] === '_') {
-          if (level === 3) {
+          if (level == 3) {
             // Llenar con números del 0 al 9 en el nivel 3
             grid[row][col] = Math.floor(Math.random() * 10).toString();
           } else {
@@ -202,19 +202,31 @@ const WordSearch = () => {
     setCurrentSelection(prev => [...prev, { rowIndex, colIndex }]);
   }, [isDragging]);
 
+  const resetGridStyles = () => {
+    const cells = document.querySelectorAll('.cell');
+    cells.forEach(cell => {
+      cell.classList.remove('found');
+    });
+  };  
+
   const handleMouseUp = useCallback(() => {
     if (!isDragging) return;
-
+  
     const selectedWord = getSelectedWord(currentSelection);
-
+  
     if (words.includes(selectedWord) && !wordsFound.includes(selectedWord)) {
       setWordsFound(prev => [...prev, selectedWord]);
       setFoundCoordinates(prev => [...prev, ...currentSelection]);
       setScore(prevScore => prevScore + selectedWord.length);
-
+  
       if (wordsFound.length + 1 === words.length) {
         setTimeout(() => {
           alert(`¡Nivel ${level} completado!`);
+          
+          // Resetea el estilo de las celdas
+          resetGridStyles();
+  
+          // Cambia al siguiente nivel
           setLevel(prevLevel => (prevLevel < 3 ? prevLevel + 1 : 1));
         }, 1000);
       }
@@ -222,10 +234,11 @@ const WordSearch = () => {
       setErrors(prevErrors => prevErrors + 1);
       setLastErrorTime(Date.now());
     }
-
+  
     setIsDragging(false);
     setCurrentSelection([]);
   }, [isDragging, currentSelection, words, wordsFound, level]);
+  
 
   const getSelectedWord = useCallback((selection) => {
     return selection.map(({ rowIndex, colIndex }) => wordGrid[rowIndex][colIndex]).join('');
@@ -304,9 +317,14 @@ const WordSearch = () => {
         setScore(prevScore => prevScore - randomWord.length); // Resta puntos
       }
     }
-    if (wordsFound.length === words.length) {
+    if (wordsFound.length + 1 === words.length) {
       setTimeout(() => {
         alert(`¡Nivel ${level} completado!`);
+        
+        // Resetea el estilo de las celdas
+        resetGridStyles();
+
+        // Cambia al siguiente nivel
         setLevel(prevLevel => (prevLevel < 3 ? prevLevel + 1 : 1));
       }, 1000);
     }
