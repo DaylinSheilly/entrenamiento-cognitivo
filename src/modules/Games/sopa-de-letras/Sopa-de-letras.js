@@ -3,7 +3,7 @@ import './SopaDeLetras.css';
 import wordsData from './words-data.json';
 
 const WordSearch = () => {
-  const [level, setLevel] = useState(3);
+  const [level, setLevel] = useState(1);
   const [wordGrid, setWordGrid] = useState([]);
   const [words, setWords] = useState([]);
   const [currentSelection, setCurrentSelection] = useState([]);
@@ -74,38 +74,38 @@ const WordSearch = () => {
     [0, 1], [1, 0], [1, 1], [-1, 1] // horizontal, vertical, diagonal down, diagonal up
   ];
 
-  const placeWordsInGrid = useCallback((words, gridSize, setWordCoordinates, setFullWordCoordinates) => {
+  const placeWordsInGrid = useCallback((words, gridSize, setWordCoordinates, setFullWordCoordinates, level) => {
     const grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill('_'));
     const placedWords = [];
-  
+
     const directions = [
       [0, 1], [1, 0], [1, 1], [-1, 1], // horizontal, vertical, diagonal down, diagonal up
       [0, -1], [-1, 0], [-1, -1], [1, -1] // reverse directions
     ];
-  
+
     const shuffledWords = words.sort(() => Math.random() - 0.5);
-  
+
     for (const word of shuffledWords) {
       let placed = false;
       const shuffledDirections = directions.sort(() => Math.random() - 0.5);
-  
+
       for (const [dx, dy] of shuffledDirections) {
         if (placed) break;
-  
+
         for (let attempt = 0; attempt < 2000; attempt++) {
           const row = Math.floor(Math.random() * gridSize);
           const col = Math.floor(Math.random() * gridSize);
-  
+
           if (canPlaceWord(word, grid, row, col, dx, dy)) {
             placeWord(word, grid, row, col, dx, dy);
             placedWords.push(word);
-  
+
             // Almacenar las coordenadas de la primera letra
             setWordCoordinates((prevCoords) => ({
               ...prevCoords,
               [word]: [row, col],
             }));
-  
+
             // Almacenar las coordenadas de todas las letras
             const wordCoordinates = [];
             for (let i = 0; i < word.length; i++) {
@@ -130,22 +130,21 @@ const WordSearch = () => {
                 [word]: wordCoordinates,
               }));
             }
-  
+
             placed = true;
             break;
           }
         }
       }
-  
+
       if (!placed) {
         console.warn(`Could not place word: ${word}`);
       }
     }
-  
-    fillEmptyCells(grid, level);
-    return { grid, placedWords };
-  }, []);
 
+    fillEmptyCells(grid, level); // Pasa el level aquí
+    return { grid, placedWords };
+  }, [level]); // Agregar level a las dependencias
 
   const fillEmptyCells = (grid, level) => {
     for (let row = 0; row < grid.length; row++) {
@@ -167,7 +166,7 @@ const WordSearch = () => {
   const startNewGame = useCallback(() => {
     const { gridSize, wordCount } = getLevelConfig(level);
     const newWords = generateWords(wordCount, level);
-    const { grid, placedWords } = placeWordsInGrid(newWords, gridSize, setWordCoordinates, setFullWordCoordinates);
+    const { grid, placedWords } = placeWordsInGrid(newWords, gridSize, setWordCoordinates, setFullWordCoordinates, level);
     
     setWordGrid(grid);
     setWords(placedWords);
@@ -228,7 +227,7 @@ const WordSearch = () => {
   
           // Cambia al siguiente nivel
           setLevel(prevLevel => (prevLevel < 3 ? prevLevel + 1 : 1));
-        }, 1000);
+        }, 500);
       }
     } else {
       setErrors(prevErrors => prevErrors + 1);
@@ -326,7 +325,7 @@ const WordSearch = () => {
 
         // Cambia al siguiente nivel
         setLevel(prevLevel => (prevLevel < 3 ? prevLevel + 1 : 1));
-      }, 1000);
+      }, 500);
     }
   }, [words, wordsFound, getWordCoordinates, fullWordCoordinates]);
   
