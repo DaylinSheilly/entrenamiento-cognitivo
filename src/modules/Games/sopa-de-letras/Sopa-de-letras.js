@@ -15,6 +15,7 @@ const WordSearch = () => {
   const [errors, setErrors] = useState(0);
   const [lastErrorTime, setLastErrorTime] = useState(null);
   const [wordCoordinates, setWordCoordinates] = useState({});
+  const [fullWordCoordinates, setFullWordCoordinates] = useState({});
 
   const getLevelConfig = useCallback((level) => {
     switch(level) {
@@ -73,7 +74,7 @@ const WordSearch = () => {
     [0, 1], [1, 0], [1, 1], [-1, 1] // horizontal, vertical, diagonal down, diagonal up
   ];
 
-  const placeWordsInGrid = useCallback((words, gridSize, setWordCoordinates) => {
+  const placeWordsInGrid = useCallback((words, gridSize, setWordCoordinates, setFullWordCoordinates) => {
     const grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill('_'));
     const placedWords = [];
   
@@ -91,7 +92,7 @@ const WordSearch = () => {
       for (const [dx, dy] of shuffledDirections) {
         if (placed) break;
   
-        for (let attempt = 0; attempt < 1000; attempt++) {
+        for (let attempt = 0; attempt < 2000; attempt++) {
           const row = Math.floor(Math.random() * gridSize);
           const col = Math.floor(Math.random() * gridSize);
   
@@ -104,6 +105,31 @@ const WordSearch = () => {
               ...prevCoords,
               [word]: [row, col],
             }));
+  
+            // Almacenar las coordenadas de todas las letras
+            const wordCoordinates = [];
+            for (let i = 0; i < word.length; i++) {
+              const newRow = row + i * dy;
+              const newCol = col + i * dx;
+
+              console.log(`Placed word ${word} at coordinates:`, newRow, newCol);
+
+              // Verificar que las coordenadas están dentro de los límites del grid
+              if (newRow >= 0 && newRow < gridSize && newCol >= 0 && newCol < gridSize) {
+                wordCoordinates.push([newRow, newCol]);
+              } else {
+                console.error(`Coordenada fuera de límites: (${newRow}, ${newCol})`);
+                break; // Si alguna coordenada está fuera de los límites, detener el proceso
+              }
+            }
+
+            if (wordCoordinates.length === word.length) {
+              // Si todas las coordenadas son válidas, guardarlas en el diccionario
+              setFullWordCoordinates((prevCoords) => ({
+                ...prevCoords,
+                [word]: wordCoordinates,
+              }));
+            }
   
             placed = true;
             break;
@@ -118,7 +144,8 @@ const WordSearch = () => {
   
     fillEmptyCells(grid);
     return { grid, placedWords };
-  }, []);  
+  }, []);
+
 
   const fillEmptyCells = (grid, level) => {
     for (let row = 0; row < grid.length; row++) {
@@ -140,7 +167,7 @@ const WordSearch = () => {
   const startNewGame = useCallback(() => {
     const { gridSize, wordCount } = getLevelConfig(level);
     const newWords = generateWords(wordCount, level);
-    const { grid, placedWords } = placeWordsInGrid(newWords, gridSize, setWordCoordinates);
+    const { grid, placedWords } = placeWordsInGrid(newWords, gridSize, setWordCoordinates, setFullWordCoordinates);
     
     setWordGrid(grid);
     setWords(placedWords);
@@ -244,45 +271,48 @@ const WordSearch = () => {
     }
   }, [words, wordsFound, findWordCoordinate]);  
 
-  const checkDirection = useCallback((word, row, col, rowDir, colDir) => {
-    for (let i = 0; i < word.length; i++) {
-      if (row < 0 || row >= wordGrid.length || col < 0 || col >= wordGrid[row].length || wordGrid[row][col] !== word[i]) {
-        return false;
-      }
-      row += rowDir;
-      col += colDir;
+  const getWordCoordinates = useCallback((word) => {
+    // Verificar si la palabra existe en el diccionario
+    if (fullWordCoordinates[word]) {
+      return fullWordCoordinates[word]; // Retorna las coordenadas de la palabra
+    } else {
+      console.warn(`La palabra "${word}" no se encuentra en el diccionario.`);
+      return null; // Retorna null si la palabra no está en el diccionario
     }
-    return true;
-  }, [wordGrid]);
-
-  const findWordCoordinates = useCallback((word) => {
-    const coords = [];
-    const startCoord = findWordCoordinate(word);
-    if (startCoord) {
-      let { row, col } = startCoord;
-      const direction = checkDirection(word, row, col, 0, 1) ? { rowDir: 0, colDir: 1 } :
-                        checkDirection(word, row, col, 1, 0) ? { rowDir: 1, colDir: 0 } :
-                        checkDirection(word, row, col, 1, 1) ? { rowDir: 1, colDir: 1 } :
-                        { rowDir: -1, colDir: 1 };
-      for (let i = 0; i < word.length; i++) {
-        coords.push({ rowIndex: row, colIndex: col });
-        row += direction.rowDir;
-        col += direction.colDir;
-      }
-    }
-    return coords;
-  }, [findWordCoordinate, checkDirection]);
+  });
 
   const revealWord = useCallback(() => {
     const unFoundWords = words.filter(word => !wordsFound.includes(word));
     if (unFoundWords.length > 0) {
       const randomWord = unFoundWords[Math.floor(Math.random() * unFoundWords.length)];
       setWordsFound(prev => [...prev, randomWord]);
-      const wordCoords = findWordCoordinates(randomWord);
-      setFoundCoordinates(prev => [...prev, ...wordCoords]);
-      setScore(prevScore => prevScore - randomWord.length); // Resta puntos
+      
+      // Obtiene las coordenadas de toda la palabra
+      const wordCoords = getWordCoordinates(randomWord);
+      console.log(wordCoords)
+      
+      if (wordCoords) {
+        // Aplica la clase "found" a todas las coordenadas de la palabra
+        wordCoords.forEach(([row, col]) => {
+          const cell = document.getElementById(`${row}-${col}`);  // Selecciona por id
+          if (cell) {
+            cell.classList.add('found');  // Aplica la clase CSS
+          }
+        });
+  
+        setFoundCoordinates(prev => [...prev, ...wordCoords]);
+        setScore(prevScore => prevScore - randomWord.length); // Resta puntos
+      }
     }
-  }, [words, wordsFound, findWordCoordinates]);
+    if (wordsFound.length === words.length) {
+      setTimeout(() => {
+        alert(`¡Nivel ${level} completado!`);
+        setLevel(prevLevel => (prevLevel < 3 ? prevLevel + 1 : 1));
+      }, 1000);
+    }
+  }, [words, wordsFound, getWordCoordinates, fullWordCoordinates]);
+  
+
 
   return (
     <div className={`game-container level-${level}`}>
