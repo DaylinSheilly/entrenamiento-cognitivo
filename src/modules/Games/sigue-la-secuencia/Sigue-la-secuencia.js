@@ -23,19 +23,20 @@ const MemoriaSecuencial = () => {
 
   const generateSequence = (currentStage) => {
     const sequenceLength = currentStage * 2; // Incrementa la longitud de la secuencia con cada etapa
-    const newSequence = [];
     let lastNumber = null;
+    let secondLastNumber = null;
+    const newSequence = [];
 
     for (let i = 0; i < sequenceLength; i++) {
       let randomNumber;
       do {
-        randomNumber = Math.floor(Math.random() * 20); // Genera un número aleatorio entre 0 y 19
-      } while (randomNumber === lastNumber); // Asegúrate de que el número no sea igual al anterior
-
+        randomNumber = Math.floor(Math.random() * 10); // Genera un número aleatorio entre 0 y 9
+      } while (randomNumber === lastNumber || randomNumber === secondLastNumber); // Asegúrate de que el número no sea igual a los dos anteriores
       newSequence.push(randomNumber);
+      // Actualiza los dos últimos números
+      secondLastNumber = lastNumber;
       lastNumber = randomNumber;
     }
-
     setSequence(newSequence);
     setUserInput([]);
     setSelectedIndices([]);
@@ -131,19 +132,8 @@ const MemoriaSecuencial = () => {
           </div>
         ))}
       </div>
-      <div className="circle-container">
-        {[10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map((number) => (
-          <div
-            key={number}
-            className={`circle ${getCircleClass(number)}`}
-            onClick={() => highlightIndex === -1 && handleUserInput(number)}
-          >
-            {number}
-          </div>
-        ))}
-      </div>
     </div>
-    </div>
+  </div>
   );
 };
 
