@@ -76,3 +76,36 @@
   25%, 75% { transform: translateX(-5px); }
   50% { transform: translateX(5px); }
 }
+
+.game-over-screen {
+  text-align: center;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.restart-button {
+  background-color: #28a745; /* Color verde */
+  color: white;              /* Texto en blanco */
+  border: none;
+  padding: 10px 20px;
+  font-size: 18px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: 20px;
+}
+
+.restart-button:hover {
+  background-color: #218838; /* Un tono más oscuro de verde al pasar el mouse */
+}
+
+.restart-button:active {
+  background-color: #1e7e34; /* Color más oscuro al hacer clic */
+  transform: scale(0.95);    /* Efecto de "clic" al presionar */
+}
+
+.restart-button:focus {
+  outline: none;             /* Elimina el borde de enfoque */
+}

@@ -10,6 +10,8 @@ const MemoriaSecuencial = () => {
   const [highlightIndex, setHighlightIndex] = useState(-1); // Índice del número resaltado
   const [selectedIndices, setSelectedIndices] = useState([]); // Índices de los números seleccionados por el usuario
   const [maxErrors, setMaxErrors] = useState(2); // Número máximo de errores permitido
+  const [currentClicked, setCurrentClicked] = useState(null); // El número actualmente seleccionado
+  const [previousClicked, setPreviousClicked] = useState(null); // El número anteriormente seleccionado
 
   useEffect(() => {
     generateSequence(stage);
@@ -26,7 +28,7 @@ const MemoriaSecuencial = () => {
     let lastNumber = null;
     let secondLastNumber = null;
     const newSequence = [];
-
+  
     for (let i = 0; i < sequenceLength; i++) {
       let randomNumber;
       do {
@@ -37,11 +39,15 @@ const MemoriaSecuencial = () => {
       secondLastNumber = lastNumber;
       lastNumber = randomNumber;
     }
-    setSequence(newSequence);
-    setUserInput([]);
-    setSelectedIndices([]);
-    setHighlightIndex(-1);
-
+  
+    // Restablece los estados de selección
+    setCurrentClicked(null);      // Reinicia el número seleccionado actual
+    setPreviousClicked(null);     // Reinicia el número previamente seleccionado
+    setSequence(newSequence);     // Genera la nueva secuencia
+    setUserInput([]);             // Vacía la entrada del usuario
+    setSelectedIndices([]);       // Limpia los índices seleccionados
+    setHighlightIndex(-1);        // Reinicia el índice resaltado
+  
     console.log(newSequence);
   };
 
@@ -61,10 +67,13 @@ const MemoriaSecuencial = () => {
   const handleUserInput = (number) => {
     const currentInputIndex = userInput.length;
     const isCorrect = sequence[currentInputIndex] === number;
-
+  
     setUserInput([...userInput, number]);
-    setSelectedIndices([...selectedIndices, { number, isCorrect }]);
-
+  
+    // Actualiza el estado para reflejar el número clicado actualmente
+    setPreviousClicked(currentClicked);  // El clic actual pasa a ser el anterior
+    setCurrentClicked(number);           // El nuevo clic se guarda como el actual
+  
     if (!isCorrect) {
       setErrorCount(errorCount + 1);
       if (errorCount >= maxErrors) {
@@ -97,24 +106,39 @@ const MemoriaSecuencial = () => {
   };
 
   const getCircleClass = (number) => {
+    // Si el número es el último clicado, aplica la clase 'correct'
+    if (number === currentClicked) {
+      return 'circle correct';
+    }
+    if (number === previousClicked) {
+      return ''; // El número anterior vuelve a su estado normal
+    }
     const selected = selectedIndices.find((index) => index.number === number);
     if (highlightIndex === number) {
       return 'highlight';
     }
-    if (selected) {
-      return selected.isCorrect ? 'correct' : 'incorrect';
-    }
-    return '';
+    return selected ? (selected.isCorrect ? 'correct' : 'incorrect') : '';
   };
 
   if (isGameOver) {
-    return (
-      <div>
-        <h1>Juego terminado</h1>
-        <p>Has cometido dos errores. Inténtalo de nuevo.</p>
-      </div>
-    );
-  }
+  return (
+    <div className="game-over-screen">
+      <h1>Juego terminado</h1>
+      <p>Has cometido dos errores. Inténtalo de nuevo.</p>
+      <button 
+        className="restart-button"
+        onClick={() => {
+          setStage(1);        // Reinicia la etapa al nivel 1
+          setErrorCount(0);   // Reinicia el contador de errores
+          setIsGameOver(false); // Restablece el estado de Game Over
+          generateSequence(1);  // Genera la secuencia para el primer nivel
+        }}
+      >
+        Reiniciar juego
+      </button>
+    </div>
+  );
+}
 
   return (
     <div className="centered-game">
