@@ -8,6 +8,7 @@ import Game1 from './modules/Games/matriz-de-memoria/Matriz-de-memoria';
 import Game2 from './modules/Games/sigue-la-secuencia/Sigue-la-secuencia';
 import Game3 from './modules/Games/sopa-de-letras/Sopa-de-letras';
 import Game4 from './modules/Games/a-fin/A-fin';
+import Game5 from './modules/Games/Juego-de-memoria/Memoria.js'
 // Importar otros juegos aquí
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
           <Route path="/games/sigue-la-secuencia" element={<Game2 />} />
           <Route path="/games/sopa-de-letras" element={<Game3 />} />
           <Route path="/games/a-fin" element={<Game4 />} />
+          <Route path="/games/juego-de-memoria" element={<Game5 />} />
           {/* Añadir rutas para otros juegos */}
         </Routes>
       </div>
@@ -29,4 +31,4 @@ function App() {
   );
 }
 
-export default App;
+export default App;
