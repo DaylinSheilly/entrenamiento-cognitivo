@@ -1,115 +1,24 @@
-/* General page styling */
-body, html {
-  margin: 0;
-  padding: 0;
-  font-family: 'Arial', sans-serif;
-}
-
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  background: linear-gradient(to bottom right, #eef2ff, #f3e8ff);
-  padding: 16px;
-}
-
-.card {
-  width: 100%;
-  max-width: 768px;
-  background-color: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
-  padding: 24px;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 24px;
-}
-
-.card-title {
-  font-size: 32px;
-  font-weight: bold;
-  background: linear-gradient(to right, #6366f1, #a78bfa);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.level, .score {
-  padding: 8px 16px;
-  border-radius: 9999px;
-  font-weight: 600;
-}
-
-.level {
-  background-color: #c7d2fe;
-  color: #4338ca;
-}
-
-.score {
-  background-color: #e9d5ff;
-  color: #6b21a8;
+.memory-game {
+  text-align: center;
 }
 
 .grid {
   display: grid;
-  gap: 8px;
-  margin: 0 auto;
+  margin: 20px auto;
 }
 
 .square {
-  border-radius: 8px;
-  transition: transform 0.3s, box-shadow 0.3s;
-  background-color: #374151;
+  width: 80px;
+  height: 80px;
+  background-color: black;
+  border: 2px solid white;
+  cursor: pointer;
 }
 
-.square:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.square.active {
+  background-color: gray;
 }
 
-.square:disabled {
-  background-color: #9ca3af;
-}
-
-.alert {
-  margin-top: 24px;
-  padding: 16px;
-  font-size: 18px;
-  text-align: center;
-}
-
-.alert-default {
-  background-color: #f9fafb;
-  color: #374151;
-}
-
-.alert-destructive {
-  background-color: #fef2f2;
-  color: #b91c1c;
-}
-
-.button-play-again {
-  margin-top: 24px;
-  padding: 12px 24px;
-  font-size: 18px;
-  color: white;
-  background: linear-gradient(to right, #6366f1, #a78bfa);
-  border-radius: 9999px;
-  transition: transform 0.3s, box-shadow 0.3s;
-}
-
-.button-play-again:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.instructions {
-  margin-top: 24px;
-  font-size: 14px;
-  color: #6b7280;
+.square.selected {
+  background-color: green;
 }
