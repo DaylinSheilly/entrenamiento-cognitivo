@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./Memoria.css";
 
-const SQUARE_SIZE = 80;
+const SQUARE_SIZE = 40;
 const displayTime = 1000; // Tiempo en milisegundos (1 segundo)
 const maxLevel = 9;
 
@@ -56,11 +56,11 @@ const MemoryGame = () => {
       setSelected([]);
       setIsClickable(false);
       setShowSequence(true);
-      setMessage(`: Memoriza la secuencia`);
+      setMessage(`Memoriza la secuencia`);
 
       setTimeout(() => {
         setShowSequence(false);
-        setMessage(`: Selecciona los cuadrados en cualquier orden`);
+        setMessage(`Selecciona los cuadrados del patrón`);
         setIsClickable(true);
       }, displayTime);
     };

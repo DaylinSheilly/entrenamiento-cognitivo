@@ -8,7 +8,7 @@
   max-width: 800px;
   margin: 0 auto;
   min-height: 100vh;
-  background-color: #f5f6fa;
+  /*background-color: #f5f6fa;*/
 }
 
 /* Pantalla de inicio */
@@ -85,8 +85,8 @@ h2 {
 
 /* Cuadrados individuales */
 .square {
-  width: 80px;
-  height: 80px;
+  width: 40px;
+  height: 40px;
   background-color: white;
   border: 3px solid #bdc3c7;
   border-radius: 10px;
