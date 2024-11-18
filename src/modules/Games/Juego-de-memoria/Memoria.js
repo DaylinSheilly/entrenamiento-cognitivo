@@ -134,25 +134,25 @@ const MemoryGame = () => {
 
   return (
     <div className="memory-game">
-      <h1>Juego de Memoria</h1>
+      <memory-h1>Juego de Memoria</memory-h1>
       {!gameStarted ? (
-        <div className="start-screen">
-          <h2>¡Bienvenido al Juego de Memoria!</h2>
-          <p>Memoriza los patrones y reproduce la secuencia para avanzar de nivel.</p>
-          <button className="start-button" onClick={startGame}>
+        <div className="memory-start-screen">
+          <memory-h2>¡Bienvenido al Juego de Memoria!</memory-h2>
+          <p className="memory-message">Memoriza los patrones y reproduce la secuencia para avanzar de nivel.</p>
+          <memory-button className="memory-start-button" onClick={startGame}>
             Comenzar Juego
-          </button>
+          </memory-button>
         </div>
       ) : (
         <>
-          <div className="game-info">
-            <h2>Nivel {level}</h2>
-            <p className={error ? "message error" : "message"}>{message}</p>
+          <div className="memory-game-info">
+            <h3>Nivel {level}</h3>
+            <p className={error ? "memory-message error" : "memory-message"}>{message}</p>
           </div>
 
           {!gameFinished && (
             <div
-              className="grid"
+              className="memory-grid"
               style={{
                 gridTemplateColumns: `repeat(${gridSize}, ${SQUARE_SIZE}px)`,
                 gridTemplateRows: `repeat(${gridSize}, ${SQUARE_SIZE}px)`,
@@ -167,7 +167,7 @@ const MemoryGame = () => {
                   return (
                     <div
                       key={squareId}
-                      className={`square ${
+                      className={`memory-square ${
                         showSequence && isActive ? "active" : ""
                       } ${isSelected ? "selected" : ""}`}
                       onClick={() => handleSquareClick(row, col)}
@@ -179,25 +179,25 @@ const MemoryGame = () => {
           )}
 
           {!gameFinished && selected.length > 0 && (
-            <button 
+            <memory-button 
               className="verify-button" 
               onClick={handleUserSelection}
               disabled={!isClickable}
             >
               Verificar Secuencia
-            </button>
+            </memory-button>
           )}
 
           {gameFinished && (
-            <div className="game-over">
+            <div className="memory-game-over">
               <h2>¡Felicidades!</h2>
-              <p>Has completado todos los niveles</p>
-              <button onClick={() => {
+              <p className="memory-message">Has completado todos los niveles</p>
+              <memory-button onClick={() => {
                 setGameStarted(false);
                 resetGame();
               }}>
                 Jugar de Nuevo
-              </button>
+              </memory-button>
             </div>
           )}
         </>

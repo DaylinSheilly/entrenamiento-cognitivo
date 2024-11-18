@@ -1,9 +1,17 @@
+.afin-body {
+    background-color: #1a1a1a;
+    color: #ffffff;
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+  }
+
 .centered-game {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh; 
-    background-color: #e0e0e0; 
+    background-color: #1a1a1a;
 }
 
 .game-container {
@@ -15,7 +23,7 @@
     text-align: center;
 }
 
-h2 {
+afin-h2 {
     color: #333;
     font-size: 24px;
     margin-bottom: 20px;
@@ -78,3 +86,21 @@ h2 {
 .restart-button:hover {
     background-color: #27ae60;
 }
+
+.titles-afin {
+  font-size: 20px;
+  color: #7f8c8d;
+  margin: 10px 0;
+  padding: 1px;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+}
+
+.message {
+    font-size: 1.2em;
+    color: #7f8c8d;
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+  }

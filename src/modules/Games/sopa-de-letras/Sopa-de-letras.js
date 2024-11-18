@@ -332,8 +332,9 @@ const WordSearch = () => {
 
 
   return (
-    <div className={`game-container level-${level}`}>
-      <h1>Sopa de Letras - Nivel {level}</h1>
+    <div class="body-sopa">
+    <div className={`game-container-sopa level-${level}`}>
+      <h1-sopa>Sopa de Letras - Nivel {level}</h1-sopa>
       <div className="game-info">
         <div>Puntuación: {score}</div>
         <div>Errores: {errors}</div>
@@ -366,11 +367,12 @@ const WordSearch = () => {
           </div>
         ))}
       </div>
-      <div className="button-container">
-        <button className="hint-button" onClick={giveHint}>Dar Pista</button>
-        <button className="reveal-button" onClick={revealWord}>Revelar Palabra</button>
-        <button className="new-game-button" onClick={startNewGame}>Nueva Partida</button>
+      <div className="button-container-sopa">
+        <button className="button-sopa hint-button-sopa" onClick={giveHint}>Dar Pista</button>
+        <button className="button-sopa reveal-button-sopa" onClick={revealWord}>Revelar Palabra</button>
+        <button className="button-sopa new-game-button-sopa" onClick={startNewGame}>Nueva Partida</button>
       </div>
+    </div>
     </div>
   );
 };

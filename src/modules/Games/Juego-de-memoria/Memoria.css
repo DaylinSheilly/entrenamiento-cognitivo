@@ -12,7 +12,7 @@
 }
 
 /* Pantalla de inicio */
-.start-screen {
+.memory-start-screen {
   text-align: center;
   padding: 2rem;
   background-color: white;
@@ -21,7 +21,7 @@
   margin: 2rem;
 }
 
-.start-button {
+.memory-start-button {
   font-size: 1.2em;
   padding: 15px 30px;
   background-color: #3498db;
@@ -32,33 +32,39 @@
   transition: all 0.3s ease;
 }
 
-.start-button:hover {
+.memory-start-button:hover {
   background-color: #2980b9;
   transform: translateY(-2px);
 }
 
 /* Información del juego */
-.game-info {
+.memory-game-info {
   text-align: center;
   margin-bottom: 2rem;
 }
 
 /* Estilos para títulos */
-h1 {
-  color: #2c3e50;
+memory-h1 {
+  color: #ffffff;
   margin-bottom: 20px;
   text-align: center;
   font-size: 2.5em;
 }
 
-h2 {
+memory-h2 {
   color: #34495e;
   margin: 15px 0;
   font-size: 2em;
 }
 
+memory-h3 {
+  color: #ffffff;
+  margin: 15px 0;
+  font-size: 2em;
+}
+
 /* Mensajes del juego */
-.message {
+.memory-message {
   font-size: 1.2em;
   color: #7f8c8d;
   margin: 10px 0;
@@ -67,13 +73,13 @@ h2 {
   transition: all 0.3s ease;
 }
 
-.message.error {
+.memory-message.error {
   color: #e74c3c;
   background-color: #ffeaea;
 }
 
 /* Cuadrícula del juego */
-.grid {
+.memory-grid {
   display: grid;
   gap: 10px;
   padding: 20px;
@@ -84,7 +90,7 @@ h2 {
 }
 
 /* Cuadrados individuales */
-.square {
+.memory-square {
   width: 40px;
   height: 40px;
   background-color: white;
@@ -94,27 +100,27 @@ h2 {
   transition: all 0.3s ease;
 }
 
-.square:hover {
+.memory-square:hover {
   transform: scale(1.05);
   border-color: #3498db;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Estilos para cuadrados activos (mostrando secuencia) */
-.square.active {
+.memory-square.active {
   background-color: #3498db;
   border-color: #2980b9;
   animation: pulse 1s infinite;
 }
 
 /* Estilos para cuadrados seleccionados por el jugador */
-.square.selected {
+.memory-square.selected {
   background-color: #2ecc71;
   border-color: #27ae60;
 }
 
 /* Botones */
-button {
+memory-button {
   margin: 20px;
   padding: 12px 24px;
   font-size: 1.1em;
@@ -126,18 +132,18 @@ button {
   transition: all 0.3s ease;
 }
 
-button:hover:not(:disabled) {
+memory-button:hover:not(:disabled) {
   background-color: #2980b9;
   transform: translateY(-2px);
 }
 
-button:disabled {
+memory-button:disabled {
   background-color: #bdc3c7;
   cursor: not-allowed;
 }
 
 /* Pantalla de fin de juego */
-.game-over {
+.memory-game-over {
   text-align: center;
   padding: 2rem;
   background-color: white;
@@ -164,30 +170,30 @@ button:disabled {
     padding: 10px;
   }
   
-  .grid {
+  .memory-grid {
     padding: 10px;
     gap: 5px;
   }
   
-  .square {
+  .memory-square {
     width: 60px;
     height: 60px;
   }
   
-  h1 {
+  memory-h1 {
     font-size: 2em;
   }
   
-  h2 {
+  memory-h2 {
     font-size: 1.5em;
   }
   
-  button {
+  memory-button {
     padding: 10px 20px;
     font-size: 1em;
   }
   
-  .message {
+  .memory-message {
     font-size: 1em;
   }
 }

@@ -1,5 +1,5 @@
 /* Estilos generales */
-attention-body {
+.recuerda-objetos-body {
     background-color: #1a1a1a;
     color: #ffffff;
     margin: 0;
@@ -7,7 +7,8 @@ attention-body {
     min-height: 100vh;
   }
   
-  .attention-juego-contenedor {
+  /* Contenedor principal del juego */
+  .recuerda-objetos-juego-contenedor {
     max-width: 1000px;
     margin: 0 auto;
     padding: 20px;
@@ -20,94 +21,71 @@ attention-body {
   }
   
   /* Título del juego */
-  .attention-juego-contenedor attention-h1 {
+  .recuerda-objetos-juego-contenedor h1 {
     color: #ffffff;
     margin-bottom: 20px;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
   }
   
-  /* Contenedor del canvas */
-  .attention-canvas-contenedor {
+  /* Contenedor de los objetos */
+  .recuerda-objetos-objetos-contenedor {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 20px;
     background-color: #1e1e1e;
+    padding: 20px;
     border-radius: 8px;
     margin: 20px auto;
-    padding: 20px;
     width: fit-content;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
     border: 1px solid #3d3d3d;
   }
   
-  /* Estilos del canvas */
-  canvas {
-    background-color: #1e1e1e;
-    border: 2px solid #3d3d3d;
-    border-radius: 8px;
-    display: block;
-  }
-  
-  /* Contenedor de botones */
-  .attention-botones-contenedor {
-    margin: 20px 0;
+  /* Estilo de los objetos (texto o botones) */
+  .recuerda-objetos-objeto {
+    font-size: 2em;
+    color: #ffffff;
+    background-color: #2ecc71;
+    border: 2px solid #27ae60;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
     display: flex;
+    align-items: center;
     justify-content: center;
-    gap: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
   }
   
-  /* Estilos de los botones */
-  attention-button {
+  .recuerda-objetos-objeto:hover {
+    background-color: #27ae60;
+    transform: scale(1.1);
+  }
+  
+  /* Estilo para los botones de selección */
+  .recuerda-objetos-seleccion-boton {
     padding: 12px 30px;
     font-size: 16px;
     border: none;
     border-radius: 25px;
     cursor: pointer;
-    transition: all 0.3s ease;
     text-transform: uppercase;
     font-weight: bold;
     letter-spacing: 1px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  }
-  
-  attention-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-  
-  /* Botón "Igual" */
-  attention-button:nth-child(1) {
-    background-color: #2ecc71;
+    margin: 10px;
     color: white;
-  }
-  
-  attention-button:nth-child(1):hover:not(:disabled) {
-    background-color: #27ae60;
-    transform: translateY(-2px);
-  }
-  
-  /* Botón "Diferente" */
-  attention-button:nth-child(2) {
-    background-color: #e74c3c;
-    color: white;
-  }
-  
-  attention-button:nth-child(2):hover:not(:disabled) {
-    background-color: #c0392b;
-    transform: translateY(-2px);
-  }
-  
-  /* Botón "Reiniciar juego" */
-  .attention-fin-juego attention-button {
     background-color: #3498db;
-    color: white;
-    margin-top: 20px;
+    transition: all 0.3s ease;
   }
   
-  .attention-fin-juego attention-button:hover {
+  .recuerda-objetos-seleccion-boton:hover {
     background-color: #2980b9;
     transform: translateY(-2px);
   }
   
-  /* Estilos para el marcador y tiempo */
-  .attention-marcadores {
+  /* Contenedor del marcador */
+  .recuerda-objetos-marcadores {
     display: flex;
     justify-content: space-around;
     margin: 20px auto;
@@ -119,36 +97,54 @@ attention-body {
     border: 1px solid #3d3d3d;
   }
   
-  .attention-marcador-item {
+  .recuerda-objetos-marcador-item {
     font-size: 18px;
     font-weight: bold;
     color: #ffffff;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
   }
   
-  /* Estilos para la pantalla de fin de juego */
-  .attention-fin-juego {
+  /* Estilo para la pantalla de fin de juego */
+  .recuerda-objetos-fin-juego {
     display: flex;
     flex-direction: column;
-    align-items: center; /* centra los elementos horizontalmente */
+    align-items: center;
     text-align: center;
     padding: 40px;
     background-color: #1e1e1e;
     border-radius: 10px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
     border: 1px solid #3d3d3d;
-}
+  }
   
-  .attention-fin-juego attention-h1 {
+  .recuerda-objetos-fin-juego h1 {
     color: #ffffff;
     margin-bottom: 20px;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
   }
   
-  .attention-fin-juego attention-p {
+  .recuerda-objetos-fin-juego p {
     font-size: 24px;
     color: #cccccc;
     margin-bottom: 30px;
+  }
+  
+  .recuerda-objetos-fin-juego button {
+    background-color: #e74c3c;
+    color: white;
+    padding: 12px 30px;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+  }
+  
+  .recuerda-objetos-fin-juego button:hover {
+    background-color: #c0392b;
+    transform: translateY(-2px);
   }
   
   /* Animaciones */
@@ -163,12 +159,13 @@ attention-body {
     }
   }
   
-  /* Efectos de brillo para elementos interactivos */
-  attention-button:focus {
+  /* Efectos interactivos */
+  .recuerda-objetos-seleccion-boton:focus {
     outline: none;
     box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
   }
   
-  .attention-canvas-contenedor:hover {
+  .recuerda-objetos-objetos-contenedor:hover {
     box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
   }
+  
