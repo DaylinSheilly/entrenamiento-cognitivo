@@ -1,4 +1,13 @@
 /* Estilos para la vista de Home */
+
+.home-body {
+    background-color: #1a1a1a;
+    color: #ffffff;
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+    }
+
 .home-container {
     max-width: 1000px;
     margin: 0 auto;

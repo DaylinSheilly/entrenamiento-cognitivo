@@ -1,5 +1,5 @@
 /* Estilos generales */
-.recuerda-objetos-body {
+  .recuerda-objetos-body {
     background-color: #1a1a1a;
     color: #ffffff;
     margin: 0;
@@ -7,7 +7,7 @@
     min-height: 100vh;
   }
   
-  /* Contenedor principal del juego */
+/* Contenedor principal del juego */
   .recuerda-objetos-juego-contenedor {
     max-width: 1000px;
     margin: 0 auto;
@@ -20,29 +20,37 @@
     animation: aparecer 0.5s ease-out;
   }
   
-  /* Título del juego */
+/* Título del juego */
   .recuerda-objetos-juego-contenedor h1 {
     color: #ffffff;
     margin-bottom: 20px;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
   }
   
-  /* Contenedor de los objetos */
+/* Contenedor de los objetos */
   .recuerda-objetos-objetos-contenedor {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Dos columnas con ancho igual */
+  gap: 20px; /* Espacio entre los elementos */
+  background-color: #1e1e1e;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 20px auto;
+  width: fit-content;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  border: 1px solid #3d3d3d;
+  }
+
+  .fila-horizontal {
     display: flex;
+    flex-direction: row;
     justify-content: center;
-    flex-wrap: wrap;
-    gap: 20px;
-    background-color: #1e1e1e;
-    padding: 20px;
-    border-radius: 8px;
-    margin: 20px auto;
-    width: fit-content;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    border: 1px solid #3d3d3d;
+    gap: 10px; /* Espaciado entre elementos */
+    flex-wrap: nowrap; /* Evita que los elementos salten a una nueva línea */
   }
   
-  /* Estilo de los objetos (texto o botones) */
+  
+/* Estilo de los objetos (texto o botones) */
   .recuerda-objetos-objeto {
     font-size: 2em;
     color: #ffffff;
@@ -63,7 +71,7 @@
     transform: scale(1.1);
   }
   
-  /* Estilo para los botones de selección */
+/* Estilo para los botones de selección */
   .recuerda-objetos-seleccion-boton {
     padding: 12px 30px;
     font-size: 16px;
@@ -84,7 +92,7 @@
     transform: translateY(-2px);
   }
   
-  /* Contenedor del marcador */
+/* Contenedor del marcador */
   .recuerda-objetos-marcadores {
     display: flex;
     justify-content: space-around;
@@ -104,7 +112,7 @@
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
   }
   
-  /* Estilo para la pantalla de fin de juego */
+/* Estilo para la pantalla de fin de juego */
   .recuerda-objetos-fin-juego {
     display: flex;
     flex-direction: column;
@@ -147,7 +155,7 @@
     transform: translateY(-2px);
   }
   
-  /* Animaciones */
+/* Animaciones */
   @keyframes aparecer {
     from {
       opacity: 0;
@@ -159,7 +167,7 @@
     }
   }
   
-  /* Efectos interactivos */
+/* Efectos interactivos */
   .recuerda-objetos-seleccion-boton:focus {
     outline: none;
     box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);

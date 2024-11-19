@@ -10,7 +10,7 @@ import Game3 from './modules/Games/a-fin/A-fin';
 import Game4 from './modules/Games/Juego-de-memoria/Memoria.js';
 import Game5 from './modules/Games/juego-de-atencion/atencion.js';
 import Game6 from './modules/Games/comparacion-de-colores/comparacion.js';
-import Game7 from './modules/Games/recuerda-los-objetos/recuerda-los-objetos.js'
+import Game7 from './modules/Games/recuerda-los-objetos/recuerda-los-objetos.jsx'
 // Importar otros juegos aquí
 
 function App() {
