@@ -1,23 +1,26 @@
 /* Estilos generales */
-attention-body {
-    background-color: #1a1a1a;
-    color: #ffffff;
-    margin: 0;
-    padding: 20px;
-    min-height: 100vh;
-  }
-  
-  .attention-juego-contenedor {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 20px;
-    font-family: 'Arial', sans-serif;
-    text-align: center;
-    background-color: #2d2d2d;
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-    animation: aparecer 0.5s ease-out;
-  }
+.attention-body {
+  background-color: #1a1a1a;
+  color: #ffffff;
+  margin: 0;
+  padding: 20px;
+  min-height: 100vh;
+  display: flex; /* Flexbox para centrar el contenedor */
+  justify-content: center; /* Centrado horizontal */
+  align-items: center; /* Centrado vertical */
+}
+
+.attention-juego-contenedor {
+  display: inline-block; /* Ajusta su tamaño al contenido */
+  padding: 20px;
+  font-family: 'Arial', sans-serif;
+  text-align: center;
+  background-color: #2d2d2d;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  animation: aparecer 0.5s ease-out;
+}
+
   
   /* Título del juego */
   .attention-juego-contenedor attention-h1 {

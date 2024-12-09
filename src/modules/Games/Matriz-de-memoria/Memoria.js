@@ -52,7 +52,7 @@ const MemoryGame = () => {
         const newSequence = generateSequence(gridSize);
         setSequence(newSequence);
       }
-      
+
       setSelected([]);
       setIsClickable(false);
       setShowSequence(true);
@@ -70,7 +70,7 @@ const MemoryGame = () => {
 
   const handleSquareClick = (row, col) => {
     if (!isClickable || gameFinished) return;
-    
+
     const clickedSquare = `${row}-${col}`;
     if (selected.includes(clickedSquare)) {
       // Permitir deseleccionar un cuadrado
@@ -124,7 +124,7 @@ const MemoryGame = () => {
     setMessage("Memoriza la secuencia");
     setSequence(generateSequence(2));
     setIsClickable(false);
-    
+
     setTimeout(() => {
       setShowSequence(false);
       setMessage("Selecciona los cuadrados correctos");
@@ -133,75 +133,76 @@ const MemoryGame = () => {
   };
 
   return (
-    <div className="memory-game">
-      <memory-h1>Juego de Memoria</memory-h1>
-      {!gameStarted ? (
-        <div className="memory-start-screen">
-          <memory-h2>¡Bienvenido al Juego de Memoria!</memory-h2>
-          <p className="memory-message">Memoriza los patrones y reproduce la secuencia para avanzar de nivel.</p>
-          <memory-button className="memory-start-button" onClick={startGame}>
-            Comenzar Juego
-          </memory-button>
-        </div>
-      ) : (
-        <>
-          <div className="memory-game-info">
-            <h3>Nivel {level}</h3>
-            <p className={error ? "memory-message error" : "memory-message"}>{message}</p>
-          </div>
-
-          {!gameFinished && (
-            <div
-              className="memory-grid"
-              style={{
-                gridTemplateColumns: `repeat(${gridSize}, ${SQUARE_SIZE}px)`,
-                gridTemplateRows: `repeat(${gridSize}, ${SQUARE_SIZE}px)`,
-              }}
-            >
-              {Array.from({ length: gridSize }).map((_, row) =>
-                Array.from({ length: gridSize }).map((_, col) => {
-                  const squareId = `${row}-${col}`;
-                  const isActive = sequence.includes(squareId);
-                  const isSelected = selected.includes(squareId);
-
-                  return (
-                    <div
-                      key={squareId}
-                      className={`memory-square ${
-                        showSequence && isActive ? "active" : ""
-                      } ${isSelected ? "selected" : ""}`}
-                      onClick={() => handleSquareClick(row, col)}
-                    />
-                  );
-                })
-              )}
-            </div>
-          )}
-
-          {!gameFinished && selected.length > 0 && (
-            <memory-button 
-              className="verify-button" 
-              onClick={handleUserSelection}
-              disabled={!isClickable}
-            >
-              Verificar Secuencia
+    <div class="memory-body">
+      <div className="memory-game">
+        <memory-h1>Matriz de Memoria</memory-h1>
+        {!gameStarted ? (
+          <div className="memory-start-screen">
+            <memory-h2>¡Bienvenido al Matriz de Memoria!</memory-h2>
+            <p className="memory-message">Memoriza los patrones y reproduce la secuencia para avanzar de nivel.</p>
+            <memory-button className="memory-start-button" onClick={startGame}>
+              Comenzar Juego
             </memory-button>
-          )}
-
-          {gameFinished && (
-            <div className="memory-game-over">
-              <h2>¡Felicidades!</h2>
-              <p className="memory-message">Has completado todos los niveles</p>
-              <memory-button onClick={() => {
-                setGameStarted(false);
-                resetGame();
-              }}>
-                Jugar de Nuevo
-              </memory-button>
+          </div>
+        ) : (
+          <>
+            <div className="memory-game-info">
+              <h3>Nivel {level}</h3>
+              <p className={error ? "memory-message error" : "memory-message"}>{message}</p>
             </div>
-          )}
-        </>
-      )}
+
+            {!gameFinished && (
+              <div
+                className="memory-grid"
+                style={{
+                  gridTemplateColumns: `repeat(${gridSize}, ${SQUARE_SIZE}px)`,
+                  gridTemplateRows: `repeat(${gridSize}, ${SQUARE_SIZE}px)`,
+                }}
+              >
+                {Array.from({ length: gridSize }).map((_, row) =>
+                  Array.from({ length: gridSize }).map((_, col) => {
+                    const squareId = `${row}-${col}`;
+                    const isActive = sequence.includes(squareId);
+                    const isSelected = selected.includes(squareId);
+
+                    return (
+                      <div
+                        key={squareId}
+                        className={`memory-square ${showSequence && isActive ? "active" : ""
+                          } ${isSelected ? "selected" : ""}`}
+                        onClick={() => handleSquareClick(row, col)}
+                      />
+                    );
+                  })
+                )}
+              </div>
+            )}
+
+            {!gameFinished && selected.length > 0 && (
+              <memory-button
+                className="verify-button"
+                onClick={handleUserSelection}
+                disabled={!isClickable}
+              >
+                Verificar Secuencia
+              </memory-button>
+            )}
+
+            {gameFinished && (
+              <div className="memory-game-over">
+                <h2>¡Felicidades!</h2>
+                <p className="memory-message">Has completado todos los niveles</p>
+                <memory-button onClick={() => {
+                  setGameStarted(false);
+                  resetGame();
+                }}>
+                  Jugar de Nuevo
+                </memory-button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 };

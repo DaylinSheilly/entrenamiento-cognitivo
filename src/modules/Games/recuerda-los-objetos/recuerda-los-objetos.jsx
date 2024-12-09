@@ -25,6 +25,7 @@ const MemoryGame = () => {
     const newSequence = allObjects
       .sort(() => 0.5 - Math.random())
       .slice(0, currentLevel + 2);
+      console.log(newSequence)
     setSequence(newSequence);
 
     setShowingSequence(true);
