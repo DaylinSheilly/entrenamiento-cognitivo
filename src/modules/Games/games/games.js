@@ -14,12 +14,13 @@ function Games() {
           <games-button className="games-button" onClick={() => navigate('/games/matriz-de-memoria')}>Matriz de Memoria</games-button>
           <games-button className="games-button" onClick={() => navigate('/games/sigue-la-secuencia')}>Sigue la Secuencia</games-button>
           <games-button className="games-button" onClick={() => navigate('/games/recuerda-los-objetos')}>Recuerda los Objetos</games-button>
-          <games-button className="games-button" onClick={() => navigate('/games/concentrate-en-el-objetivo')}>Concentrate en el Objetivo</games-button>
+          <games-button className="games-button" onClick={() => navigate('/games/concentrarse-en-el-objetivo')}>Concentrate en el Objetivo</games-button>
           <games-button className="games-button" onClick={() => navigate('/games/no-pierdas-los-objetos')}>No Pierdas los Objetos</games-button>
           <games-button className="games-button" onClick={() => navigate('/games/sopa-de-letras')}>Sopa de Letras</games-button>
           <games-button className="games-button" onClick={() => navigate('/games/a-fin')}>A Fin</games-button>
           <games-button className="games-button" onClick={() => navigate('/games/comparacion-de-colores')}>Comparación de Colores</games-button>
           <games-button className="games-button" onClick={() => navigate('/games/juego-de-atencion')}>Juego de Atención</games-button>
+          <games-button className="games-button" onClick={() => navigate('/games/concentrate-en-el-objetivo')}>No es Concentrate en el Objetivo</games-button>
           {/* Añadir botones para otros juegos */}
         </div>
       </div>

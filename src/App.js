@@ -13,6 +13,7 @@ import Game6 from './modules/Games/comparacion-de-colores/comparacion.js';
 import Game7 from './modules/Games/recuerda-los-objetos/recuerda-los-objetos.jsx'
 import Game8 from './modules/Games/concentrate-en-objetivo/concentrate.jsx'
 import Game9 from './modules/Games/no-pierdas-objetos/no-pierdas-objetos.jsx'
+import Game10 from './modules/Games/concentrarse-en-objetivo/concentrarse.jsx'
 // Importar otros juegos aquí
 
 function App() {
@@ -32,6 +33,7 @@ function App() {
           <Route path="/games/recuerda-los-objetos" element={<Game7 />} />
           <Route path="/games/concentrate-en-el-objetivo" element={<Game8 />} />
           <Route path="/games/no-pierdas-los-objetos" element={<Game9 />} />
+          <Route path="/games/concentrarse-en-el-objetivo" element={<Game10 />} />
           {/* Añadir rutas para otros juegos */}
         </Routes>
       </div>
