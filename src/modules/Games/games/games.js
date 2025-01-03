@@ -16,6 +16,7 @@ function Games() {
           <games-button className="games-button" onClick={() => navigate('/games/recuerda-los-objetos')}>Recuerda los Objetos</games-button>
           <games-button className="games-button" onClick={() => navigate('/games/concentrarse-en-el-objetivo')}>Concentrate en el Objetivo</games-button>
           <games-button className="games-button" onClick={() => navigate('/games/no-pierdas-los-objetos')}>No Pierdas los Objetos</games-button>
+          <games-button className="games-button" onClick={() => navigate('/games/mira-la-direccion')}>Mira la dirección</games-button>
           <games-button className="games-button" onClick={() => navigate('/games/sopa-de-letras')}>Sopa de Letras</games-button>
           <games-button className="games-button" onClick={() => navigate('/games/a-fin')}>A Fin</games-button>
           <games-button className="games-button" onClick={() => navigate('/games/comparacion-de-colores')}>Comparación de Colores</games-button>
