@@ -1,9 +1,13 @@
-.App {
-  text-align: center;
-  background-color: #1a1a1a;
+#root, .App {
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Asegura que ocupen toda la ventana */
+  width: 100%;
   margin: 0;
-  padding: 20px;
-  min-height: 100vh;
+  padding: 0;
+  overflow: hidden; /* Evita scroll innecesario */
+  background-color: #1a1a1a;
+  text-align: center;
 }
 
 .App-logo {

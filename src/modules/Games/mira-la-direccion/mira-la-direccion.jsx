@@ -8,8 +8,11 @@ const MiraLaDireccion = () => {
   const [stars, setStars] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [errorCount, setErrorCount] = useState(0);
-  const [objects, setObjects] = useState({ objects: [], isCase1: true });
+  const [streak, setStreak] = useState(0); // Aciertos consecutivos
+  const [feedback, setFeedback] = useState(''); // Indica si la respuesta fue correcta o incorrecta
   const [gameOver, setGameOver] = useState(false);
+  const [objects, setObjects] = useState({ objects: [], isCase1: true });
+  const [isInputActive, setIsInputActive] = useState(true); // Controla si las teclas están activas
 
   const generateObjects = () => {
     const directions = ['↑', '↓', '←', '→'];
@@ -28,80 +31,136 @@ const MiraLaDireccion = () => {
     return { objects: newObjects, isCase1 };
   };
 
+  useEffect(() => {
+    setObjects(generateObjects());
+  }, []);
+
   const handleKeyPress = (event) => {
-    if (gameOver) return;
+    if (!isInputActive || gameOver) return; // Ignora entradas si las teclas están desactivadas o el juego terminó
 
-    const correctDirection = objects.isCase1
-      ? objects.objects[0]
-      : objects.objects.find(
-          (dir, index, arr) => arr.filter((d) => d === dir).length === 1
-        );
+    const keyToSymbol = {
+      ArrowUp: '↑',
+      ArrowDown: '↓',
+      ArrowLeft: '←',
+      ArrowRight: '→',
+    };
 
-    if (event.key === `Arrow${correctDirection}`) {
-      setScore((prev) => prev + 50);
-      setCorrectCount((prev) => prev + 1);
+    const pressedKey = keyToSymbol[event.key];
+    if (!pressedKey) return;
 
-      if ((correctCount + 1) % 4 === 0) {
-        const bonus = 100 + Math.floor((correctCount + 1) / 4) * 50;
-        setScore((prev) => prev + bonus);
-        setStars((prev) => prev + 1);
-        setLevel((prev) => prev + 1);
-      }
+    let correctDirection = null;
+
+    if (objects.isCase1) {
+      correctDirection = objects.objects[0];
     } else {
-      setErrorCount((prev) => prev + 1);
-      setStars((prev) => Math.max(0, prev - 1));
+      const uniqueObject = objects.objects.find(
+        (item, index, arr) => arr.indexOf(item) === arr.lastIndexOf(item)
+      );
+      correctDirection = uniqueObject;
     }
 
-    setObjects(generateObjects());
+    setIsInputActive(false); // Desactiva las entradas del teclado
+
+    if (pressedKey === correctDirection) {
+      setScore((prev) => prev + 50);
+      setCorrectCount((prev) => prev + 1);
+      setStreak((prev) => {
+        const newStreak = prev + 1;
+        if (newStreak % 4 === 0) {
+          setStars((prevStars) => prevStars + 1);
+          setLevel((prevLevel) => prevLevel + 1);
+        }
+        return newStreak;
+      });
+      setFeedback('correct'); // Indicación visual de acierto
+    } else {
+      setErrorCount((prev) => prev + 1);
+      setStreak(0); // Reinicia la racha si hay un error
+      setFeedback('incorrect'); // Indicación visual de error
+    }
+
+    setTimeout(() => {
+      setFeedback(''); // Limpia el feedback
+      setObjects(generateObjects()); // Genera nuevos objetos
+      setIsInputActive(true); // Reactiva las entradas del teclado
+    }, 250); // Tiempo para mostrar el feedback (1 segundo)
   };
 
   useEffect(() => {
-    if (timeLeft <= 0) {
-      setGameOver(true);
-      return;
-    }
+    window.addEventListener('keydown', handleKeyPress);
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [objects, gameOver, isInputActive]);
 
-    const timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
-    return () => clearInterval(timer);
+  // Manejo del temporizador
+  useEffect(() => {
+    if (timeLeft > 0) {
+      const timer = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+
+      return () => clearInterval(timer);
+    } else {
+      setGameOver(true);
+    }
   }, [timeLeft]);
 
-  useEffect(() => {
-    setObjects(generateObjects());
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, []);
-
-  if (gameOver) {
-    return (
-      <div className="results-screen">
-        <h1>¡Juego Terminado!</h1>
-        <p>Puntaje Final: {score}</p>
-        <p>Total de Aciertos: {correctCount}</p>
-        <p>Total de Errores: {errorCount}</p>
-        <p>Nivel Alcanzado: {level}</p>
-        <button onClick={() => window.location.reload()}>Reiniciar</button>
-      </div>
-    );
-  }
+  const convertDirectionToClass = (dir) => {
+    switch (dir) {
+      case '↑':
+        return 'up';
+      case '↓':
+        return 'down';
+      case '←':
+        return 'left';
+      case '→':
+        return 'right';
+      default:
+        return '';
+    }
+  };
 
   return (
-    <div className="game-container">
-      <h1>Mira la Dirección</h1>
-      <div className="stats">
-        <p>Tiempo Restante: {timeLeft}s</p>
-        <p>Puntaje: {score}</p>
-        <p>Estrellas: {stars}</p>
-        <p>Nivel: {level}</p>
-      </div>
-      <div className="grid">
-        {objects.objects && objects.objects.length > 0 ? (
-          objects.objects.map((dir, index) => (
-            <div key={index} className="arrow">
-              {dir}
+    <div
+      className={`mira.game-container ${feedback === 'correct'
+        ? 'correct-bg'
+        : feedback === 'incorrect'
+          ? 'incorrect-bg'
+          : ''
+        }`}
+    >
+
+      <div className="fullscreen-container">
+        {!gameOver ? (
+          <div className="mira">
+            <h1>Mira la Dirección</h1>
+            <div className="mira.stats">
+              <p>Tiempo Restante: {timeLeft}s</p>
+              <p>Puntaje: {score}</p>
+              <p>Estrellas: {stars}</p>
+              <p>Nivel: {level}</p>
             </div>
-          ))
+
+            <div className="mira.grid">
+              {objects.objects.map((dir, index) => (
+                <div key={index} className={`mira arrow ${convertDirectionToClass(dir)}`}>{dir}
+                  {/* Los triángulos son visuales; no es necesario mostrar texto */}
+                </div>
+              ))}
+            </div>
+          </div>
         ) : (
-          <p>Cargando...</p>
+          <div className="mira.end-game">
+            <div className="mira">
+              <h1>Fin del Juego</h1>
+              <p>Puntaje Final: {score}</p>
+              <p>Nivel Máximo: {level}</p>
+              <p>Aciertos: {correctCount}</p>
+              <p>Errores: {errorCount}</p>
+              <button onClick={() => window.location.reload()}>Jugar de Nuevo</button>
+            </div>
+          </div>
         )}
       </div>
     </div>
