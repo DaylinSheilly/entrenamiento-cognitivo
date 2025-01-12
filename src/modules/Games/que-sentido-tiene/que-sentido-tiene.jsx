@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './que-sentido-tiene.css';
 import wordsData from './words.json';
 
-const MAX_SCORE = 5000; // Puntaje necesario para finalizar el juego
+const MAX_SCORE = 2000; // Puntaje necesario para finalizar el juego
 
 const QueSentidoTiene = () => {
   const [word, setWord] = useState('');
@@ -11,7 +11,19 @@ const QueSentidoTiene = () => {
   const [errors, setErrors] = useState(0);
   const [startTime, setStartTime] = useState(null);
   const [reactionTime, setReactionTime] = useState(0);
+  const [elapsedTime, setElapsedTime] = useState(0); // Nuevo estado para el tiempo transcurrido
   const [isGameOver, setIsGameOver] = useState(false);
+
+  // Inicia el temporizador ascendente
+  useEffect(() => {
+    let timer;
+    if (!isGameOver) {
+      timer = setInterval(() => {
+        setElapsedTime((prevTime) => prevTime + 1);
+      }, 1000); // Actualiza cada segundo
+    }
+    return () => clearInterval(timer); // Limpia el temporizador al desmontar
+  }, [isGameOver]);
 
   useEffect(() => {
     generateNewWord();
@@ -70,6 +82,7 @@ const QueSentidoTiene = () => {
     setErrors(0);
     setStartTime(null);
     setReactionTime(0);
+    setElapsedTime(0); // Reinicia el tiempo transcurrido
     setIsGameOver(false);
     generateNewWord();
   };
@@ -82,6 +95,7 @@ const QueSentidoTiene = () => {
         <div id="sentido-stats">
           <h3>Puntaje final: {score}</h3>
           <h3>Errores totales: {errors}</h3>
+          <h3>Tiempo total: {elapsedTime} segundos</h3>
           <h3>Tiempo promedio de reacción: {reactionTime} ms</h3>
         </div>
         <button id="sentido-restart-btn" onClick={resetGame}>
@@ -104,6 +118,7 @@ const QueSentidoTiene = () => {
         <h3>Puntaje: {score}</h3>
         <h3>Errores: {errors}</h3>
         <h3>Tiempo de reacción: {reactionTime} ms</h3>
+        <h3>Tiempo: {elapsedTime} segundos</h3>
       </div>
     </div>
   );
