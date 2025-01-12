@@ -1,0 +1,122 @@
+/* General styles for the game */
+.acierta-game-container {
+    font-family: Arial, sans-serif;
+    text-align: center;
+  }
+  
+  /* Start Screen */
+  .acierta-start-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #2d3133;
+  }
+  
+  .acierta-start-screen h1 {
+    font-size: 2.5rem;
+    color: #1565c0;
+  }
+  
+  .acierta-start-screen button {
+    background-color: #1976d2;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .acierta-start-screen button:hover {
+    background-color: #0d47a1;
+  }
+  
+  /* Game Header */
+  .acierta-game-header {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 20px;
+    background-color: #34352f;
+    font-size: 1.2rem;
+    border-bottom: 2px solid #c8e6c9;
+  }
+  
+  /* Game Area */
+  .acierta-game-area {
+    position: relative;
+    margin: 20px auto;
+    border: 2px solid #43484b;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .acierta-ball {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background-color: red;
+    border-radius: 50%;
+    animation: ball-move 1s infinite linear;
+  }
+  
+  .acierta-target {
+    position: absolute;
+    background-color: blue;
+    border-radius: 50%;
+    transition: width 0.3s, height 0.3s;
+  }
+  
+  /* Hit Button */
+  .acierta-hit-button {
+    background-color: #43a047;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1.2rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .acierta-hit-button:hover {
+    background-color: #1b5e20;
+  }
+  
+  /* End Screen */
+  .acierta-end-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #3b3637;
+  }
+  
+  .acierta-end-screen h1 {
+    font-size: 2.5rem;
+    color: #c62828;
+  }
+  
+  .acierta-end-screen p {
+    font-size: 1.2rem;
+    color: #d32f2f;
+  }
+  
+  .acierta-end-screen button {
+    background-color: #b71c1c;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .acierta-end-screen button:hover {
+    background-color: #7f0000;
+  }
+  
