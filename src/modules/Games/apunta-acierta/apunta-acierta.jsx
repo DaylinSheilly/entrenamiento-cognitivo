@@ -19,20 +19,22 @@ const ApuntaYAcierta = () => {
         if (gameState === 'playing') {
             const gameArea = gameAreaRef.current;
             if (gameArea) {
-                // Centrando el objetivo
+                // Centrando el objetivo, con un desplazamiento adicional
                 const centerX = gameArea.offsetWidth / 2;
                 const centerY = gameArea.offsetHeight / 2;
-                setTargetPosition({ x: centerX, y: centerY });
-
+                setTargetPosition({ x: centerX + 9, y: centerY + 9 });
+    
                 // Ajustando la bola para que pase por el centro
                 if (trajectory === 'horizontal') {
                     setBallPosition({ x: 0, y: centerY });
+                    console.log('horizontal');
                 } else {
                     setBallPosition({ x: centerX, y: 0 });
+                    console.log('vertical');
                 }
             }
         }
-    }, [gameState, trajectory]);
+    }, [gameState, trajectory]);    
 
     useEffect(() => {
         if (gameState === 'playing') {
@@ -43,22 +45,22 @@ const ApuntaYAcierta = () => {
 
                     if (trajectory === 'horizontal') {
                         const newX = prev.x + ballSpeed;
-                        if (newX > gameArea.offsetWidth) {
+                        if (newX > gameArea.offsetWidth - 20) {
                             // Cambiar a trayectoria vertical
                             setTrajectory(Math.random() > 0.5 ? 'horizontal' : 'vertical');
                             return trajectory === 'horizontal'
-                                ? { x: 0, y: targetPosition.y }
-                                : { x: targetPosition.x, y: 0 };
+                                ? { x: 0, y: targetPosition.y-9 }
+                                : { x: targetPosition.x-9, y: 0 };
                         }
                         return { ...prev, x: newX };
                     } else {
                         const newY = prev.y + ballSpeed;
-                        if (newY > gameArea.offsetHeight) {
+                        if (newY > gameArea.offsetHeight - 20) {
                             // Cambiar a trayectoria horizontal
                             setTrajectory(Math.random() > 0.5 ? 'horizontal' : 'vertical');
                             return trajectory === 'horizontal'
-                                ? { x: 0, y: targetPosition.y }
-                                : { x: targetPosition.x, y: 0 };
+                                ? { x: 0, y: targetPosition.y-9 }
+                                : { x: targetPosition.x-9, y: 0 };
                         }
                         return { ...prev, y: newY };
                     }
@@ -104,7 +106,7 @@ const ApuntaYAcierta = () => {
         if (distance <= targetSize / 2) {
             setScore((prev) => prev + 10);
             setBallSpeed((prev) => prev + 0.5);
-            setTargetSize((prev) => Math.max(prev - 5, 20));
+            setTargetSize((prev) => Math.max(prev - 2.5, 20));
         } else {
             setErrors((prev) => prev + 1);
         }
@@ -169,7 +171,7 @@ const ApuntaYAcierta = () => {
                         ></div>
                     </div>
 
-                    <button className="acierta-hit-button" onClick={checkHit}>
+                    <button className="acierta-hit-button" onMouseDown={checkHit}>
                         Acierto!
                     </button>
                 </div>
