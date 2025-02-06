@@ -17,6 +17,7 @@ import Game10 from './modules/Games/concentrarse-en-objetivo/concentrarse.jsx'
 import Game11 from './modules/Games/mira-la-direccion/mira-la-direccion.jsx'
 import Game12 from './modules/Games/que-sentido-tiene/que-sentido-tiene.jsx'
 import Game13 from './modules/Games/apunta-acierta/apunta-acierta.jsx'
+import Game14 from './modules/Games/construye-la-pipe/construye-la-pipe.jsx'
 // Importar otros juegos aquí
 
 function App() {
@@ -40,6 +41,7 @@ function App() {
           <Route path="/games/mira-la-direccion" element={<Game11 />} />
           <Route path="/games/que-sentido-tiene" element={<Game12 />} />
           <Route path="/games/apunta-acierta" element={<Game13 />} />
+          <Route path="/games/construye-la-tuberia" element={<Game14 />} />
           {/* Añadir rutas para otros juegos */}
         </Routes>
       </div>
