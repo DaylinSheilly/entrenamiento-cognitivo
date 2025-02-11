@@ -20,6 +20,7 @@ function Games() {
           <games-button className="games-button" onClick={() => navigate('/games/que-sentido-tiene')}>¿Qué sentido tiene?</games-button>
           <games-button className="games-button" onClick={() => navigate('/games/apunta-acierta')}>¡Apunta y acierta!</games-button>
           <games-button className="games-button" onClick={() => navigate('/games/construye-la-tuberia')}>Construye la Tubería</games-button>
+          <games-button className="games-button" onClick={() => navigate('/games/colorea-el-camino')}>Colorea el camino</games-button>
           <games-button className="games-button" onClick={() => navigate('/games/sopa-de-letras')}>Sopa de Letras</games-button>
           <games-button className="games-button" onClick={() => navigate('/games/a-fin')}>A Fin</games-button>
           <games-button className="games-button" onClick={() => navigate('/games/comparacion-de-colores')}>Comparación de Colores</games-button>
