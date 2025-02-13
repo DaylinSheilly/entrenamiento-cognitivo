@@ -1,0 +1,78 @@
+/* Estilos generales del contenedor del juego */
+.colores-contenedor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+  font-family: Arial, sans-serif;
+}
+
+/* Título del juego */
+.colores-titulo {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #6b95be;
+}
+
+/* Descripción del juego */
+.colores-descripcion {
+  font-size: 16px;
+  color: #6b95be;
+  margin-bottom: 20px;
+  text-align: center;
+  max-width: 600px;
+}
+
+/* Estilos de la cuadrícula */
+.colores-grid {
+  display: grid;
+  gap: 2px;
+  background-color: #bdc3c7;
+  padding: 5px;
+  border-radius: 5px;
+}
+
+/* Estilos de las celdas */
+.colores-celda {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #7f8c8d;
+  background-color: #ecf0f1;
+  transition: background-color 0.2s ease-in-out;
+  box-sizing: border-box;
+}
+
+/* Celda coloreada */
+.colores-celda.coloreada {
+  background-color: #3498db;
+  border: 1px solid #2980b9;
+}
+
+.colores-reset-btn {
+  display: block;
+  margin: 20px auto;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  color: white;
+  background-color: #e74c3c;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.colores-reset-btn:hover {
+  background-color: #c0392b;
+}
+
+.colores-reset-btn:active {
+  transform: scale(0.95);
+}
+
+.colores-head {
+  background-color: #f39c12; /* Un naranja brillante para la cabeza */
+  border: 2px solid #e67e22;
+}

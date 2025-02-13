@@ -82,8 +82,8 @@ const SynonymGame = () => {
     return (
       <div className="centered-game">
         <div className="game-container game-over">
-          <h2>¡Juego terminado!</h2>
-          <p>Tu puntuación final es: {score}</p>
+          <afin-h2>¡Juego terminado!</afin-h2>
+          <p className="message">Tu puntuación final es: {score}</p>
           <button className="restart-button" onClick={restartGame}>Jugar de nuevo</button>
         </div>
       </div>
@@ -92,26 +92,28 @@ const SynonymGame = () => {
   }
 
   return (
-    <div className="centered-game">
-    <div className="game-container">
-      <h2>Juego de Sinónimos</h2>
-      <div className="game-info">
-        <p>Nivel: {level}</p>
-        <p>Puntuación: {score}</p>
-        <p>Tiempo: {time}s</p>
+    <div class="afin-body">
+      <div className="centered-game">
+        <div className="game-container">
+          <afin-h2>Juego de Sinónimos</afin-h2>
+          <div className="game-info">
+            <p className="titles-afin">Nivel: {level}</p>
+            <p className="titles-afin">Puntuación: {score}</p>
+            <p className="titles-afin">Tiempo: {time}s</p>
+          </div>
+          <div className="word-container">
+            <afin-h2>Palabra objetivo:</afin-h2>
+            <p className="target-word">{currentWord}</p>
+          </div>
+          <div className="options-container">
+            {options.map((option, index) => (
+              <button key={index} className="option-button" onClick={() => handleChoice(option)}>
+                {option}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
-      <div className="word-container">
-        <h3>Palabra objetivo:</h3>
-        <p className="target-word">{currentWord}</p>
-      </div>
-      <div className="options-container">
-        {options.map((option, index) => (
-          <button key={index} className="option-button" onClick={() => handleChoice(option)}>
-            {option}
-          </button>
-        ))}
-      </div>
-    </div>
     </div>
   );
 };

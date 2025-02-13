@@ -7,9 +7,18 @@ const MemoriaSecuencial = () => {
   const [userInput, setUserInput] = useState([]);
   const [errorCount, setErrorCount] = useState(0);
   const [isGameOver, setIsGameOver] = useState(false);
-  const [highlightIndex, setHighlightIndex] = useState(-1); // Índice del número resaltado
-  const [selectedIndices, setSelectedIndices] = useState([]); // Índices de los números seleccionados por el usuario
-  const [maxErrors, setMaxErrors] = useState(2); // Número máximo de errores permitido
+  const [highlightIndex, setHighlightIndex] = useState(-1);
+  const [selectedIndices, setSelectedIndices] = useState([]);
+  const [maxErrors, setMaxErrors] = useState(2);
+  const [currentClicked, setCurrentClicked] = useState(null);
+  const [previousClicked, setPreviousClicked] = useState(null);
+
+  useEffect(() => {
+    import('./MemoriaSecuencial.css');
+    return () => {
+        // Limpia el CSS al salir de la vista, si es necesario
+    };
+  }, []);
 
   useEffect(() => {
     generateSequence(stage);
@@ -22,57 +31,60 @@ const MemoriaSecuencial = () => {
   }, [sequence]);
 
   const generateSequence = (currentStage) => {
-    const sequenceLength = currentStage * 2; // Incrementa la longitud de la secuencia con cada etapa
-    const newSequence = [];
+    const sequenceLength = currentStage * 2;
     let lastNumber = null;
-
+    let secondLastNumber = null;
+    const newSequence = [];
+  
     for (let i = 0; i < sequenceLength; i++) {
       let randomNumber;
       do {
-        randomNumber = Math.floor(Math.random() * 20); // Genera un número aleatorio entre 0 y 19
-      } while (randomNumber === lastNumber); // Asegúrate de que el número no sea igual al anterior
-
+        randomNumber = Math.floor(Math.random() * 10);
+      } while (randomNumber === lastNumber || randomNumber === secondLastNumber);
       newSequence.push(randomNumber);
+      secondLastNumber = lastNumber;
       lastNumber = randomNumber;
     }
-
+  
+    setCurrentClicked(null);
+    setPreviousClicked(null);
     setSequence(newSequence);
     setUserInput([]);
     setSelectedIndices([]);
     setHighlightIndex(-1);
-
+  
     console.log(newSequence);
   };
 
   const showSequence = () => {
     let index = 0;
-    const timeInterval = Math.max(500, 2000 - stage * 200); // Ajusta el tiempo según la etapa
+    const timeInterval = Math.max(500, 2000 - stage * 200);
     const intervalId = setInterval(() => {
-      setHighlightIndex(sequence[index]); // Resalta el número actual en la secuencia
+      setHighlightIndex(sequence[index]);
       index++;
       if (index === sequence.length + 1) {
         clearInterval(intervalId);
-        setHighlightIndex(-1); // Deja de resaltar después de mostrar la secuencia
+        setHighlightIndex(-1);
       }
-    }, timeInterval); // Tiempo de espera entre cada número (ajustado por etapa)
+    }, timeInterval);
   };
 
   const handleUserInput = (number) => {
     const currentInputIndex = userInput.length;
     const isCorrect = sequence[currentInputIndex] === number;
-
+  
     setUserInput([...userInput, number]);
-    setSelectedIndices([...selectedIndices, { number, isCorrect }]);
-
+  
+    setPreviousClicked(currentClicked);
+    setCurrentClicked(number);
+  
     if (!isCorrect) {
       setErrorCount(errorCount + 1);
       if (errorCount >= maxErrors) {
-        // Retrasa el fin del juego para que el usuario pueda ver el error
         setTimeout(() => {
           setIsGameOver(true);
         }, 1000);
       } else {
-        // Retrasa el reinicio de la secuencia para que el usuario pueda ver el error
         setTimeout(() => {
           setUserInput([]);
           setSelectedIndices([]);
@@ -86,7 +98,6 @@ const MemoriaSecuencial = () => {
           setIsGameOver(true);
         }, 1000);
       } else {
-        // Retrasa el avance a la siguiente etapa
         setTimeout(() => {
           alert("¡Correcto! Pasas a la siguiente etapa.");
           setStage(stage + 1);
@@ -96,53 +107,56 @@ const MemoriaSecuencial = () => {
   };
 
   const getCircleClass = (number) => {
+    if (number === currentClicked) {
+      return 'circle correct';
+    }
+    if (number === previousClicked) {
+      return '';
+    }
     const selected = selectedIndices.find((index) => index.number === number);
     if (highlightIndex === number) {
       return 'highlight';
     }
-    if (selected) {
-      return selected.isCorrect ? 'correct' : 'incorrect';
-    }
-    return '';
+    return selected ? (selected.isCorrect ? 'correct' : 'incorrect') : '';
   };
 
   if (isGameOver) {
     return (
-      <div>
+      <div className="game-over-screen-secuancial">
         <h1>Juego terminado</h1>
         <p>Has cometido dos errores. Inténtalo de nuevo.</p>
+        <button 
+          className="restart-button-secuancial"
+          onClick={() => {
+            setStage(1);        
+            setErrorCount(0);   
+            setIsGameOver(false); 
+            generateSequence(1);  
+          }}
+        >
+          Reiniciar juego
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="centered-game">
-    <div className="game-container">
-      <h1>Memoria Secuencial</h1>
-      <p>Etapa: {stage}</p>
-      <div className="circle-container">
-        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((number) => (
-          <div
-            key={number}
-            className={`circle ${getCircleClass(number)}`}
-            onClick={() => highlightIndex === -1 && handleUserInput(number)}
-          >
-            {number}
-          </div>
-        ))}
+    <div className="centered-game-secuencia">
+      <div className="game-container-secuancial">
+        <h1>Memoria Secuencial</h1>
+        <p>Etapa: {stage}</p>
+        <div className="circle-container-secuancial">
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((number) => (
+            <div
+              key={number}
+              className={`circle-secuancial ${getCircleClass(number)}`}
+              onClick={() => highlightIndex === -1 && handleUserInput(number)}
+            >
+              {number}
+            </div>
+          ))}
+        </div>
       </div>
-      <div className="circle-container">
-        {[10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map((number) => (
-          <div
-            key={number}
-            className={`circle ${getCircleClass(number)}`}
-            onClick={() => highlightIndex === -1 && handleUserInput(number)}
-          >
-            {number}
-          </div>
-        ))}
-      </div>
-    </div>
     </div>
   );
 };

@@ -1,21 +1,28 @@
-.centered-game {
+.centered-game-secuencia {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh; 
-  background-color: #e0e0e0; 
+  height: 100vh;
+  background-color: #1a1a1a; /* Color oscuro de fondo */
 }
 
-.game-container {
+
+.game-container-secuancial {
   width: 400px;
   padding: 30px;
-  background-color: #f0f0f0;
+  background-color: #cccccc; /* Fondo oscuro del contenedor */
   border-radius: 15px;
-  box-shadow: 0 0 15px rgba(0,0,0,0.2);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
   text-align: center;
+  color: #cccccc; /* Color de texto claro */
 }
 
-.circle-container {
+.game-container-secuencial h1, /* Aplica estilo oscuro al título */
+.game-container-secuancial p { /* Aplica estilo oscuro a la etapa */
+  color: #1e1e1e;
+}
+
+.circle-container-secuancial {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -26,38 +33,40 @@
   margin-right: auto;
 }
 
-.circle {
+.circle-secuancial {
   width: 60px;
   height: 60px;
   margin: 10px;
   border-radius: 50%;
-  background-color: #ddd;
+  background-color: #1e1e1e; /* Fondo oscuro de los círculos */
   display: flex;
   justify-content: center;
   align-items: center;
   font-size: 18px;
+  color: #ffffff; /* Texto blanco */
   cursor: pointer;
   transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
 }
 
-.circle.highlight {
+.circle-secuancial.highlight {
   background-color: #4caf50;
   color: white;
   transform: scale(1.1);
 }
 
-.circle.correct {
+.circle-secuancial.correct {
   background-color: #ffd700;
   animation: pulse 0.5s ease-in-out;
 }
 
-.circle.incorrect {
+.circle-secuancial.incorrect {
   background-color: #ff4136;
   animation: shake 0.5s ease;
 }
 
 @media (max-width: 600px) {
-  .circle {
+  .circle-secuancial {
     width: 40px;
     height: 40px;
     font-size: 14px;
@@ -75,4 +84,40 @@
   0%, 100% { transform: translateX(0); }
   25%, 75% { transform: translateX(-5px); }
   50% { transform: translateX(5px); }
+}
+
+.game-over-screen-secuancial {
+  text-align: center;
+  padding: 20px;
+  background-color: #2d2d2d; /* Fondo oscuro */
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  color: #cccccc;
+}
+
+.restart-button-secuancial {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 18px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.restart-button-secuancial:hover {
+  background-color: #2980b9;
+}
+
+.restart-button-secuancial:active {
+  background-color: #1e6e9e;
+  transform: scale(0.95);
+}
+
+.restart-button-secuancial:focus {
+  outline: none;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
 }

@@ -1,0 +1,68 @@
+/* Estilos para la vista de Home */
+
+.home-body {
+    background-color: #1a1a1a;
+    color: #ffffff;
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+    }
+
+.home-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #2d2d2d;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    animation: aparecer 0.5s ease-out;
+}
+
+.home-container h1 {
+    color: #ffffff;
+    margin-bottom: 30px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    font-size: 2rem;
+}
+
+/* Contenedor para los botones de Home */
+.home-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+/* Botones de navegación en Home */
+.home-buttons button {
+    padding: 12px 24px;
+    font-size: 16px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 1px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    min-width: 200px;
+}
+
+.home-buttons button:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+}
+
+.home-buttons button:focus {
+    outline: none;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+/* Animación de aparición */
+@keyframes aparecer {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}

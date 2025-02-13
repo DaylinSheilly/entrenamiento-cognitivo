@@ -1,0 +1,23 @@
+[
+    { "text": "Éxito", "type": "positive" },
+    { "text": "Felicidad", "type": "positive" },
+    { "text": "Esperanza", "type": "positive" },
+    { "text": "Victoria", "type": "positive" },
+    { "text": "Optimismo", "type": "positive" },
+    { "text": "Progreso", "type": "positive" },
+    { "text": "Alegría", "type": "positive" },
+    { "text": "Generosidad", "type": "positive" },
+    { "text": "Amabilidad", "type": "positive" },
+    { "text": "Solidaridad", "type": "positive" },
+    { "text": "Fracaso", "type": "negative" },
+    { "text": "Pérdida", "type": "negative" },
+    { "text": "Desesperación", "type": "negative" },
+    { "text": "Derrota", "type": "negative" },
+    { "text": "Pesimismo", "type": "negative" },
+    { "text": "Retroceso", "type": "negative" },
+    { "text": "Tristeza", "type": "negative" },
+    { "text": "Egoísmo", "type": "negative" },
+    { "text": "Crueldad", "type": "negative" },
+    { "text": "Indiferencia", "type": "negative" }
+  ]
+  

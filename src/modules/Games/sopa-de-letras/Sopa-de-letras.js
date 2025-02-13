@@ -14,6 +14,8 @@ const WordSearch = () => {
   const [time, setTime] = useState(0);
   const [errors, setErrors] = useState(0);
   const [lastErrorTime, setLastErrorTime] = useState(null);
+  const [wordCoordinates, setWordCoordinates] = useState({});
+  const [fullWordCoordinates, setFullWordCoordinates] = useState({});
 
   const getLevelConfig = useCallback((level) => {
     switch(level) {
@@ -72,7 +74,7 @@ const WordSearch = () => {
     [0, 1], [1, 0], [1, 1], [-1, 1] // horizontal, vertical, diagonal down, diagonal up
   ];
 
-  const placeWordsInGrid = useCallback((words, gridSize) => {
+  const placeWordsInGrid = useCallback((words, gridSize, setWordCoordinates, setFullWordCoordinates, level) => {
     const grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill('_'));
     const placedWords = [];
 
@@ -90,13 +92,45 @@ const WordSearch = () => {
       for (const [dx, dy] of shuffledDirections) {
         if (placed) break;
 
-        for (let attempt = 0; attempt < 100; attempt++) {
+        for (let attempt = 0; attempt < 2000; attempt++) {
           const row = Math.floor(Math.random() * gridSize);
           const col = Math.floor(Math.random() * gridSize);
 
           if (canPlaceWord(word, grid, row, col, dx, dy)) {
             placeWord(word, grid, row, col, dx, dy);
             placedWords.push(word);
+
+            // Almacenar las coordenadas de la primera letra
+            setWordCoordinates((prevCoords) => ({
+              ...prevCoords,
+              [word]: [row, col],
+            }));
+
+            // Almacenar las coordenadas de todas las letras
+            const wordCoordinates = [];
+            for (let i = 0; i < word.length; i++) {
+              const newRow = row + i * dy;
+              const newCol = col + i * dx;
+
+              console.log(`Placed word ${word} at coordinates:`, newRow, newCol);
+
+              // Verificar que las coordenadas están dentro de los límites del grid
+              if (newRow >= 0 && newRow < gridSize && newCol >= 0 && newCol < gridSize) {
+                wordCoordinates.push([newRow, newCol]);
+              } else {
+                console.error(`Coordenada fuera de límites: (${newRow}, ${newCol})`);
+                break; // Si alguna coordenada está fuera de los límites, detener el proceso
+              }
+            }
+
+            if (wordCoordinates.length === word.length) {
+              // Si todas las coordenadas son válidas, guardarlas en el diccionario
+              setFullWordCoordinates((prevCoords) => ({
+                ...prevCoords,
+                [word]: wordCoordinates,
+              }));
+            }
+
             placed = true;
             break;
           }
@@ -108,24 +142,31 @@ const WordSearch = () => {
       }
     }
 
-    fillEmptyCells(grid);
+    fillEmptyCells(grid, level); // Pasa el level aquí
     return { grid, placedWords };
-  }, []);
+  }, [level]); // Agregar level a las dependencias
 
-  const fillEmptyCells = (grid) => {
+  const fillEmptyCells = (grid, level) => {
     for (let row = 0; row < grid.length; row++) {
       for (let col = 0; col < grid[row].length; col++) {
         if (grid[row][col] === '_') {
-          grid[row][col] = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+          if (level == 3) {
+            // Llenar con números del 0 al 9 en el nivel 3
+            grid[row][col] = Math.floor(Math.random() * 10).toString();
+          } else {
+            // Llenar con letras mayúsculas (A-Z) en niveles 1 y 2
+            grid[row][col] = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+          }
         }
       }
     }
   };
+  
 
   const startNewGame = useCallback(() => {
     const { gridSize, wordCount } = getLevelConfig(level);
     const newWords = generateWords(wordCount, level);
-    const { grid, placedWords } = placeWordsInGrid(newWords, gridSize);
+    const { grid, placedWords } = placeWordsInGrid(newWords, gridSize, setWordCoordinates, setFullWordCoordinates, level);
     
     setWordGrid(grid);
     setWords(placedWords);
@@ -160,30 +201,43 @@ const WordSearch = () => {
     setCurrentSelection(prev => [...prev, { rowIndex, colIndex }]);
   }, [isDragging]);
 
+  const resetGridStyles = () => {
+    const cells = document.querySelectorAll('.cell');
+    cells.forEach(cell => {
+      cell.classList.remove('found');
+    });
+  };  
+
   const handleMouseUp = useCallback(() => {
     if (!isDragging) return;
-
+  
     const selectedWord = getSelectedWord(currentSelection);
-
+  
     if (words.includes(selectedWord) && !wordsFound.includes(selectedWord)) {
       setWordsFound(prev => [...prev, selectedWord]);
       setFoundCoordinates(prev => [...prev, ...currentSelection]);
       setScore(prevScore => prevScore + selectedWord.length);
-
+  
       if (wordsFound.length + 1 === words.length) {
         setTimeout(() => {
           alert(`¡Nivel ${level} completado!`);
+          
+          // Resetea el estilo de las celdas
+          resetGridStyles();
+  
+          // Cambia al siguiente nivel
           setLevel(prevLevel => (prevLevel < 3 ? prevLevel + 1 : 1));
-        }, 1000);
+        }, 500);
       }
     } else {
       setErrors(prevErrors => prevErrors + 1);
       setLastErrorTime(Date.now());
     }
-
+  
     setIsDragging(false);
     setCurrentSelection([]);
   }, [isDragging, currentSelection, words, wordsFound, level]);
+  
 
   const getSelectedWord = useCallback((selection) => {
     return selection.map(({ rowIndex, colIndex }) => wordGrid[rowIndex][colIndex]).join('');
@@ -193,83 +247,106 @@ const WordSearch = () => {
     return foundCoordinates.some(coord => coord.rowIndex === rowIndex && coord.colIndex === colIndex);
   }, [foundCoordinates]);
 
+  const findWordCoordinate = useCallback((word) => {
+    if (wordCoordinates[word]) {
+      return wordCoordinates[word]; // Devuelve las coordenadas si la palabra existe en el diccionario
+    } else {
+      return null; // Devuelve null si la palabra no está almacenada
+    }
+  }, [wordGrid]);
+
   const giveHint = useCallback(() => {
     const unFoundWords = words.filter(word => !wordsFound.includes(word));
     if (unFoundWords.length > 0) {
       const randomWord = unFoundWords[Math.floor(Math.random() * unFoundWords.length)];
       const hintCoord = findWordCoordinate(randomWord);
+  
       if (hintCoord) {
-        alert(`Pista: La palabra "${randomWord}" comienza en la fila ${hintCoord.row + 1}, columna ${hintCoord.col + 1}`);
-      }
-    }
-  }, [words, wordsFound]);
-
-  const findWordCoordinate = useCallback((word) => {
-    for (let row = 0; row < wordGrid.length; row++) {
-      for (let col = 0; col < wordGrid[row].length; col++) {
-        if (wordGrid[row][col] === word[0]) {
-          if (checkDirection(word, row, col, 0, 1) || checkDirection(word, row, col, 1, 0) ||
-              checkDirection(word, row, col, 1, 1) || checkDirection(word, row, col, -1, 1)) {
-            return { row, col };
-          }
+        const [row, col] = hintCoord;
+  
+        // Selecciona la celda en el tablero
+        const cellId = `${row}-${col}`;
+        const cellElement = document.getElementById(cellId);
+  
+        if (cellElement) {
+          // Añade la clase 'highlight' para aplicar el color
+          cellElement.classList.add('highlight');
+  
+          // Remueve la clase 'highlight' después de 1.5 segundos (coincide con la transición)
+          setTimeout(() => {
+            cellElement.classList.remove('highlight');
+          }, 1500);
         }
+      } else {
+        alert(`La palabra "${randomWord}" no está en el tablero.`);
       }
     }
-    return null;
-  }, [wordGrid]);
+  }, [words, wordsFound, findWordCoordinate]);  
 
-  const checkDirection = useCallback((word, row, col, rowDir, colDir) => {
-    for (let i = 0; i < word.length; i++) {
-      if (row < 0 || row >= wordGrid.length || col < 0 || col >= wordGrid[row].length || wordGrid[row][col] !== word[i]) {
-        return false;
-      }
-      row += rowDir;
-      col += colDir;
+  const getWordCoordinates = useCallback((word) => {
+    // Verificar si la palabra existe en el diccionario
+    if (fullWordCoordinates[word]) {
+      return fullWordCoordinates[word]; // Retorna las coordenadas de la palabra
+    } else {
+      console.warn(`La palabra "${word}" no se encuentra en el diccionario.`);
+      return null; // Retorna null si la palabra no está en el diccionario
     }
-    return true;
-  }, [wordGrid]);
-
-  const findWordCoordinates = useCallback((word) => {
-    const coords = [];
-    const startCoord = findWordCoordinate(word);
-    if (startCoord) {
-      let { row, col } = startCoord;
-      const direction = checkDirection(word, row, col, 0, 1) ? { rowDir: 0, colDir: 1 } :
-                        checkDirection(word, row, col, 1, 0) ? { rowDir: 1, colDir: 0 } :
-                        checkDirection(word, row, col, 1, 1) ? { rowDir: 1, colDir: 1 } :
-                        { rowDir: -1, colDir: 1 };
-      for (let i = 0; i < word.length; i++) {
-        coords.push({ rowIndex: row, colIndex: col });
-        row += direction.rowDir;
-        col += direction.colDir;
-      }
-    }
-    return coords;
-  }, [findWordCoordinate, checkDirection]);
+  });
 
   const revealWord = useCallback(() => {
     const unFoundWords = words.filter(word => !wordsFound.includes(word));
     if (unFoundWords.length > 0) {
       const randomWord = unFoundWords[Math.floor(Math.random() * unFoundWords.length)];
       setWordsFound(prev => [...prev, randomWord]);
-      const wordCoords = findWordCoordinates(randomWord);
-      setFoundCoordinates(prev => [...prev, ...wordCoords]);
-      setScore(prevScore => prevScore - randomWord.length); // Resta puntos
+      
+      // Obtiene las coordenadas de toda la palabra
+      const wordCoords = getWordCoordinates(randomWord);
+      console.log(wordCoords)
+      
+      if (wordCoords) {
+        // Aplica la clase "found" a todas las coordenadas de la palabra
+        wordCoords.forEach(([row, col]) => {
+          const cell = document.getElementById(`${row}-${col}`);  // Selecciona por id
+          if (cell) {
+            cell.classList.add('found');  // Aplica la clase CSS
+          }
+        });
+  
+        setFoundCoordinates(prev => [...prev, ...wordCoords]);
+        setScore(prevScore => prevScore - randomWord.length); // Resta puntos
+      }
     }
-  }, [words, wordsFound, findWordCoordinates]);
+    if (wordsFound.length + 1 === words.length) {
+      setTimeout(() => {
+        alert(`¡Nivel ${level} completado!`);
+        
+        // Resetea el estilo de las celdas
+        resetGridStyles();
+
+        // Cambia al siguiente nivel
+        setLevel(prevLevel => (prevLevel < 3 ? prevLevel + 1 : 1));
+      }, 500);
+    }
+  }, [words, wordsFound, getWordCoordinates, fullWordCoordinates]);
+  
+
 
   return (
-    <div className={`game-container level-${level}`}>
-      <h1>Sopa de Letras - Nivel {level}</h1>
+    <div class="body-sopa">
+    <div className={`game-container-sopa level-${level}`}>
+      <h1-sopa>Sopa de Letras - Nivel {level}</h1-sopa>
       <div className="game-info">
         <div>Puntuación: {score}</div>
-        <div>Tiempo: {time} segundos</div>
         <div>Errores: {errors}</div>
+      </div>
+      <div className="game-info">
+        <div>Tiempo: {time} segundos</div>
       </div>
       <div id="wordSearchContainer" onMouseUp={handleMouseUp}>
         {wordGrid.map((row, rowIndex) =>
           row.map((cell, colIndex) => (
             <div
+              id={`${rowIndex}-${colIndex}`}  // Añadir id basado en las coordenadas
               key={`${rowIndex}-${colIndex}`}
               className={`cell ${
                 isCellFound(rowIndex, colIndex) ? 'found' : 
@@ -290,11 +367,12 @@ const WordSearch = () => {
           </div>
         ))}
       </div>
-      <div className="button-container">
-        <button className="hint-button" onClick={giveHint}>Dar Pista</button>
-        <button className="reveal-button" onClick={revealWord}>Revelar Palabra</button>
-        <button className="new-game-button" onClick={startNewGame}>Nueva Partida</button>
+      <div className="button-container-sopa">
+        <button className="button-sopa hint-button-sopa" onClick={giveHint}>Dar Pista</button>
+        <button className="button-sopa reveal-button-sopa" onClick={revealWord}>Revelar Palabra</button>
+        <button className="button-sopa new-game-button-sopa" onClick={startNewGame}>Nueva Partida</button>
       </div>
+    </div>
     </div>
   );
 };
