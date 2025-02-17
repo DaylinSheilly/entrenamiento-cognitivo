@@ -6,7 +6,7 @@ const ColoreaElCamino = () => {
   const [gameStartTime] = useState(Date.now());
 
   // Estado para el nivel actual
-  const [nivel, setNivel] = useState(9);
+  const [nivel, setNivel] = useState(1);
   // Al iniciar el nivel, generamos y almacenamos la configuración inicial.
   const [initialLevelConfig, setInitialLevelConfig] = useState(() => initializeLevel(1));
   // levelConfig se utiliza en la partida actual; se restaura a partir de initialLevelConfig en caso de error.
