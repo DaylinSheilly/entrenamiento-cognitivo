@@ -35,7 +35,8 @@
       { "x": 0, "y": 2, "type": "pipe-angle", "rotation": 180 },
       { "x": 1, "y": 2, "type": "pipe", "rotation": 0 },
       { "x": 2, "y": 2, "type": "pipe", "rotation": 180 },
-      { "x": 3, "y": 2, "type": "pipe-T", "rotation": 180 }
+      { "x": 3, "y": 2, "type": "pipe-T", "rotation": 180 },
+      { "x": 1, "y": 0, "type": "pipe", "rotation": 90 }
 
     ]
   },
@@ -68,7 +69,8 @@
       { "x": 2, "y": 3, "type": "pipe", "rotation": 270 },
       { "x": 3, "y": 2, "type": "pipe", "rotation": 180 },
       { "x": 4, "y": 2, "type": "pipe-angle", "rotation": 0 },
-      { "x": 4, "y": 3, "type": "pipe", "rotation": 270 }
+      { "x": 4, "y": 3, "type": "pipe", "rotation": 270 },
+      { "x": 3, "y": 0, "type": "pipe", "rotation": 90 }
     ]
   },
   {
@@ -123,6 +125,7 @@
       { "x": 5, "y": 1, "type": "pipe", "rotation": 270 },
       { "x": 5, "y": 2, "type": "pipe-angle", "rotation": 270 },
       { "x": 5, "y": 3, "type": "pipe-angle", "rotation": 0 },
+      { "x": 1, "y": 0, "type": "pipe", "rotation": 270 },
       { "x": 5, "y": 4, "type": "pipe", "rotation": 270 }
     ]
   },

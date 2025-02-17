@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import "./construye-la-pipe.css";
 import levelsData from "./maps.json";
+import pipeImage from "./assets/pipe.png";
+import pipeAngleImage from "./assets/pipe-angle.png";
+import pipeTImage from "./assets/pipe-T.png";
+import pipeCrossImage from "./assets/pipe-cross.png";
 
 const App = () => {
   const [grid, setGrid] = useState([]);
@@ -164,10 +168,10 @@ const App = () => {
               >
                 {cell.type === "source" && "💧"}
                 {cell.type === "plant" && "🌱"}
-                {cell.type === "pipe" && "|"}
-                {cell.type === "pipe-angle" && "L"}
-                {cell.type === "pipe-T" && "⊤"}
-                {cell.type === "pipe-cross" && "✚"}
+                {cell.type === "pipe" && <img src={pipeImage} alt="Tubería recta" />}
+                {cell.type === "pipe-angle" && <img src={pipeAngleImage} alt="Tubería curva" />}
+                {cell.type === "pipe-T" && <img src={pipeTImage} alt="Tubería en T" />}
+                {cell.type === "pipe-cross" && <img src={pipeCrossImage} alt="Tubería cruzada" />}
               </div>
             ))
           )}
