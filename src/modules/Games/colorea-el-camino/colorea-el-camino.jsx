@@ -6,14 +6,14 @@ const ColoreaElCamino = () => {
   const [gameStartTime] = useState(Date.now());
 
   // Estado para el nivel actual
-  const [nivel, setNivel] = useState(9);
+  const [nivel, setNivel] = useState(1);
   // Al iniciar el nivel, generamos y almacenamos la configuración inicial.
   const [initialLevelConfig, setInitialLevelConfig] = useState(() => initializeLevel(1));
   // levelConfig se utiliza en la partida actual; se restaura a partir de initialLevelConfig en caso de error.
   const [levelConfig, setLevelConfig] = useState(initialLevelConfig);
   const { grid, activeBlocks, numRows, numCols } = levelConfig;
 
-  // Estados para evaluar el rendimiento a nivel global
+  // Estados para evaluar el rendimiento global
   const [resolutionTime, setResolutionTime] = useState(null);
   const [totalErrors, setTotalErrors] = useState(0);
   const [gameOver, setGameOver] = useState(false);
@@ -25,7 +25,6 @@ const ColoreaElCamino = () => {
   // currentBlockIndex indica cuál bloque (de activeBlocks) está activo para propagar.
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentBlockIndex, setCurrentBlockIndex] = useState(null);
-
   // Estado para medir el tiempo de resolución de cada nivel (se reinicia en cada nivel).
   const [startTime, setStartTime] = useState(Date.now());
 
@@ -145,7 +144,7 @@ const ColoreaElCamino = () => {
         }
       }
     }
-    // Aquí contamos obstáculos y, si la cantidad es impar, eliminamos uno para dejarla par.
+    // Contamos obstáculos y, si la cantidad es impar, eliminamos el primer obstáculo encontrado para dejarla par.
     let obstacleCount = 0;
     for (let i = 0; i < rows; i++) {
       for (let j = 0; j < cols; j++) {
@@ -153,7 +152,6 @@ const ColoreaElCamino = () => {
       }
     }
     if (obstacleCount % 2 !== 0) {
-      // Eliminamos el primer obstáculo encontrado para que quede par.
       for (let i = 0; i < rows; i++) {
         let removed = false;
         for (let j = 0; j < cols; j++) {
