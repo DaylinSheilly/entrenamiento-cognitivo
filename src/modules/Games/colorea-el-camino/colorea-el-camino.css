@@ -1,7 +1,6 @@
 /* Fuente personalizada desde Google Fonts (ejemplo) */
 /* @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap'); */
 
-/* Contenedor general de la página */
 .colores-contenedor {
   display: flex;
   flex-direction: column;
@@ -9,14 +8,13 @@
   justify-content: center;
   margin-top: 20px;
   font-family: 'Poppins', sans-serif;
-  color: #34495e;
+  color: #ecf0f1;
   background-color: #1a1a1a;
   min-height: 100vh;
   padding: 20px;
   box-sizing: border-box;
 }
 
-/* Título principal */
 .colores-titulo {
   font-size: 32px;
   font-weight: 600;
@@ -25,14 +23,12 @@
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-/* Subtítulo o nivel */
 .colores-nivel {
   font-size: 22px;
   margin-bottom: 15px;
   color: #ecf0f1;
 }
 
-/* Descripción */
 .colores-descripcion {
   font-size: 18px;
   text-align: center;
@@ -52,13 +48,11 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Cada celda */
 .colores-celda {
   transition: background-color 0.2s ease-in-out;
   border: 1px solid #bdc3c7;
 }
 
-/* Botón de reinicio */
 .colores-reset-btn {
   margin-top: 20px;
   padding: 12px 24px;
@@ -68,7 +62,7 @@
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
@@ -134,7 +128,6 @@
   font-weight: 700;
 }
 
-/* Responsividad */
 @media (max-width: 480px) {
   .gameover-title {
     font-size: 28px;
