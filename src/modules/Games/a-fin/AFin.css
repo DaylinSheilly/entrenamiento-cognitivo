@@ -1,12 +1,15 @@
+/* Fuente personalizada desde Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
 .afin-body {
     background-color: #1a1a1a;
     color: #ffffff;
     margin: 0;
     padding: 20px;
     min-height: 100vh;
-  }
+}
 
-.centered-game {
+.afin-centered-game {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -14,7 +17,7 @@
     background-color: #1a1a1a;
 }
 
-.game-container {
+.afin-game-container {
     width: 400px;
     padding: 30px;
     background-color: #f0f0f0;
@@ -24,37 +27,41 @@
     text-align: center;
 }
 
-afin-h2 {
+.afin-h2 {
     color: #333;
     font-size: 24px;
     margin-bottom: 20px;
+    font-family: 'Poppins', sans-serif;
 }
 
-.game-info {
+.afin-game-info {
     display: flex;
     justify-content: space-between;
     margin-bottom: 30px;
     font-weight: bold;
     font-size: 18px;
+    font-family: 'Poppins', sans-serif;
 }
 
-.word-container {
+.afin-word-container {
     margin-bottom: 30px;
+    font-family: 'Poppins', sans-serif;
 }
 
-.target-word {
+.afin-target-word {
     font-size: 28px;
     font-weight: bold;
     color: #2c3e50;
+    font-family: 'Poppins', sans-serif;
 }
 
-.options-container {
+.afin-options-container {
     display: flex;
     justify-content: center;
     gap: 30px;
 }
 
-.option-button {
+.afin-option-button {
     padding: 15px 30px;
     font-size: 20px;
     background-color: #3498db;
@@ -63,17 +70,18 @@ afin-h2 {
     border-radius: 10px;
     cursor: pointer;
     transition: background-color 0.3s;
+    font-family: 'Poppins', sans-serif;
 }
 
-.option-button:hover {
+.afin-option-button:hover {
     background-color: #2980b9;
 }
 
-.game-over {
+.afin-game-over {
     text-align: center;
 }
 
-.restart-button {
+.afin-restart-button {
     padding: 15px 30px;
     font-size: 20px;
     background-color: #2ecc71;
@@ -82,26 +90,29 @@ afin-h2 {
     border-radius: 10px;
     cursor: pointer;
     transition: background-color 0.3s;
+    font-family: 'Poppins', sans-serif;
 }
 
-.restart-button:hover {
+.afin-restart-button:hover {
     background-color: #27ae60;
 }
 
-.titles-afin {
-  font-size: 20px;
-  color: #7f8c8d;
-  margin: 10px 0;
-  padding: 1px;
-  border-radius: 5px;
-  transition: all 0.3s ease;
+.afin-titles {
+    font-size: 20px;
+    color: #7f8c8d;
+    margin: 10px 0;
+    padding: 1px;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    font-family: 'Poppins', sans-serif;
 }
 
-.message {
+.afin-message {
     font-size: 1.2em;
     color: #7f8c8d;
     margin: 10px 0;
     padding: 10px;
     border-radius: 5px;
     transition: all 0.3s ease;
-  }
+    font-family: 'Poppins', sans-serif;
+}
