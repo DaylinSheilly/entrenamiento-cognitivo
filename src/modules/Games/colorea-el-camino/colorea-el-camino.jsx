@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './colorea-el-camino.css';
 
 const ColoreaElCamino = () => {
@@ -7,11 +7,6 @@ const ColoreaElCamino = () => {
 
   // Estado para el nivel actual
   const [nivel, setNivel] = useState(1);
-  // Configuración inicial del nivel
-  const [initialLevelConfig, setInitialLevelConfig] = useState(() => initializeLevel(1));
-  // Configuración actual del nivel
-  const [levelConfig, setLevelConfig] = useState(initialLevelConfig);
-  const { grid, activeBlocks, numRows, numCols } = levelConfig;
 
   // Estados de rendimiento global
   const [resolutionTime, setResolutionTime] = useState(null);
@@ -29,160 +24,21 @@ const ColoreaElCamino = () => {
   // Tiempo de inicio de cada nivel (se reinicia al cambiar de nivel)
   const [startTime, setStartTime] = useState(Date.now());
 
-  // Función de validación de mapa (BFS, solo 4 direcciones)
-  function isMapSolvable(grid, activeHeads) {
-    const numRows = grid.length;
-    const numCols = grid[0].length;
-    const visited = Array.from({ length: numRows }, () => Array(numCols).fill(false));
-
-    // Cada serpiente se inicializa con una única cabeza
-    let snakes = activeHeads.map(head => [head]);
-    snakes.forEach(snake => {
-      const head = snake[snake.length - 1];
-      visited[head.row][head.col] = true;
-    });
-
-    const directions = [
-      { row: -1, col: 0 }, // Arriba
-      { row: 1, col: 0 },  // Abajo
-      { row: 0, col: -1 }, // Izquierda
-      { row: 0, col: 1 }   // Derecha
-    ];
-
-    function moveSnakes() {
-      let moved = false;
-      // Se recorre cada serpiente individualmente
-      for (let i = 0; i < snakes.length; i++) {
-        let snake = snakes[i];
-        const head = snake[snake.length - 1];
-        // Para cada serpiente, se intenta mover la cabeza en alguna dirección válida
-        for (const d of directions) {
-          const newRow = head.row + d.row;
-          const newCol = head.col + d.col;
-          if (
-            newRow >= 0 &&
-            newRow < numRows &&
-            newCol >= 0 &&
-            newCol < numCols &&
-            grid[newRow][newCol] !== -1 &&
-            !visited[newRow][newCol]
-          ) {
-            // Se mueve la cabeza de la serpiente
-            snake.push({ row: newRow, col: newCol });
-            visited[newRow][newCol] = true;
-            // Se elimina el primer elemento para mantener la longitud constante
-            snake.shift();
-            moved = true;
-            break; // Solo un movimiento por serpiente en esta iteración
-          }
-        }
-        // Si una serpiente no puede moverse, simplemente se queda en su posición actual.
-      }
-      return moved;
-    }
-
-    // Limitamos el número de iteraciones para evitar bucles infinitos
-    let maxIterations = numRows * numCols;
-    while (maxIterations--) {
-      // Cada iteración, todas las serpientes intentan moverse
-      if (!moveSnakes()) {
-        break; // Si ninguna serpiente se pudo mover, salimos del bucle.
-      }
-    }
-
-    // Verificamos que todas las celdas accesibles hayan sido visitadas
-    let allReachable = true;
-    for (let i = 0; i < numRows; i++) {
-      for (let j = 0; j < numCols; j++) {
-        if (grid[i][j] !== -1 && !visited[i][j]) {
-          allReachable = false;
-          console.warn(`La celda (${i}, ${j}) no es alcanzable.`);
-        }
-      }
-    }
-
-    if (allReachable) {
-      console.log("isMapSolvable: El mapa es solucionable.");
-    } else {
-      console.error("isMapSolvable: El mapa NO es solucionable.");
-    }
-    return allReachable;
-  }
-
-  function printSolvedMap(grid, activeBlocks) {
-    const numRows = grid.length;
-    const numCols = grid[0].length;
-    // Creamos una copia de la cuadrícula para marcar las celdas alcanzadas.
-    const solvedMap = grid.map(row => row.slice());
-
-    // Usamos BFS para recorrer desde todas las cabezas.
-    const visited = Array.from({ length: numRows }, () => Array(numCols).fill(false));
-    const queue = [];
-
-    activeBlocks.forEach(block => {
-      queue.push({ row: block.row, col: block.col, id: block.id });
-      visited[block.row][block.col] = true;
-    });
-
-    const directions = [
-      { row: -1, col: 0 },
-      { row: 1, col: 0 },
-      { row: 0, col: -1 },
-      { row: 0, col: 1 }
-    ];
-
-    while (queue.length) {
-      const { row, col, id } = queue.shift();
-      // Marcar la celda como "solucionada" con el id (o un símbolo)
-      solvedMap[row][col] = id;
-
-      for (const d of directions) {
-        const newRow = row + d.row;
-        const newCol = col + d.col;
-        if (
-          newRow >= 0 &&
-          newRow < numRows &&
-          newCol >= 0 &&
-          newCol < numCols &&
-          grid[newRow][newCol] !== -1 &&  // no es obstáculo
-          !visited[newRow][newCol]
-        ) {
-          visited[newRow][newCol] = true;
-          queue.push({ row: newRow, col: newCol, id });
-        }
-      }
-    }
-
-    // Imprimir la matriz en consola. Para cada celda, si es obstáculo, mostramos "X", si no, mostramos el valor.
-    console.log("Mapa solucionado:");
-    for (let i = 0; i < numRows; i++) {
-      let line = "";
-      for (let j = 0; j < numCols; j++) {
-        if (grid[i][j] === -1) {
-          line += " X ";
-        } else {
-          line += ` ${solvedMap[i][j]} `;
-        }
-      }
-      console.log(line);
-    }
-  }
+  // FUNCIONES DE LÓGICA DEL JUEGO -------------------------------------------- //
 
   // Función para inicializar el nivel
-  function initializeLevel(level) {
+  const initializeLevel = useCallback((level) => {
     let rows = 10, cols = 10;
     let obstaclesProbability = 0;
     let activeBlocks = [];
+    let grid;
 
-    // Niveles 1 y 2: configuración básica.
     if (level === 1) {
       obstaclesProbability = 0;
       activeBlocks = [
         { row: Math.floor(rows / 2), col: Math.floor(cols / 2), id: 1, color: "blue", headColor: "lightblue" }
       ];
-      // Creamos un grid sin obstáculos (todas las celdas en 0)
-      const grid = Array.from({ length: rows }, () => Array(cols).fill(0));
-      // Colocamos el bloque activo
+      grid = Array.from({ length: rows }, () => Array(cols).fill(0));
       grid[Math.floor(rows / 2)][Math.floor(cols / 2)] = 1;
       return { grid, activeBlocks, numRows: rows, numCols: cols };
 
@@ -192,15 +48,12 @@ const ColoreaElCamino = () => {
         { row: Math.floor(rows / 2), col: Math.floor(cols / 2) - 1, id: 1, color: "blue", headColor: "lightblue" },
         { row: Math.floor(rows / 2), col: Math.floor(cols / 2) + 1, id: 2, color: "green", headColor: "lightgreen" }
       ];
-      // Creamos un grid sin obstáculos (todas las celdas en 0)
-      const grid = Array.from({ length: rows }, () => Array(cols).fill(0));
-      // Ubicamos los bloques activos en el grid
+      grid = Array.from({ length: rows }, () => Array(cols).fill(0));
       grid[Math.floor(rows / 2)][Math.floor(cols / 2) - 1] = 1;
       grid[Math.floor(rows / 2)][Math.floor(cols / 2) + 1] = 2;
       return { grid, activeBlocks, numRows: rows, numCols: cols };
 
     } else if (level === 3) {
-      // Nivel 3: mapa estático, sin obstáculos dinámicos.
       cols = 8;
       obstaclesProbability = 0;
       const staticGridLevel3 = [
@@ -218,117 +71,151 @@ const ColoreaElCamino = () => {
       activeBlocks = [
         { row: Math.floor(rows / 2), col: Math.floor(cols / 2), id: 1, color: "blue", headColor: "lightblue" }
       ];
-      const grid = staticGridLevel3.map(r => r.slice());
+      grid = staticGridLevel3.map(r => r.slice());
       grid[activeBlocks[0].row][activeBlocks[0].col] = activeBlocks[0].id;
       return { grid, activeBlocks, numRows: rows, numCols: cols };
+
     } else {
-      // Para niveles avanzados (4 en adelante):
-      // 1. Incrementamos la densidad de obstáculos. Por ejemplo, iniciamos en 15% para nivel 4 y aumentamos 5% por nivel (máximo, digamos, 50%).
-      obstaclesProbability = Math.min(0.15 + 0.05 * (level - 4), 0.5);
+      // Niveles 4 en adelante: generación dinámica del mapa
 
-      // 2. Variamos la forma del mapa: por ejemplo, para niveles impares (>=5) usamos un mapa rectangular.
-      if (level >= 5 && level % 2 === 1) {
-        rows = 10;
-        cols = 8;
-      }
+      // Elegir tamaño del mapa aleatoriamente entre 7x7 y 9x9
+      cols = Math.floor(Math.random() * 3) + 7;
+      rows = Math.floor(Math.random() * 3) + 7;
 
-      // 3. Aumentamos el número de bloques activos hasta 4.
-      const numBlocks = Math.min(level, 4);
-      if (numBlocks === 3) {
-        activeBlocks = [
-          { row: 0, col: 0, id: 1, color: "blue", headColor: "lightblue" },
-          { row: 0, col: cols - 1, id: 2, color: "green", headColor: "lightgreen" },
-          { row: rows - 1, col: Math.floor(cols / 2), id: 3, color: "red", headColor: "salmon" }
-        ];
-      } else if (numBlocks === 4) {
-        activeBlocks = [
-          { row: 0, col: 0, id: 1, color: "blue", headColor: "lightblue" },
-          { row: 0, col: cols - 1, id: 2, color: "green", headColor: "lightgreen" },
-          { row: rows - 1, col: 0, id: 3, color: "red", headColor: "salmon" },
-          { row: rows - 1, col: cols - 1, id: 4, color: "purple", headColor: "plum" }
-        ];
-      } else {
-        activeBlocks = [
-          { row: Math.floor(rows / 2), col: Math.floor(cols / 2), id: 1, color: "blue", headColor: "lightblue" }
-        ];
-      }
-      // Crear la cuadrícula vacía
-      const grid = Array.from({ length: rows }, () => Array(cols).fill(0));
+      // Probabilidad de obstáculos aumenta con el nivel (hasta un límite del 30%)
+      obstaclesProbability = Math.min(0.05 + (level - 3) * 0.05, 0.3);
 
-      // Colocar obstáculos en función de obstaclesProbability, evitando:
-      // - bordes,
-      // - celdas de bloques iniciales,
-      // - obstáculos en diagonales inmediatas o a dos celdas,
-      // - y posiciones diagonales respecto a la posición inicial de las cabezas.
-      for (let i = 0; i < rows; i++) {
-        for (let j = 0; j < cols; j++) {
-          if (obstaclesProbability > 0 && (i === 0 || i === rows - 1 || j === 0 || j === cols - 1)) continue;
-          const isInitial = activeBlocks.some(block => block.row === i && block.col === j);
-          if (i > 0 && j > 0 && grid[i - 1][j - 1] === -1) continue;
-          if (i > 0 && j < cols - 1 && grid[i - 1][j + 1] === -1) continue;
-          if (i > 1 && j > 1 && grid[i - 2][j - 2] === -1) continue;
-          if (i > 1 && j < cols - 2 && grid[i - 2][j + 2] === -1) continue;
-          for (let block of activeBlocks) {
-            if (Math.abs(i - block.row) === 1 && Math.abs(j - block.col) === 1) continue;
-            if (Math.abs(i - block.row) === 2 && Math.abs(j - block.col) === 2) continue;
-          }
-          if (!isInitial && Math.random() < obstaclesProbability) {
-            grid[i][j] = -1;
-          }
+      // Número de cabezas aumenta con el nivel (máximo 4)
+      let numHeads = Math.min(2 + Math.floor(level / 3), 4);
+
+      function generateMap() {
+        let tempGrid = Array.from({ length: rows }, () => Array(cols).fill(0));
+        let tempActiveBlocks = [];
+
+        // Colocar cabezas en posiciones aleatorias
+        for (let i = 0; i < numHeads; i++) {
+          let r, c;
+          do {
+            r = Math.floor(Math.random() * rows);
+            c = Math.floor(Math.random() * cols);
+          } while (tempGrid[r][c] !== 0); // Evitar repetir posiciones
+
+          let colors = ["blue", "green", "red", "yellow"];
+          let headColors = ["lightblue", "lightgreen", "salmon", "lightyellow"];
+          tempActiveBlocks.push({ row: r, col: c, id: i + 1, color: colors[i], headColor: headColors[i] });
+          tempGrid[r][c] = i + 1;
         }
-      }
 
-      // Asegurar que el número de obstáculos sea par.
-      let obstacleCount = 0;
-      for (let i = 0; i < rows; i++) {
-        for (let j = 0; j < cols; j++) {
-          if (grid[i][j] === -1) obstacleCount++;
-        }
-      }
-      if (obstacleCount % 2 !== 0) {
-        for (let i = 0; i < rows; i++) {
-          let removed = false;
-          for (let j = 0; j < cols; j++) {
-            if (grid[i][j] === -1) {
-              grid[i][j] = 0;
-              removed = true;
-              break;
+        // Colocar obstáculos aleatorios basados en obstaclesProbability
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            if (tempGrid[r][c] === 0 && Math.random() < obstaclesProbability) {
+              tempGrid[r][c] = -1; // -1 representa un obstáculo
             }
           }
-          if (removed) break;
         }
+
+        return { tempGrid, tempActiveBlocks };
       }
 
-      // Ubicar los bloques iniciales en la cuadrícula.
-      activeBlocks.forEach(block => {
-        grid[block.row][block.col] = block.id;
-      });
+      let mapData;
+      // Se genera el mapa hasta que sea solucionable
+      do {
+        mapData = generateMap();
+      } while (!solveAndPrintMap(mapData.tempGrid, mapData.tempActiveBlocks));
+
+      return { grid: mapData.tempGrid, activeBlocks: mapData.tempActiveBlocks, numRows: rows, numCols: cols };
+    }
+  }, []);
+  // Configuración inicial del nivel
+  const [initialLevelConfig, setInitialLevelConfig] = useState(() => initializeLevel(1));
+  // Configuración actual del nivel
+  const [levelConfig, setLevelConfig] = useState(initialLevelConfig);
+  const { grid, activeBlocks, numRows, numCols } = levelConfig;
+
+  // Función de validación de mapa (BFS, solo 4 direcciones)
+  function solveAndPrintMap(grid, activeBlocks) {
+    const numRows = grid.length;
+    const numCols = grid[0].length;
+
+    // Matriz para marcar celdas visitadas y construir el mapa solucionado
+    const visited = Array.from({ length: numRows }, () => Array(numCols).fill(false));
+    const solvedMap = grid.map(row => row.slice());
+
+    // Inicializamos la cola con todas las cabezas activas
+    const queue = [];
+    activeBlocks.forEach(block => {
+      queue.push({ row: block.row, col: block.col, id: block.id });
+      visited[block.row][block.col] = true;
+    });
+
+    const directions = [
+      { row: -1, col: 0 },
+      { row: 1, col: 0 },
+      { row: 0, col: -1 },
+      { row: 0, col: 1 }
+    ];
+
+    // Usamos un índice para evitar queue.shift()
+    let index = 0;
+    while (index < queue.length) {
+      const { row, col, id } = queue[index++];
+
+      // Asignamos el id a la celda en el mapa solucionado
+      solvedMap[row][col] = id;
+
+      // Expandimos a las celdas adyacentes
+      for (const d of directions) {
+        const newRow = row + d.row;
+        const newCol = col + d.col;
+        if (
+          newRow >= 0 &&
+          newRow < numRows &&
+          newCol >= 0 &&
+          newCol < numCols &&
+          grid[newRow][newCol] !== -1 &&  // no es obstáculo
+          !visited[newRow][newCol]
+        ) {
+          visited[newRow][newCol] = true;
+          queue.push({ row: newRow, col: newCol, id });
+        }
+      }
     }
 
-    // Validar que el mapa sea solucionable; de lo contrario, regenerar.
-    if (!isMapSolvable(grid, activeBlocks)) {
-      return initializeLevel(level);
+    // Verificamos que todas las celdas accesibles hayan sido visitadas
+    let allReachable = true;
+    for (let i = 0; i < numRows; i++) {
+      for (let j = 0; j < numCols; j++) {
+        if (grid[i][j] !== -1 && !visited[i][j]) {
+          allReachable = false;
+          console.warn(`La celda (${i}, ${j}) no es alcanzable.`);
+        }
+      }
     }
 
-    // Imprimir el mapa solucionado en consola para depuración
-    printSolvedMap(grid, activeBlocks);
+    // Imprimimos el mapa solucionado si es soluble
+    if (allReachable) {
+      console.log("solveAndPrintMap: El mapa es solucionable. Mapa solucionado:");
+      for (let i = 0; i < numRows; i++) {
+        let line = "";
+        for (let j = 0; j < numCols; j++) {
+          if (grid[i][j] === -1) {
+            line += " X ";
+          } else {
+            line += ` ${solvedMap[i][j]} `;
+          }
+        }
+        console.log(line);
+      }
+    } else {
+      console.error("solveAndPrintMap: El mapa NO es solucionable.");
+    }
 
-    return { grid, activeBlocks, numRows: rows, numCols: cols };
+    return allReachable;
   }
 
-  // Cada vez que cambia el nivel, se actualiza la configuración inicial.
-  useEffect(() => {
-    const newConfig = initializeLevel(nivel);
-    setInitialLevelConfig(newConfig);
-    setLevelConfig(newConfig);
-    setStartTime(Date.now());
-    setResolutionTime(null);
-    setRecoveryTimes([]);
-    setRecoveryStart(null);
-  }, [nivel]);
-
   // Reinicia el nivel usando la configuración inicial.
-  const resetBoard = (incrementError = false) => {
+  const resetBoard = useCallback((incrementError = false) => {
     if (incrementError) {
       // Se suma error solo una vez por reinicio válido.
       setTotalErrors(prev => prev + 1);
@@ -341,10 +228,10 @@ const ColoreaElCamino = () => {
     setLevelConfig(initialLevelConfig);
     setIsDrawing(false);
     setCurrentBlockIndex(null);
-  };
+  }, [recoveryStart, initialLevelConfig]);
 
   // Al completar el nivel, se registra el tiempo y se pasa al siguiente nivel.
-  const nextLevel = () => {
+  const nextLevel = useCallback(() => {
     const levelTime = Date.now() - startTime;
     setResolutionTime(levelTime);
     // Si existe una medición de recuperación, la registramos y detenemos la medición.
@@ -369,7 +256,7 @@ const ColoreaElCamino = () => {
         setRecoveryStart(null);
       }, 500);
     }
-  };
+  }, [nivel, recoveryStart, startTime]);
 
   // Verifica si dos celdas son adyacentes (solo horizontales o verticales).
   const isAdjacent = (cell1, cell2) => {
@@ -377,7 +264,7 @@ const ColoreaElCamino = () => {
   };
 
   // Devuelve las celdas adyacentes disponibles (valor 0) para un bloque.
-  const getAvailableMoves = (block) => {
+  const getAvailableMoves = useCallback((block) => {
     const directions = [
       { row: -1, col: 0 },
       { row: 1, col: 0 },
@@ -391,56 +278,89 @@ const ColoreaElCamino = () => {
         return false;
       return levelConfig.grid[newRow][newCol] === 0;
     });
-  };
+  }, [numRows, numCols, levelConfig.grid]);
 
+  const isValidStart = (row, col) => {
+    // Verifica si la celda pertenece a un bloque activo
+    return activeBlocks.some(block => block.row === row && block.col === col);
+  };
+  
   // Inicio de la propagación: al hacer clic/tocar sobre una celda con un bloque activo.
   const handleMouseDown = (row, col) => {
+    if (!isValidStart(row, col)) return; // Bloquea el inicio en celdas prohibidas
     const index = activeBlocks.findIndex(block => block.row === row && block.col === col);
-    if (index !== -1) {
-      setCurrentBlockIndex(index);
-      setIsDrawing(true);
-    }
+    if (index === -1) return; // Solo activa si es un bloque válido
+
+    setIsDrawing(true);
+    setCurrentBlockIndex(index);
   };
 
   // Al mover el mouse sobre una celda, se valida la expansión del bloque activo.
   const handleMouseEnter = (row, col) => {
     if (!isDrawing || currentBlockIndex === null) return;
     if (levelConfig.grid[row][col] !== 0) return;
+
     const currentBlock = activeBlocks[currentBlockIndex];
-    if (!isAdjacent(currentBlock, { row, col })) {
-      return;
-    }
-    const newGrid = levelConfig.grid.map(r => r.slice());
-    newGrid[row][col] = currentBlock.id;
-    const newActiveBlocks = activeBlocks.slice();
-    newActiveBlocks[currentBlockIndex] = { ...currentBlock, row, col };
-    setLevelConfig(prev => ({ ...prev, grid: newGrid, activeBlocks: newActiveBlocks }));
+    if (!isAdjacent(currentBlock, { row, col })) return;
+
+    setLevelConfig(prev => {
+      const newGrid = prev.grid.map(r => r.slice());
+      newGrid[row][col] = currentBlock.id;
+
+      const newActiveBlocks = prev.activeBlocks.slice();
+      newActiveBlocks[currentBlockIndex] = { ...currentBlock, row, col };
+
+      return { ...prev, grid: newGrid, activeBlocks: newActiveBlocks };
+    });
+  };
+
+  // Detiene la propagación al soltar el mouse.
+  const handleMouseUp = () => {
+    setIsDrawing(false);
+    setCurrentBlockIndex(null);
   };
 
   // Eventos táctiles
   const handleTouchStart = (row, col) => {
     const index = activeBlocks.findIndex(block => block.row === row && block.col === col);
-    if (index !== -1) {
-      setCurrentBlockIndex(index);
-      setIsDrawing(true);
-    }
+    if (index === -1) return;
+
+    setIsDrawing(true);
+    setCurrentBlockIndex(index);
   };
 
   const handleTouchMove = (e) => {
+    e.preventDefault(); // Evita desplazamientos inesperados en dispositivos táctiles
+    if (!isDrawing) return;
+
     const touch = e.touches[0];
     if (!touch) return;
+
     const element = document.elementFromPoint(touch.clientX, touch.clientY);
-    if (element && element.dataset.row && element.dataset.col) {
-      const row = parseInt(element.dataset.row, 10);
-      const col = parseInt(element.dataset.col, 10);
-      handleMouseEnter(row, col);
-    }
+    if (!element || !element.dataset.row || !element.dataset.col) return;
+
+    const row = parseInt(element.dataset.row, 10);
+    const col = parseInt(element.dataset.col, 10);
+    handleMouseEnter(row, col);
   };
 
   const handleTouchEnd = () => {
     setIsDrawing(false);
     setCurrentBlockIndex(null);
   };
+
+  // EFECTOS DE REACT -------------------------------------------------------- //
+
+  // Cada vez que cambia el nivel, se actualiza la configuración inicial.
+  useEffect(() => {
+    const newConfig = initializeLevel(nivel);
+    setInitialLevelConfig(newConfig);
+    setLevelConfig(newConfig);
+    setStartTime(Date.now());
+    setResolutionTime(null);
+    setRecoveryTimes([]);
+    setRecoveryStart(null);
+  }, [nivel, initializeLevel]);
 
   useEffect(() => {
     const gridFull = levelConfig.grid.every(row =>
@@ -450,7 +370,28 @@ const ColoreaElCamino = () => {
     if (gridFull) {
       nextLevel();
     }
-  }, [levelConfig.grid]);
+  }, [levelConfig.grid, nextLevel]);
+
+  useEffect(() => {
+    // Si el tablero está completo, no se reinicia.
+    const gridFull = levelConfig.grid.every(row => row.every(cell => cell !== 0));
+    if (gridFull) return;
+
+    // Verificar que cada cabeza tenga algún movimiento disponible.
+    const allBlocked = activeBlocks.every(block => getAvailableMoves(block).length === 0);
+
+    if (allBlocked) {
+      // Si es la primera vez que se detecta bloqueo en este nivel, iniciar medición de recuperación.
+      if (!recoveryStart) {
+        setRecoveryStart(Date.now());
+      } else {
+        // Si ya se estaba midiendo, reiniciar la medición (sin sumar error nuevamente)
+        setRecoveryStart(Date.now());
+      }
+      console.log("Todas las cabezas están bloqueadas. Reiniciando nivel por error.");
+      setTimeout(() => resetBoard(true), 500);
+    }
+  }, [levelConfig.grid, activeBlocks, recoveryStart, getAvailableMoves, resetBoard]);
 
   useEffect(() => {
     const handleMouseUp = () => {
@@ -488,21 +429,21 @@ const ColoreaElCamino = () => {
         ? Math.round(recoveryTimes.reduce((a, b) => a + b, 0) / recoveryTimes.length / 1000)
         : 0;
     return (
-      <div className="gameover-container">
-        <h1 className="gameover-title">¡Juego Terminado!</h1>
-        <h2 className="gameover-subtitle">Resumen de Rendimiento Global</h2>
-        <div className="gameover-stats">
-          <div className="stat">
-            <span className="stat-label">Tiempo Total:</span>
-            <span className="stat-value">{totalGameTimeSeconds} s</span>
+      <div className="colores-gameover-container">
+        <h1 className="colores-gameover-title">¡Juego Terminado!</h1>
+        <h2 className="colores-gameover-subtitle">Resumen de Rendimiento Global</h2>
+        <div className="colores-gameover-stats">
+          <div className="colores-stat">
+            <span className="colores-stat-label">Tiempo Total:</span>
+            <span className="colores-stat-value">{totalGameTimeSeconds} s</span>
           </div>
-          <div className="stat">
-            <span className="stat-label">Cantidad de Errores:</span>
-            <span className="stat-value">{totalErrors}</span>
+          <div className="colores-stat">
+            <span className="colores-stat-label">Cantidad de Errores:</span>
+            <span className="colores-stat-value">{totalErrors}</span>
           </div>
-          <div className="stat">
-            <span className="stat-label">Tiempo Promedio de Recuperación:</span>
-            <span className="stat-value">{avgRecoveryTimeSeconds} s</span>
+          <div className="colores-stat">
+            <span className="colores-stat-label">Tiempo Promedio de Recuperación:</span>
+            <span className="colores-stat-value">{avgRecoveryTimeSeconds} s</span>
           </div>
         </div>
       </div>
@@ -522,12 +463,10 @@ const ColoreaElCamino = () => {
       <div
         className="colores-grid"
         style={gridStyle}
-        onMouseLeave={() => {
-          setIsDrawing(false);
-          setCurrentBlockIndex(null);
-        }}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
+        onMouseDown={(e) => e.preventDefault()} // Evita selecciones inesperadas
+        onMouseLeave={() => setIsDrawing(false)} // Detiene la acción si el cursor sale del área
+        onMouseUp={handleMouseUp} // Asegura que se detiene correctamente
+        onTouchEnd={handleTouchEnd} // Finaliza el dibujo en pantallas táctiles
       >
         {grid.map((row, rowIndex) =>
           row.map((cell, colIndex) => {
