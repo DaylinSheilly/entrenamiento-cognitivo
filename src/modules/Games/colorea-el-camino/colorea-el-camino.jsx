@@ -5,13 +5,14 @@ const ColoreaElCamino = () => {
   // Estado global: tiempo de inicio del juego (no se reinicia)
   const [gameStartTime] = useState(Date.now());
 
-  // Estado para el nivel actual
+  // Estado para el nivel actual 
   const [nivel, setNivel] = useState(1);
 
   // Estados de rendimiento global
   const [resolutionTime, setResolutionTime] = useState(null);
   const [totalErrors, setTotalErrors] = useState(0);
   const [gameOver, setGameOver] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const [currentLevelTime, setCurrentLevelTime] = useState(0);
 
   // Estados para medir tiempo de recuperación (se mide solo si el nivel se reinicia por error)
@@ -76,55 +77,143 @@ const ColoreaElCamino = () => {
       return { grid, activeBlocks, numRows: rows, numCols: cols };
 
     } else {
-      // Niveles 4 en adelante: generación dinámica del mapa
+      // Niveles 4 en adelante: generación dinámica optimizada del mapa
 
       // Elegir tamaño del mapa aleatoriamente entre 7x7 y 9x9
       cols = Math.floor(Math.random() * 3) + 7;
       rows = Math.floor(Math.random() * 3) + 7;
 
-      // Probabilidad de obstáculos aumenta con el nivel (hasta un límite del 30%)
-      obstaclesProbability = Math.min(0.05 + (level - 3) * 0.05, 0.3);
+      // Probabilidad de obstáculos aumenta con el nivel (hasta un límite del 40%)
+      let obstaclesProbability = Math.min(0.05 + (level - 4) * 0.05, 0.50);
 
       // Número de cabezas aumenta con el nivel (máximo 4)
-      let numHeads = Math.min(2 + Math.floor(level / 3), 4);
+      let numHeads = Math.min(2 + Math.floor(level / 5), 4);
 
-      function generateMap() {
-        let tempGrid = Array.from({ length: rows }, () => Array(cols).fill(0));
-        let tempActiveBlocks = [];
+      // Crear grid vacío (sin obstáculos)
+      let tempGrid = Array.from({ length: rows }, () => Array(cols).fill(0));
+      let tempActiveBlocks = [];
 
-        // Colocar cabezas en posiciones aleatorias
-        for (let i = 0; i < numHeads; i++) {
-          let r, c;
-          do {
-            r = Math.floor(Math.random() * rows);
-            c = Math.floor(Math.random() * cols);
-          } while (tempGrid[r][c] !== 0); // Evitar repetir posiciones
+      // Definir área segura para colocar las cabezas (evitar bordes)
+      const safeRowRange = { min: 1, max: rows - 2 };
+      const safeColRange = { min: 1, max: cols - 2 };
 
-          let colors = ["blue", "green", "red", "yellow"];
-          let headColors = ["lightblue", "lightgreen", "salmon", "lightyellow"];
-          tempActiveBlocks.push({ row: r, col: c, id: i + 1, color: colors[i], headColor: headColors[i] });
-          tempGrid[r][c] = i + 1;
+
+      // Colocar las cabezas en posiciones aleatorias dentro del área segura
+      for (let i = 0; i < numHeads; i++) {
+        let r, c;
+        do {
+          r = Math.floor(Math.random() * (safeRowRange.max - safeRowRange.min + 1)) + safeRowRange.min;
+          c = Math.floor(Math.random() * (safeColRange.max - safeColRange.min + 1)) + safeColRange.min;
+        } while (tempGrid[r][c] !== 0);
+
+        let colors = ["blue", "green", "red", "yellow"];
+        let headColors = ["lightblue", "lightgreen", "salmon", "lightyellow"];
+        tempActiveBlocks.push({ row: r, col: c, id: i + 1, color: colors[i], headColor: headColors[i] });
+        tempGrid[r][c] = i + 1; // Marca la posición de la cabeza
+      }
+      // Función para conectar dos puntos con un camino Manhattan
+      function connectPoints(p1, p2) {
+        let curRow = p1.row;
+        let curCol = p1.col;
+        // Conectar verticalmente
+        while (curRow !== p2.row) {
+          curRow += (curRow < p2.row ? 1 : -1);
+          if (tempGrid[curRow][curCol] === 0) {
+            tempGrid[curRow][curCol] = 1; // 1 indica backbone (reserva de conectividad)
+          }
         }
+        // Conectar horizontalmente
+        while (curCol !== p2.col) {
+          curCol += (curCol < p2.col ? 1 : -1);
+          if (tempGrid[curRow][curCol] === 0) {
+            tempGrid[curRow][curCol] = 1;
+          }
+        }
+      }
 
-        // Colocar obstáculos aleatorios basados en obstaclesProbability
+      // Conectar todas las cabezas en orden (asegurando un backbone)
+      for (let i = 0; i < tempActiveBlocks.length - 1; i++) {
+        connectPoints(tempActiveBlocks[i], tempActiveBlocks[i + 1]);
+      }
+
+      // Marcar zonas de seguridad alrededor de cada cabeza (para evitar obstáculos en sus inmediaciones)
+      tempActiveBlocks.forEach(block => {
+        for (let dr = -1; dr <= 1; dr++) {
+          for (let dc = -1; dc <= 1; dc++) {
+            const r = block.row + dr;
+            const c = block.col + dc;
+            if (r >= 0 && r < rows && c >= 0 && c < cols) {
+              if (tempGrid[r][c] === 0) {
+                tempGrid[r][c] = 2; // 2 indica zona de seguridad
+              }
+            }
+          }
+        }
+      });
+
+      // Ahora, en las celdas que aún son 0 (no forman parte del backbone ni de zonas de seguridad), colocamos obstáculos aleatorios
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          if (tempGrid[r][c] === 0 && Math.random() < obstaclesProbability) {
+            tempGrid[r][c] = -1; // -1 representa un obstáculo
+          }
+        }
+      }
+
+      // Restaurar las celdas de backbone (1) y zonas de seguridad (2) a 0, para que se consideren libres en la validación
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          if (tempGrid[r][c] === 1 || tempGrid[r][c] === 2) {
+            tempGrid[r][c] = 0;
+          }
+        }
+      }
+
+      // Verificar si hay al menos un obstáculo
+      let hasObstacle = tempGrid.some(row => row.includes(-1));
+
+      if (!hasObstacle) {
+        let emptyCells = [];
+
+        // Buscar todas las celdas vacías (0) donde podríamos colocar un obstáculo
         for (let r = 0; r < rows; r++) {
           for (let c = 0; c < cols; c++) {
-            if (tempGrid[r][c] === 0 && Math.random() < obstaclesProbability) {
-              tempGrid[r][c] = -1; // -1 representa un obstáculo
+            if (tempGrid[r][c] === 0) {
+              emptyCells.push({ row: r, col: c });
             }
           }
         }
 
-        return { tempGrid, tempActiveBlocks };
+        // Intentar agregar un obstáculo sin romper la solución
+        let placedObstacle = false;
+
+        while (emptyCells.length > 0 && !placedObstacle) {
+          let randomIndex = Math.floor(Math.random() * emptyCells.length);
+          let { row, col } = emptyCells[randomIndex];
+
+          tempGrid[row][col] = -1; // Colocar obstáculo temporalmente
+
+          // Verificar si el mapa sigue siendo solucionable
+          if (solveAndPrintMap(tempGrid, tempActiveBlocks)) {
+            placedObstacle = true; // Se encontró una posición válida
+          } else {
+            tempGrid[row][col] = 0; // Revertir si el mapa no es solucionable
+            emptyCells.splice(randomIndex, 1); // Eliminar esta celda de la lista e intentar otra
+          }
+        }
       }
 
-      let mapData;
-      // Se genera el mapa hasta que sea solucionable
-      do {
-        mapData = generateMap();
-      } while (!solveAndPrintMap(mapData.tempGrid, mapData.tempActiveBlocks));
+      // Asegurarse de que las cabezas conserven su id
+      tempActiveBlocks.forEach(block => {
+        tempGrid[block.row][block.col] = block.id;
+      });
 
-      return { grid: mapData.tempGrid, activeBlocks: mapData.tempActiveBlocks, numRows: rows, numCols: cols };
+      // Verificar que el mapa sea solucionable (BFS)
+      if (!solveAndPrintMap(tempGrid, tempActiveBlocks)) {
+        return initializeLevel(level); // Si no es soluble, se regenera
+      }
+
+      return { grid: tempGrid, activeBlocks: tempActiveBlocks, numRows: rows, numCols: cols };
     }
   }, []);
   // Configuración inicial del nivel
@@ -142,11 +231,22 @@ const ColoreaElCamino = () => {
     const visited = Array.from({ length: numRows }, () => Array(numCols).fill(false));
     const solvedMap = grid.map(row => row.slice());
 
-    // Inicializamos la cola con todas las cabezas activas
+    // Inicializamos la cola con todas las cabezas activas, cada una con su camino (path)
     const queue = [];
     activeBlocks.forEach(block => {
-      queue.push({ row: block.row, col: block.col, id: block.id });
+      queue.push({
+        row: block.row,
+        col: block.col,
+        id: block.id,
+        path: [{ row: block.row, col: block.col }]
+      });
       visited[block.row][block.col] = true;
+    });
+
+    // Objeto para almacenar el camino continuo (la cadena) de cada cabeza
+    const paths = {};
+    activeBlocks.forEach(block => {
+      paths[block.id] = [{ row: block.row, col: block.col }];
     });
 
     const directions = [
@@ -156,46 +256,52 @@ const ColoreaElCamino = () => {
       { row: 0, col: 1 }
     ];
 
-    // Usamos un índice para evitar queue.shift()
+    // Usamos un índice en lugar de shift() para eficiencia
     let index = 0;
     while (index < queue.length) {
-      const { row, col, id } = queue[index++];
-
-      // Asignamos el id a la celda en el mapa solucionado
+      const { row, col, id, path } = queue[index++];
+      // Marcamos la celda en el mapa solucionado con el id correspondiente
       solvedMap[row][col] = id;
-
-      // Expandimos a las celdas adyacentes
+      // Actualizamos el camino para esta cabeza (si el camino actual es más largo)
+      if (path.length > paths[id].length) {
+        paths[id] = path;
+      }
+      // Expansión: solo encolamos la primera casilla adyacente válida para mantener un camino continuo
       for (const d of directions) {
         const newRow = row + d.row;
         const newCol = col + d.col;
+        // Se valida: dentro de límites, la celda es blanca (0) y no ha sido visitada
         if (
           newRow >= 0 &&
           newRow < numRows &&
           newCol >= 0 &&
           newCol < numCols &&
-          grid[newRow][newCol] !== -1 &&  // no es obstáculo
+          grid[newRow][newCol] === 0 && // Solo se expande sobre casillas blancas
           !visited[newRow][newCol]
         ) {
           visited[newRow][newCol] = true;
-          queue.push({ row: newRow, col: newCol, id });
+          // Creamos una nueva cadena copiando el camino actual y añadiendo la nueva celda
+          const newPath = path.concat([{ row: newRow, col: newCol }]);
+          queue.push({ row: newRow, col: newCol, id, path: newPath });
+          // Rompemos para que solo se tome la primera dirección válida
+          break;
         }
       }
     }
 
-    // Verificamos que todas las celdas accesibles hayan sido visitadas
+    // Verificamos que todas las celdas blancas hayan sido visitadas
     let allReachable = true;
     for (let i = 0; i < numRows; i++) {
       for (let j = 0; j < numCols; j++) {
-        if (grid[i][j] !== -1 && !visited[i][j]) {
+        if (grid[i][j] === 0 && !visited[i][j]) {
           allReachable = false;
-          console.warn(`La celda (${i}, ${j}) no es alcanzable.`);
+          //console.warn(`La celda (${i}, ${j}) no es alcanzable.`);
         }
       }
     }
 
-    // Imprimimos el mapa solucionado si es soluble
     if (allReachable) {
-      console.log("solveAndPrintMap: El mapa es solucionable. Mapa solucionado:");
+      //console.log("solveAndPrintMap: El mapa es solucionable. Mapa solucionado:");
       for (let i = 0; i < numRows; i++) {
         let line = "";
         for (let j = 0; j < numCols; j++) {
@@ -207,8 +313,13 @@ const ColoreaElCamino = () => {
         }
         console.log(line);
       }
+      // Imprimimos los recorridos continuos de cada cabeza para depuración
+      /*console.log("Recorridos continuos de las cabezas (cada movimiento es adyacente al anterior):");
+      Object.keys(paths).forEach(id => {
+        console.log(`Cabeza ${id}:`, paths[id]); 
+      });*/
     } else {
-      console.error("solveAndPrintMap: El mapa NO es solucionable.");
+      //console.error("solveAndPrintMap: El mapa NO es solucionable.");
     }
 
     return allReachable;
@@ -284,7 +395,7 @@ const ColoreaElCamino = () => {
     // Verifica si la celda pertenece a un bloque activo
     return activeBlocks.some(block => block.row === row && block.col === col);
   };
-  
+
   // Inicio de la propagación: al hacer clic/tocar sobre una celda con un bloque activo.
   const handleMouseDown = (row, col) => {
     if (!isValidStart(row, col)) return; // Bloquea el inicio en celdas prohibidas
@@ -373,25 +484,25 @@ const ColoreaElCamino = () => {
   }, [levelConfig.grid, nextLevel]);
 
   useEffect(() => {
-    // Si el tablero está completo, no se reinicia.
     const gridFull = levelConfig.grid.every(row => row.every(cell => cell !== 0));
-    if (gridFull) return;
+    if (gridFull || isResetting) return;
 
-    // Verificar que cada cabeza tenga algún movimiento disponible.
     const allBlocked = activeBlocks.every(block => getAvailableMoves(block).length === 0);
 
     if (allBlocked) {
-      // Si es la primera vez que se detecta bloqueo en este nivel, iniciar medición de recuperación.
       if (!recoveryStart) {
         setRecoveryStart(Date.now());
-      } else {
-        // Si ya se estaba midiendo, reiniciar la medición (sin sumar error nuevamente)
-        setRecoveryStart(Date.now());
       }
+
       console.log("Todas las cabezas están bloqueadas. Reiniciando nivel por error.");
-      setTimeout(() => resetBoard(true), 500);
+
+      setIsResetting(true);
+      setTimeout(() => {
+        resetBoard(true);
+        setIsResetting(false);
+      }, 500);
     }
-  }, [levelConfig.grid, activeBlocks, recoveryStart, getAvailableMoves, resetBoard]);
+  }, [levelConfig.grid, activeBlocks, recoveryStart, getAvailableMoves, resetBoard, isResetting]);
 
   useEffect(() => {
     const handleMouseUp = () => {
@@ -451,54 +562,60 @@ const ColoreaElCamino = () => {
   }
 
   return (
-    <div className="colores-contenedor">
-      <h1 className="colores-titulo">Colorea el camino</h1>
-      <h2 className="colores-nivel">Nivel: {nivel}</h2>
-      <p className="colores-descripcion">
-        Completa el rompecabezas cubriendo todo el área con colores sin dejar huecos.
-      </p>
-      <p className="colores-descripcion">
-        Errores: {totalErrors} | Tiempo de resolución: {currentLevelTime ? Math.round(currentLevelTime / 1000) + " s" : "En progreso..."}
-      </p>
-      <div
-        className="colores-grid"
-        style={gridStyle}
-        onMouseDown={(e) => e.preventDefault()} // Evita selecciones inesperadas
-        onMouseLeave={() => setIsDrawing(false)} // Detiene la acción si el cursor sale del área
-        onMouseUp={handleMouseUp} // Asegura que se detiene correctamente
-        onTouchEnd={handleTouchEnd} // Finaliza el dibujo en pantallas táctiles
-      >
-        {grid.map((row, rowIndex) =>
-          row.map((cell, colIndex) => {
-            let backgroundColor = "white";
-            if (cell === -1) {
-              backgroundColor = "#7f8c8d";
-            } else if (cell !== 0) {
-              const block = activeBlocks.find(b => b.id === cell);
-              if (block) {
-                backgroundColor = (block.row === rowIndex && block.col === colIndex)
-                  ? block.headColor
-                  : block.color;
+    <div className="colores-layout">
+      <div className="colores-grid-container">
+        <div
+          className="colores-grid"
+          style={gridStyle}
+          onMouseDown={(e) => e.preventDefault()}
+          onMouseLeave={() => setIsDrawing(false)}
+          onMouseUp={handleMouseUp}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          {grid.map((row, rowIndex) =>
+            row.map((cell, colIndex) => {
+              let backgroundColor = "white";
+              if (cell === -1) {
+                backgroundColor = "#7f8c8d";
+              } else if (cell !== 0) {
+                const block = activeBlocks.find(b => b.id === cell);
+                if (block) {
+                  backgroundColor = (block.row === rowIndex && block.col === colIndex)
+                    ? block.headColor
+                    : block.color;
+                }
               }
-            }
-            return (
-              <div
-                key={`${rowIndex}-${colIndex}`}
-                className="colores-celda"
-                data-row={rowIndex}
-                data-col={colIndex}
-                onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
-                onMouseEnter={() => handleMouseEnter(rowIndex, colIndex)}
-                onTouchStart={() => handleTouchStart(rowIndex, colIndex)}
-                style={{ width: cellSize, height: cellSize, backgroundColor }}
-              ></div>
-            );
-          })
-        )}
+              return (
+                <div
+                  key={`${rowIndex}-${colIndex}`}
+                  className="colores-celda"
+                  data-row={rowIndex}
+                  data-col={colIndex}
+                  onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
+                  onMouseEnter={() => handleMouseEnter(rowIndex, colIndex)}
+                  onTouchStart={() => handleTouchStart(rowIndex, colIndex)}
+                  style={{ width: cellSize, height: cellSize, backgroundColor }}
+                ></div>
+              );
+            })
+          )}
+        </div>
       </div>
-      <button className="colores-reset-btn" onClick={() => resetBoard(true)}>
-        Reiniciar Tablero (Error)
-      </button>
+
+      <div className="colores-info">
+        <h1 className="colores-titulo">Colorea el camino</h1>
+        <h2 className="colores-nivel">Nivel: {nivel}</h2>
+        <p className="colores-descripcion">
+          Completa el rompecabezas cubriendo todo el área con colores sin dejar huecos.
+        </p>
+        <p className="colores-descripcion">
+          Errores: {totalErrors} | Tiempo de resolución: {currentLevelTime ? Math.round(currentLevelTime / 1000) + " s" : "En progreso..."}
+        </p>
+        <button className="colores-reset-btn" onClick={() => resetBoard(true)}>
+          Reiniciar Tablero
+        </button>
+      </div>
     </div>
   );
 };
