@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './colorea-el-camino.css';
 
 const ColoreaElCamino = () => {
@@ -7,6 +7,7 @@ const ColoreaElCamino = () => {
 
   // Estado para el nivel actual 
   const [nivel, setNivel] = useState(1);
+  const hasAdvanced = useRef(false);
 
   // Estados de rendimiento global
   const [resolutionTime, setResolutionTime] = useState(null);
@@ -29,7 +30,7 @@ const ColoreaElCamino = () => {
 
   // Función para inicializar el nivel
   const initializeLevel = useCallback((level) => {
-    let rows = 10, cols = 10;
+    let rows = 5, cols = 5;
     let obstaclesProbability = 0;
     let activeBlocks = [];
     let grid;
@@ -44,6 +45,7 @@ const ColoreaElCamino = () => {
       return { grid, activeBlocks, numRows: rows, numCols: cols };
 
     } else if (level === 2) {
+      let rows = 6, cols = 7;
       obstaclesProbability = 0;
       activeBlocks = [
         { row: Math.floor(rows / 2), col: Math.floor(cols / 2) - 1, id: 1, color: "blue", headColor: "lightblue" },
@@ -56,6 +58,7 @@ const ColoreaElCamino = () => {
 
     } else if (level === 3) {
       cols = 8;
+      rows = 10;
       obstaclesProbability = 0;
       const staticGridLevel3 = [
         [0, 0, -1, 0, 0, 0, 0, -1],
@@ -107,7 +110,7 @@ const ColoreaElCamino = () => {
         } while (tempGrid[r][c] !== 0);
 
         let colors = ["blue", "green", "red", "yellow"];
-        let headColors = ["lightblue", "lightgreen", "salmon", "lightyellow"];
+        let headColors = ["lightblue", "lightgreen", "salmon", "orange"];
         tempActiveBlocks.push({ row: r, col: c, id: i + 1, color: colors[i], headColor: headColors[i] });
         tempGrid[r][c] = i + 1; // Marca la posición de la cabeza
       }
@@ -302,7 +305,7 @@ const ColoreaElCamino = () => {
 
     if (allReachable) {
       //console.log("solveAndPrintMap: El mapa es solucionable. Mapa solucionado:");
-      for (let i = 0; i < numRows; i++) {
+      /*for (let i = 0; i < numRows; i++) {
         let line = "";
         for (let j = 0; j < numCols; j++) {
           if (grid[i][j] === -1) {
@@ -312,7 +315,7 @@ const ColoreaElCamino = () => {
           }
         }
         console.log(line);
-      }
+      }*/
       // Imprimimos los recorridos continuos de cada cabeza para depuración
       /*console.log("Recorridos continuos de las cabezas (cada movimiento es adyacente al anterior):");
       Object.keys(paths).forEach(id => {
@@ -460,6 +463,20 @@ const ColoreaElCamino = () => {
     setCurrentBlockIndex(null);
   };
 
+  const resetGame = () => {
+    setNivel(1); // Restablece el nivel inicial
+    setResolutionTime(null);
+    setTotalErrors(0);
+    setGameOver(false);
+    setIsResetting(false);
+    setCurrentLevelTime(0);
+    setRecoveryStart(null);
+    setRecoveryTimes([]);
+    setIsDrawing(false);
+    setCurrentBlockIndex(null);
+    setStartTime(Date.now()); // Reinicia el tiempo de inicio del nivel
+  };
+
   // EFECTOS DE REACT -------------------------------------------------------- //
 
   // Cada vez que cambia el nivel, se actualiza la configuración inicial.
@@ -478,8 +495,13 @@ const ColoreaElCamino = () => {
       row.every(cell => cell !== 0)
     );
     console.log("¿Tablero completo?", gridFull);
-    if (gridFull) {
+  
+    if (gridFull && !hasAdvanced.current) {
+      hasAdvanced.current = true;
       nextLevel();
+      setTimeout(() => {
+        hasAdvanced.current = false;
+      }, 100); // Un pequeño retraso para evitar llamadas repetidas en un mismo ciclo
     }
   }, [levelConfig.grid, nextLevel]);
 
@@ -545,18 +567,24 @@ const ColoreaElCamino = () => {
         <h2 className="colores-gameover-subtitle">Resumen de Rendimiento Global</h2>
         <div className="colores-gameover-stats">
           <div className="colores-stat">
-            <span className="colores-stat-label">Tiempo Total:</span>
-            <span className="colores-stat-value">{totalGameTimeSeconds} s</span>
+            <span className="colores-stat-label">Tiempo Total: </span>
+            <span className="colores-stat-value">{totalGameTimeSeconds}s</span>
           </div>
           <div className="colores-stat">
-            <span className="colores-stat-label">Cantidad de Errores:</span>
+            <span className="colores-stat-label">Cantidad de Errores: </span>
             <span className="colores-stat-value">{totalErrors}</span>
           </div>
           <div className="colores-stat">
-            <span className="colores-stat-label">Tiempo Promedio de Recuperación:</span>
-            <span className="colores-stat-value">{avgRecoveryTimeSeconds} s</span>
+            <span className="colores-stat-label">Tiempo Promedio de Recuperación: </span>
+            <span className="colores-stat-value">{avgRecoveryTimeSeconds}s</span>
           </div>
         </div>
+        <button
+          className="colores-restart-button"
+          onClick={resetGame}
+        >
+          Volver a Jugar
+        </button>
       </div>
     );
   }

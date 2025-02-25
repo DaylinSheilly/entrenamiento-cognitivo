@@ -136,7 +136,7 @@
 .colores-gameover-subtitle {
   font-size: 24px;
   color: #bdc3c7;
-  margin-bottom: 20px;
+  padding: 10px;
 }
 
 .colores-gameover-stats {
@@ -164,6 +164,22 @@
 
 .colores-stat-value {
   font-weight: 700;
+}
+
+.colores-restart-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 5px;
+  margin-top: 20px;
+  font-family: 'Poppins', sans-serif; /* Asegurar la fuente en stats */
+}
+
+.colores-restart-button:hover {
+  background-color: #0056b3;
 }
 
 /* Estilos responsivos */
