@@ -131,6 +131,10 @@
     font-weight: bold;
     color: #ffffff;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    display: flex;
+    gap: 16px; /* Espaciado entre los elementos */
+    align-items: center; /* Alinea verticalmente los elementos */
+    justify-content: center; /* Centra los elementos en la fila */
 }
 
 /* Estilos para la pantalla de fin de juego */
