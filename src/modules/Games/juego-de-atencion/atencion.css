@@ -5,6 +5,7 @@
   margin: 0;
   padding: 20px;
   min-height: 100vh;
+  box-sizing: border-box;
   display: flex; /* Flexbox para centrar el contenedor */
   justify-content: center; /* Centrado horizontal */
   align-items: center; /* Centrado vertical */

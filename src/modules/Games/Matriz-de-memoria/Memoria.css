@@ -1,22 +1,22 @@
 /* Contenedor principal del juego */
 
 .memory-body {
+  box-sizing: border-box;
   background-color: #1a1a1a;
+  color: #ffffff;
   margin: 0;
   padding: 20px;
-  min-height: 100vh;
   }
 
 .memory-game {
+  box-sizing: border-box;
   background-color: #1a1a1a;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 20px;
-  font-family: Arial, sans-serif;
   max-width: 800px;
   margin: 0 auto;
-  min-height: 100vh;
   /*background-color: #f5f6fa;*/
 }
 
