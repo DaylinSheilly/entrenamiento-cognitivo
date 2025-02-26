@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./construye-la-pipe.css";
 import levelsData from "./maps.json";
 import pipeImage from "./assets/pipe.png";
@@ -13,9 +13,16 @@ const App = () => {
   const [errors, setErrors] = useState(0);
   const [currentLevel, setCurrentLevel] = useState(0);
   const [levels, setLevels] = useState([]);
+  const [message, setMessage] = useState("");
+  const [gameFinished, setGameFinished] = useState(false);
+  const [totalTime, setTotalTime] = useState(0);
+  const [recoveryTimes, setRecoveryTimes] = useState([]);
+  const timerRef = useRef(null);
+  const errorTimeRef = useRef(null);
 
-  // Cargar niveles desde el archivo JSON
+  // Iniciar el temporizador del juego
   useEffect(() => {
+    timerRef.current = Date.now();
     setLevels(levelsData);
     loadLevel(levelsData[currentLevel]);
   }, []);
@@ -25,24 +32,23 @@ const App = () => {
       console.error("Nivel no encontrado");
       return;
     }
-
     setGridSize(level.gridSize);
-
-    // Crear la cuadrícula y colocar los elementos desde el JSON
     const newGrid = Array.from({ length: level.gridSize }, (_, x) =>
       Array.from({ length: level.gridSize }, (_, y) => {
         const element = level.elements.find((el) => el.x === x && el.y === y);
         return (
           element || {
-            type: "empty", // Celda vacía
+            type: "empty",
             rotation: 0,
             locked: true,
           }
         );
       })
     );
-
     setGrid(newGrid);
+    setMessage("");
+    // Reiniciar el tiempo de error cuando se carga un nuevo nivel
+    errorTimeRef.current = Date.now();
   };
 
   const rotatePiece = (x, y) => {
@@ -51,13 +57,6 @@ const App = () => {
         row.map((cell, colIndex) => {
           if (rowIndex === x && colIndex === y && !cell.locked) {
             const updatedCell = { ...cell, rotation: (cell.rotation + 90) % 360 };
-  
-            // TODO 🔽🔽🔽 MODIFICACIÓN SOLO PARA VERIFICACIÓN 🔽🔽🔽
-          console.log(
-            `{ "x": ${x}, "y": ${y}, "type": "${updatedCell.type}", "rotation": ${updatedCell.rotation} }`
-          );
-            // TODO 🔼🔼🔼 FIN DE MODIFICACIÓN DE VERIFICACIÓN 🔼🔼🔼
-  
             return updatedCell;
           }
           return cell;
@@ -66,117 +65,131 @@ const App = () => {
       return newGrid;
     });
   };
-  
 
   const verifySolution = () => {
     const currentAnswer = levels[currentLevel].answer;
-  
     for (const answerCell of currentAnswer) {
       const { x, y, type, rotation } = answerCell;
       const cell = grid[x][y];
-  
-      console.log(
-        `Evaluando celda en (${x}, ${y}) - Tipo actual: ${cell?.type}, Rotación actual: ${cell?.rotation}, Tipo esperado: ${type}, Rotación esperada: ${rotation}`
-      );
-  
       if (!cell || cell.type !== type) {
-        console.log(`❌ Celda en (${x}, ${y}) tiene un tipo incorrecto.`);
         return false;
       }
-  
       if (type === "pipe") {
         if (cell.rotation !== rotation && cell.rotation !== (rotation + 180) % 360) {
-          console.log(
-            `❌ Celda en (${x}, ${y}) tiene una rotación incorrecta. Rotaciones válidas: ${rotation}, ${(rotation + 180) % 360}`
-          );
           return false;
         }
       } else if (type === "pipe-angle" || type === "pipe-T") {
         if (cell.rotation !== rotation) {
-          console.log(
-            `❌ Celda en (${x}, ${y}) tiene una rotación incorrecta. Rotación válida: ${rotation}`
-          );
           return false;
         }
-      } else if (type === "pipe-cross") {
-        console.log(`✅ Celda en (${x}, ${y}) es un 'pipe-cross', la rotación no importa.`);
       }
     }
-  
-    console.log("✅ Todas las celdas están correctamente posicionadas.");
     return true;
   };
 
   const startFlow = () => {
     if (verifySolution()) {
-      alert("¡Nivel completado!");
       setScore((prev) => prev + 100);
+      setMessage("¡Excelente trabajo! Has completado el nivel con éxito.");
+      // Calcular tiempo de recuperación si hubo error
+      if (errorTimeRef.current) {
+        const recovery = Date.now() - errorTimeRef.current;
+        setRecoveryTimes((prev) => [...prev, recovery]);
+      }
       nextLevel();
     } else {
-      alert("¡La conexión tiene errores! Reintenta.");
       setErrors((prev) => prev + 1);
+      setMessage("¡Ups! Algunas conexiones no son correctas. Por favor, inténtalo de nuevo.");
     }
-  };
-
-  const resetLevel = () => {
-    setScore(0);
-    setErrors(0);
-    loadLevel(levels[currentLevel]);
   };
 
   const nextLevel = () => {
     if (currentLevel < levels.length - 1) {
       setCurrentLevel((prev) => prev + 1);
       loadLevel(levels[currentLevel + 1]);
+      setMessage("¡Bienvenido al siguiente nivel! Sigue así.");
     } else {
-      alert("¡Has completado todos los niveles!");
+      // Juego completado
+      setGameFinished(true);
+      const totalGameTime = Date.now() - timerRef.current;
+      setTotalTime(totalGameTime);
     }
   };
 
   return (
     <div className="pipe-app">
-      <header className="pipe-header">
-        <h1 className="pipe-title">Construye la Cañería</h1>
-        <div className="pipe-controls">
-          <button className="pipe-button" onClick={startFlow}>
-            Iniciar flujo
-          </button>
-          <button className="pipe-button" onClick={resetLevel}>
-            Reiniciar nivel
-          </button>
-          <button className="pipe-button" onClick={nextLevel}>
-            Siguiente nivel
-          </button>
+      {!gameFinished ? (
+        <>
+          <header className="pipe-header">
+            <h1 className="pipe-title">Construye la Cañería</h1>
+          </header>
+          <main className="pipe-main">
+            <div
+              className="pipe-grid"
+              style={{ gridTemplateColumns: `repeat(${gridSize}, 1fr)` }}
+            >
+              {grid.map((row, x) =>
+                row.map((cell, y) => (
+                  <div
+                    key={`${x}-${y}`}
+                    className={`pipe-cell pipe-${cell.type}`}
+                    style={{ transform: `rotate(${cell.rotation}deg)` }}
+                    onClick={() => rotatePiece(x, y)}
+                  >
+                    {cell.type === "source" && "💧"}
+                    {cell.type === "plant" && "🌱"}
+                    {cell.type === "pipe" && (
+                      <img src={pipeImage} alt="Tubería recta" />
+                    )}
+                    {cell.type === "pipe-angle" && (
+                      <img src={pipeAngleImage} alt="Tubería curva" />
+                    )}
+                    {cell.type === "pipe-T" && (
+                      <img src={pipeTImage} alt="Tubería en T" />
+                    )}
+                    {cell.type === "pipe-cross" && (
+                      <img src={pipeCrossImage} alt="Tubería cruzada" />
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </main>
+          <header className="pipe-header">
+            <div className="pipe-controls">
+              <button className="pipe-button" onClick={startFlow}>
+                Iniciar flujo
+              </button>
+            </div>
+            <div className="pipe-status">
+              <p className="pipe-score">Puntaje: {score}</p>
+              <p className="pipe-errors">Errores: {errors}</p>
+            </div>
+            {message && <p className="pipe-message">{message}</p>}
+          </header>
+        </>
+      ) : (
+        <div className="game-end">
+          <h2 className="end-title">Fin del Juego</h2>
+          <p className="end-stats">
+            <strong>Tiempo total de juego:</strong>{" "}
+            {(totalTime / 1000).toFixed(2)} segundos
+          </p>
+          <p className="end-stats">
+            <strong>Total de errores:</strong> {errors}
+          </p>
+          <p className="end-stats">
+            <strong>Tiempo de recuperación promedio:</strong>{" "}
+            {recoveryTimes.length > 0
+              ? (recoveryTimes.reduce((a, b) => a + b, 0) /
+                  recoveryTimes.length /
+                  1000
+                ).toFixed(2)
+              : "0"}{" "}
+            segundos
+          </p>
         </div>
-        <div className="pipe-status">
-          <p className="pipe-score">Puntaje: {score}</p>
-          <p className="pipe-errors">Errores: {errors}</p>
-        </div>
-      </header>
-      <main className="pipe-main">
-        <div
-          className="pipe-grid"
-          style={{ gridTemplateColumns: `repeat(${gridSize}, 1fr)` }}
-        >
-          {grid.map((row, x) =>
-            row.map((cell, y) => (
-              <div
-                key={`${x}-${y}`}
-                className={`pipe-cell pipe-${cell.type}`}
-                style={{ transform: `rotate(${cell.rotation}deg)` }}
-                onClick={() => rotatePiece(x, y)}
-              >
-                {cell.type === "source" && "💧"}
-                {cell.type === "plant" && "🌱"}
-                {cell.type === "pipe" && <img src={pipeImage} alt="Tubería recta" />}
-                {cell.type === "pipe-angle" && <img src={pipeAngleImage} alt="Tubería curva" />}
-                {cell.type === "pipe-T" && <img src={pipeTImage} alt="Tubería en T" />}
-                {cell.type === "pipe-cross" && <img src={pipeCrossImage} alt="Tubería cruzada" />}
-              </div>
-            ))
-          )}
-        </div>
-      </main>
+      )}
     </div>
   );
 };

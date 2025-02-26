@@ -1,102 +1,151 @@
 /* Estilos para "Construye la Cañería" */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 
 .pipe-app {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    background-color: #1a1a1a;
-    color: #ffffff;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+  font-family: 'Roboto', sans-serif;
+  text-align: center;
+  background-color: #1a1a1a;
+  color: #ffffff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
 }
 
 .pipe-header {
-    margin-bottom: 20px;
+  margin-bottom: 20px;
 }
 
-.pipe-header h1 {
-    font-size: 2.5rem;
-    margin-bottom: 10px;
+/* Título responsivo con efecto */
+.pipe-title {
+  font-size: clamp(2rem, 6vw, 3rem);
+  margin-bottom: 10px;
+  color: #f0a500;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
+/* Separación adicional */
+.pipe-main {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+/* Controles */
 .pipe-controls {
-    margin-bottom: 15px;
+  margin-bottom: 15px;
 }
 
 .pipe-controls button {
-    font-size: 1rem;
-    padding: 10px 20px;
-    margin: 5px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    background-color: #4caf50;
-    color: white;
-    transition: background-color 0.3s;
+  font-size: 1rem;
+  padding: 10px 20px;
+  margin: 5px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: #f0a500;
+  color: #1a1a1a;
+  transition: background-color 0.3s;
 }
 
 .pipe-controls button:hover {
-    background-color: #45a049;
+  background-color: #db9400;
 }
 
+/* Estado del juego */
 .pipe-status {
-    font-size: 1rem;
+  font-size: 1.2rem;
+  margin-top: 10px;
 }
 
-.pipe-main {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    padding: 10px;
+.pipe-message {
+  font-size: 1.3rem;
+  margin-top: 10px;
+  padding: 10px;
+  border: 2px solid #f0a500;
+  border-radius: 5px;
+  background-color: #2e2e2e;
+  color: #f0a500;
+  font-weight: bold;
+  max-width: 80%;
+  margin: 0 auto;
 }
 
+/* Tablero */
 .pipe-grid {
-    display: grid;
-    gap: 5px;
-    background-color: #273e46;
-    padding: 10px;
-    border-radius: 10px;
+  display: grid;
+  gap: 5px;
+  background-color: #273e46;
+  padding: 10px;
+  border: 4px solid #f0a500;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
+/* Celdas */
 .pipe-cell {
-    width: 50px;
-    height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #fff;
-    border: 2px solid #ccc;
-    color: #273e46;
-    border-radius: 5px;
-    transition: transform 0.2s, background-color 0.2s;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+  border: 2px solid #ccc;
+  color: #273e46;
+  border-radius: 5px;
+  transition: transform 0.2s, background-color 0.2s;
 }
 
 .pipe-cell img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .pipe-cell.source {
-    background-color: #87ceeb;
+  background-color: #87ceeb;
 }
 
 .pipe-cell.plant {
-    background-color: #98fb98;
+  background-color: #98fb98;
 }
 
 .pipe-cell.pipe {
-    background-color: #dcdcdc;
+  background-color: #dcdcdc;
 }
 
 .pipe-cell:hover {
-    cursor: pointer;
-    background-color: #eeede6;
+  cursor: pointer;
+  background-color: #eeede6;
 }
 
 .pipe-cell:active {
-    transform: scale(0.95);
+  transform: scale(0.95);
+}
+
+/* Ventana final del juego */
+.game-end {
+  background-color: #2e2e2e;
+  border: 4px solid #f0a500;
+  border-radius: 10px;
+  padding: 20px;
+  max-width: 500px;
+  width: 90%;
+  margin: 0 auto;
+}
+
+.end-title {
+  font-size: 2rem;
+  color: #f0a500;
+  margin-bottom: 15px;
+}
+
+.end-stats {
+  font-size: 1.2rem;
+  margin: 10px 0;
+  text-align: left;
 }
