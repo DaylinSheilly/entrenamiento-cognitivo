@@ -11,6 +11,9 @@ const ApuntaYAcierta = () => {
     const [targetSize, setTargetSize] = useState(50);
     const [trajectory, setTrajectory] = useState('horizontal'); // 'horizontal' or 'vertical'
     const [gameState, setGameState] = useState('start'); // 'start', 'playing', 'end'
+    const [hits, setHits] = useState(0);
+    const [errorTimestamps, setErrorTimestamps] = useState([]);
+    const [hitTimestamps, setHitTimestamps] = useState([]);
 
     const gameAreaRef = useRef(null);
     const intervalRef = useRef(null);
@@ -23,7 +26,7 @@ const ApuntaYAcierta = () => {
                 const centerX = gameArea.offsetWidth / 2;
                 const centerY = gameArea.offsetHeight / 2;
                 setTargetPosition({ x: centerX + 9, y: centerY + 9 });
-    
+
                 // Ajustando la bola para que pase por el centro
                 if (trajectory === 'horizontal') {
                     setBallPosition({ x: 0, y: centerY });
@@ -34,7 +37,24 @@ const ApuntaYAcierta = () => {
                 }
             }
         }
-    }, [gameState, trajectory]);    
+    }, [gameState, trajectory]);
+
+    useEffect(() => {
+        if (gameState === 'playing') {
+            const gameArea = gameAreaRef.current;
+            if (gameArea) {
+                const centerX = gameArea.offsetWidth / 2;
+                const centerY = gameArea.offsetHeight / 2;
+                setTargetPosition({ x: centerX + 9, y: centerY + 9 });
+                
+                if (trajectory === 'horizontal') {
+                    setBallPosition({ x: 0, y: centerY });
+                } else {
+                    setBallPosition({ x: centerX, y: 0 });
+                }
+            }
+        }
+    }, [gameState, trajectory]);
 
     useEffect(() => {
         if (gameState === 'playing') {
@@ -46,21 +66,19 @@ const ApuntaYAcierta = () => {
                     if (trajectory === 'horizontal') {
                         const newX = prev.x + ballSpeed;
                         if (newX > gameArea.offsetWidth - 20) {
-                            // Cambiar a trayectoria vertical
                             setTrajectory(Math.random() > 0.5 ? 'horizontal' : 'vertical');
                             return trajectory === 'horizontal'
-                                ? { x: 0, y: targetPosition.y-9 }
-                                : { x: targetPosition.x-9, y: 0 };
+                                ? { x: 0, y: targetPosition.y - 9 }
+                                : { x: targetPosition.x - 9, y: 0 };
                         }
                         return { ...prev, x: newX };
                     } else {
                         const newY = prev.y + ballSpeed;
                         if (newY > gameArea.offsetHeight - 20) {
-                            // Cambiar a trayectoria horizontal
                             setTrajectory(Math.random() > 0.5 ? 'horizontal' : 'vertical');
                             return trajectory === 'horizontal'
-                                ? { x: 0, y: targetPosition.y-9 }
-                                : { x: targetPosition.x-9, y: 0 };
+                                ? { x: 0, y: targetPosition.y - 9 }
+                                : { x: targetPosition.x - 9, y: 0 };
                         }
                         return { ...prev, y: newY };
                     }
@@ -107,8 +125,11 @@ const ApuntaYAcierta = () => {
             setScore((prev) => prev + 10);
             setBallSpeed((prev) => prev + 0.5);
             setTargetSize((prev) => Math.max(prev - 2.5, 20));
+            setHits((prev) => prev + 1);
+            setHitTimestamps((prev) => [...prev, Date.now()]);
         } else {
             setErrors((prev) => prev + 1);
+            setErrorTimestamps((prev) => [...prev, Date.now()]);
         }
     };
 
@@ -120,6 +141,21 @@ const ApuntaYAcierta = () => {
         setBallSpeed(2);
         setTargetSize(50);
         setTrajectory('horizontal');
+    };
+
+    const calculateRecoveryTime = () => {
+        if (errorTimestamps.length === 0 || hitTimestamps.length === 0) return 'N/A';
+        let totalRecoveryTime = 0;
+        let count = 0;
+
+        errorTimestamps.forEach(errorTime => {
+            const nextHit = hitTimestamps.find(hitTime => hitTime > errorTime);
+            if (nextHit) {
+                totalRecoveryTime += (nextHit - errorTime) / 1000;
+                count++;
+            }
+        });
+        return count > 0 ? (totalRecoveryTime / count).toFixed(2) + 's' : 'N/A';
     };
 
     return (
@@ -142,7 +178,7 @@ const ApuntaYAcierta = () => {
                     <div
                         className="acierta-game-area"
                         ref={gameAreaRef}
-                        style={{ position: 'relative', width: '800px', height: '500px', background: '#34352f' }}
+                        style={{ position: 'relative', width: '800px', height: '500px' }}
                     >
                         <div
                             className="acierta-ball"
@@ -170,9 +206,8 @@ const ApuntaYAcierta = () => {
                             }}
                         ></div>
                     </div>
-
                     <button className="acierta-hit-button" onMouseDown={checkHit}>
-                        Acierto!
+                        Acierto
                     </button>
                 </div>
             )}
@@ -181,7 +216,10 @@ const ApuntaYAcierta = () => {
                 <div className="acierta-end-screen">
                     <h1>Resultados</h1>
                     <p>Puntaje Final: {score}</p>
+                    <p>Tiempo total: 60s</p>
+                    <p>Correctas Totales: {hits}</p>
                     <p>Errores Totales: {errors}</p>
+                    <p>Tiempo de recuperación: {calculateRecoveryTime()}</p>
                     <button onClick={startGame}>Jugar de Nuevo</button>
                 </div>
             )}
