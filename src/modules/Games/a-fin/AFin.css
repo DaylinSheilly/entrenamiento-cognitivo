@@ -2,14 +2,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
 
 .afin-body {
+    box-sizing: border-box;
     background-color: #1a1a1a;
     color: #ffffff;
     margin: 0;
-    padding: 20px;
     min-height: 100vh;
 }
 
 .afin-centered-game {
+    box-sizing: border-box;
     display: flex;
     justify-content: center;
     align-items: center;

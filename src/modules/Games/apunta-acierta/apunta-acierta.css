@@ -42,11 +42,11 @@
   /* Game Header */
   .acierta-game-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-between; 
     padding: 10px 20px;
     background-color: #34352f;
     font-size: 1.2rem;
-    border-bottom: 2px solid #c8e6c9;
+    border-bottom: 2px solid #f0a500; /*#c8e6c9;*/
     font-family: 'Poppins', sans-serif;
   }
   

@@ -10,6 +10,13 @@ const COLOR_NAMES = {
     yellow: 'Amarillo', 
     purple: 'Púrpura' 
 }; 
+const NAMES_TO_COLOR = { 
+    'Rojo': 'red', 
+    'Azul': 'blue', 
+    'Verde': 'green', 
+    'Amarillo': 'yellow', 
+    'Púrpura': 'purple' 
+}; 
 
 const MAX_LEVEL = 4; 
 
@@ -18,7 +25,7 @@ const CognitiveInhibitionGame = () => {
         timeLeft: 45, 
         score: 50, 
         level: 1, 
-        stars: 1, 
+        stars: 0, 
         correctCount: 0, 
         totalCount: 0, 
         consecutiveCorrect: 0, 
@@ -42,35 +49,39 @@ const CognitiveInhibitionGame = () => {
     }, [lastGeneratedColor]); 
 
     const generateCards = useCallback((level) => { 
-        const leftColor = generateRandomColor(); 
         const shouldMatch = Math.random() < 0.5; 
-        
-        let leftWord = COLOR_NAMES[leftColor]; 
-        let rightColor, rightWord; 
+        const leftColor = generateRandomColor();
+        let rightColor, rightWord, leftWord; 
         
         switch (level) { 
             case 1: 
-                rightColor = shouldMatch ? leftColor : generateRandomColor(leftColor); 
+                // Los colores de las tarjetas coinciden
                 leftWord = ''; 
+                rightColor = shouldMatch ? leftColor : generateRandomColor(); 
                 rightWord = ''; 
                 break; 
 
             case 2: 
-                leftWord = COLOR_NAMES[generateRandomColor(leftColor)]; 
-                rightColor = shouldMatch ? leftColor : generateRandomColor(leftColor); 
-                rightWord = ''; 
+                // Palabra de la derecha coincide con el color de la tarjeta de la izquierda
+                leftWord = '';
+                rightColor = generateRandomColor();
+                rightWord = shouldMatch ? COLOR_NAMES[leftColor] : COLOR_NAMES[generateRandomColor()];
                 break; 
 
             case 3: 
-                leftWord = COLOR_NAMES[generateRandomColor(leftColor)]; 
+                // Las palabras no coinciden con el color de sus tarjetas
+                leftWord = !shouldMatch ? COLOR_NAMES[leftColor] : COLOR_NAMES[generateRandomColor(leftColor)]; 
                 rightColor = generateRandomColor(); 
-                rightWord = shouldMatch ? leftWord : COLOR_NAMES[generateRandomColor(rightColor)]; 
+                rightWord = !shouldMatch ? COLOR_NAMES[rightColor] : COLOR_NAMES[generateRandomColor(rightColor)];
                 break; 
 
             case 4: 
-                leftWord = COLOR_NAMES[generateRandomColor(leftColor)]; 
-                rightColor = shouldMatch ? leftColor : generateRandomColor(leftColor); 
-                rightWord = ''; 
+                // La palabra de la izquierda no coincide con el color de su tarjeta,
+                // La palabra de la derecha coincide con el color de la tarjeta de la izquierda
+                // El color de la tarjeta de las derecha no debe coincidir con la palabra de la derecha 
+                leftWord = !shouldMatch ? COLOR_NAMES[leftColor] : COLOR_NAMES[generateRandomColor(leftColor)]; 
+                rightWord = shouldMatch ? COLOR_NAMES[leftColor] : COLOR_NAMES[generateRandomColor()];
+                rightColor = !shouldMatch ? NAMES_TO_COLOR[rightWord] : generateRandomColor(NAMES_TO_COLOR[rightWord]);
                 break; 
 
             default: break; 
@@ -95,14 +106,20 @@ const CognitiveInhibitionGame = () => {
                 
                 switch (gameState.level) {  
                     case 1:
+                        // Los colores de las tarjetas coinciden
                         isMatch = gameState.leftCard.color === gameState.rightCard.color;  
                         break;  
                     case 2:
-                    case 3:
+                        // Palabra de la derecha coincide con el color de la tarjeta de la izquierda
                         isMatch = gameState.leftCard.word === gameState.rightCard.color;  
+                    case 3:
+                        // Las palabras no coinciden con el color de sus tarjetas
+                        isMatch = (gameState.leftCard.word !== gameState.leftCard.color) && (gameState.rightCard.word !== gameState.rightCard.color);
                         break;  
                     case 4:
-                        isMatch = gameState.leftCard.word === gameState.rightCard.color;  
+                        // La palabra de la izquierda es de otro color al de su tarjeta,
+                        // la palabra de la derecha coincide con el color de la tarjeta de la izquierda pero el color de su tarjeta es distitno
+                        isMatch = (gameState.leftCard.word !== gameState.leftCard.color) && (gameState.rightCard.word === gameState.leftCard.color) && (gameState.rightCard.color !== gameState.rightCard.word);
                         break;  
                     default:
                         break;  
@@ -217,17 +234,23 @@ const CognitiveInhibitionGame = () => {
                         </div>
                     </div>
 
-                    <div className="text-center text-gray-600"> Usa ← Izquierda o → Derecha </div>
+                    <div className="text-center text-gray-600"> ← Falso o Verdadero → </div>
                     
                     {/* Marcadores y tiempo */}
                     <div className="comparacion-marcadores">
                         <div className="comparacion-marcador-item">
+                            <div>
                             Tiempo Restante: {gameState.timeLeft}s
                             <Clock className="mr-2" />
-                            Estrellas:
+                            </div>
+                            <div>
+                            Estrellas: {gameState.stars}
                             <Star className="mr-2" />
+                            </div>
+                            <div>
                             Puntaje:
                             {gameState.score}
+                            </div>
                         </div>
                     </div>
                     
