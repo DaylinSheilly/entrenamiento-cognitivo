@@ -6,7 +6,7 @@ const ColoreaElCamino = () => {
   const [gameStartTime] = useState(Date.now());
 
   // Estado para el nivel actual 
-  const [nivel, setNivel] = useState(1);
+  const [nivel, setNivel] = useState(10);
   const hasAdvanced = useRef(false);
 
   // Estados de rendimiento global
@@ -545,7 +545,7 @@ const ColoreaElCamino = () => {
     }
   }, [startTime, gameOver, resolutionTime]);
 
-  const cellSize = 40;
+  const cellSize = 100;
   const gridStyle = {
     display: 'grid',
     gridTemplateColumns: `repeat(${numCols}, ${cellSize}px)`,

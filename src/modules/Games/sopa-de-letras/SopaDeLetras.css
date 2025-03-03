@@ -1,10 +1,14 @@
   .body-sopa {
-  background-color: #1a1a1a;
-  color: #ffffff;
-  margin: 0;
-  padding: 20px;
-  min-height: 100vh;
-  box-sizing: border-box;
+    background-color: transparent;  /* Para que adopte el color del contenedor */
+    color: #ffffff;
+    margin: 0;
+    padding: 20px;
+    height: 100%; /* Ocupará todo el alto del GameContainer */
+    width: 100%;  /* Ocupará todo el ancho del GameContainer */
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
   
   .game-container-sopa {

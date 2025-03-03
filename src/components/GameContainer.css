@@ -1,0 +1,24 @@
+/* src/components/GameContainer.css */
+.compo-game-container {
+  width: 600px;
+  height: 600px;
+  background-color: #ffffff;
+  border: 2px solid #f0a500;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* src/components/InfoPanel.css */
+.info-panel {
+  width: 300px; /* Ajusta este ancho según tus necesidades */
+  padding: 20px;
+  background-color: #1a1a1a;
+  border: 2px solid #f0a500;
+  color: #ffffff;
+  border-radius: 8px;
+  box-sizing: border-box;
+}

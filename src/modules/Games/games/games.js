@@ -25,7 +25,7 @@ function Games() {
           <games-button className="games-button" onClick={() => navigate('/games/a-fin')}>A Fin</games-button>
           <games-button className="games-button" onClick={() => navigate('/games/comparacion-de-colores')}>Comparación de Colores</games-button>
           <games-button className="games-button" onClick={() => navigate('/games/juego-de-atencion')}>Juego de Atención</games-button>
-          <games-button className="games-button" onClick={() => navigate('/games/concentrate-en-el-objetivo')}>No es Concentrate en el Objetivo</games-button>
+          <games-button className="games-button" onClick={() => navigate('/games/concentrate-en-objetivo')}>No es Concentrate en el Objetivo</games-button>
           {/* Añadir botones para otros juegos */}
         </div>
       </div>
