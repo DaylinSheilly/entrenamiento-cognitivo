@@ -3,72 +3,154 @@
 
 /* General styles for the game */
 .acierta-game-container {
-    font-family: 'Poppins', sans-serif;
-    text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 600px;
+  width: 600px;
+  background-color: transparent;
+  text-align: center;
+  position: relative; /* Asegura que los elementos absolutos se posicionen dentro */
+  overflow: hidden; /* Previene que los elementos sobresalgan */
+  }
+
+  /* Estilos para títulos */
+  .acierta-game-container h1 {
+    color: #ffffff;
+    margin-bottom: 0px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  
+  .acierta-game-container h2 {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 8px;
+  }
+  
+  .acierta-game-container h3 {
+    font-size: 1.5rem;
+    font-weight: normal;
+    color: #444;
+    margin-bottom: 6px;
+  }
+  
+  .acierta-game-container p {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+  
+  .acierta-score,
+  .acierta-stars,
+  .acierta-timer {
+    position: absolute;
+    color: white;
+    font-size: 0.875rem; /* Reducido a 14px */
+    font-weight: bold;
+    white-space: nowrap; /* Evita saltos de línea */
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  }
+  
+  .acierta-score {
+    top: 0.5rem;
+    left: 0.5rem;
+  }
+  
+  .acierta-stars {
+    top: 0.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  
+  .acierta-timer {
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+  
+  /* Evitar conflictos con los estilos globales */
+  .acierta-game-container .acierta-score,
+  .acierta-game-container .acierta-stars,
+  .acierta-game-container .acierta-timer {
+    font-size: 1rem; /* Asegurar tamaño menor dentro del contenedor */
+    color: #222 !important;
+  }
+
+  .acierta-countdown {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 6rem;
+    font-weight: bold;
+    color: #222;
+    animation: fadeIn 0.5s ease-in-out;
   }
   
   /* Start Screen */
   .acierta-start-screen {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    background-color: #2d3133;
-    font-family: 'Poppins', sans-serif;
+    text-align: center;
+    padding: 2rem;
+    background-color: #9ebde6;
+    border: 2px solid #f0a500;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin: 2rem;
   }
   
   .acierta-start-screen h1 {
     font-size: 2.5rem;
     color: #1565c0;
   }
-  
+
   .acierta-start-screen button {
-    background-color: #1976d2;
+    font-size: 1.2em;
+    padding: 15px 30px;
+    background-color: #3498db;
     color: white;
     border: none;
-    padding: 10px 20px;
-    font-size: 1rem;
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.3s;
-    font-family: 'Poppins', sans-serif;
+    transition: all 0.3s ease;
   }
   
   .acierta-start-screen button:hover {
-    background-color: #0d47a1;
+    background-color: #2980b9;
+    transform: translateY(-2px);
   }
   
   /* Game Header */
-  .acierta-game-header {
-    display: flex;
-    justify-content: space-between; 
-    padding: 10px 20px;
-    background-color: #34352f;
-    font-size: 1.2rem;
-    border-bottom: 2px solid #f0a500; /*#c8e6c9;*/
-    font-family: 'Poppins', sans-serif;
+  .acierta-game-info {
+    text-align: center;
+    padding: 0.5rem 2rem;
+    background-color: #9ebde6;
+    border: 2px solid #f0a500;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin: 0.3rem;
   }
   
   /* Game Area */
   .acierta-game-area {
     position: relative;
-    margin: 20px auto;
-    background-color: #f0f0f0;
-    border: 4px solid #f0a500;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    font-family: 'Poppins', sans-serif;
-  }
-  
-  .acierta-ball {
+    margin: 0 auto;
+    width: 375px;
+    height: 375px;
+    border: 2px solid black; /* Mantiene el borde negro */
+    overflow: hidden; /* Oculta cualquier cosa fuera del área de juego */
+    transition: background-color 0.3s ease-in-out !important;
+}
+
+/* Bola */
+.acierta-ball {
     position: absolute;
     width: 20px;
     height: 20px;
     background-color: red;
     border-radius: 50%;
-    animation: ball-move 1s infinite linear;
-  }
+}
   
   .acierta-target {
     position: absolute;
@@ -88,6 +170,7 @@
     cursor: pointer;
     transition: background-color 0.3s;
     font-family: 'Poppins', sans-serif;
+    margin: 0.3rem;
   }
   
   .acierta-hit-button:hover {
@@ -129,4 +212,36 @@
   
   .acierta-end-screen button:hover {
     background-color: #7f0000;
+  }
+
+  .acierta-fin-juego-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Arial', sans-serif;
+    text-align: center;
+    background-color: #3498db;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    animation: aparecer 0.5s ease-out;
+  }
+    
+  .acierta-fin-juego-container button {
+    background-color: #75e78e;
+    border: 2px solid #61bd75;
+    color: white;
+    padding: 12px 30px;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+    margin-top: 15px;
+  }
+  
+  .acierta-fin-juego-container button:hover {
+    background-color: #61bd75;
+    transform: translateY(-2px);
   }

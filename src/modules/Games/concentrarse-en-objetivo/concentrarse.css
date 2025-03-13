@@ -1,19 +1,15 @@
-/* Asegura que el contenedor ocupe toda la pantalla */
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
-}
-
 .concentrarse-body {
-  background-color: #1a1a1a;
   color: #ffffff;
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
   overflow: hidden;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+  color: #ffffff;
+  margin: 0;
+  padding: 20px;
 }
 
 .concentrarse-game-container {
@@ -21,18 +17,75 @@ html, body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  width: 100vw;
-  background-color: #f0f0f0;
+  height: 600px;
+  width: 600px;
+  background-color: transparent;
   text-align: center;
 }
 
+/* Estilos para títulos */
+.concentrarse-game-container h1 {
+  color: #ffffff;
+  margin-bottom: 0px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.concentrarse-game-container h2 {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.concentrarse-game-container h3 {
+  font-size: 1.5rem;
+  font-weight: normal;
+  color: #444;
+  margin-bottom: 6px;
+}
+
+.concentrarse-game-container p {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+/* Pantalla de inicio */
+.concentrarse-start-screen {
+  text-align: center;
+  padding: 2rem;
+  background-color: #9ebde6;
+  border: 2px solid #f0a500;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin: 2rem;
+}
+
+.concentrarse-start-screen button {
+  font-size: 1.2em;
+  padding: 15px 30px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.concentrarse-start-screen button:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+}
+
+/* Score */
 .concentrarse-score {
   margin: 10px 0;
   font-size: 1.5rem;
   color: #333;
 }
 
+/* Contenedor de círculos */
 .concentrarse-circle-container {
   display: flex;
   justify-content: center;
@@ -48,7 +101,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+  font-size: 3rem;
   position: relative;
   transition: transform 0.2s ease;
 }
@@ -84,6 +137,7 @@ html, body {
   animation: concentrarse-moveRight 2s linear infinite;
 }
 
+/* Animaciones */
 @keyframes concentrarse-moveUp {
   from {
     top: 50%;
@@ -117,5 +171,92 @@ html, body {
   }
   to {
     left: 150%;
+  }
+}
+
+.concentrarse-fin-juego-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Arial', sans-serif;
+  text-align: center;
+  background-color: #3498db;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  animation: aparecer 0.5s ease-out;
+}
+
+.fin-juego-titulo {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.concentrarse-fin-juego {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.fin-juego-texto {
+  font-size: 1.25rem;
+  margin: 0.5rem 0;
+}
+
+.fin-juego-boton {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #3b82f6;
+  color: white;
+  font-size: 1.125rem;
+  border-radius: 8px;
+  transition: background-color 0.2s ease-in-out;
+  border: none;
+  cursor: pointer;
+}
+
+.fin-juego-boton:hover {
+  background-color: #1e40af;
+}
+  
+.concentrarse-fin-juego-container button {
+  background-color: #75e78e;
+  border: 2px solid #61bd75;
+  color: white;
+  padding: 12px 30px;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  margin-top: 15px;
+}
+
+.concentrarse-fin-juego-container button:hover {
+  background-color: #61bd75;
+  transform: translateY(-2px);
+}
+
+.concentrarse-countdown {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 6rem;
+  font-weight: bold;
+  color: #222;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -60%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
   }
 }

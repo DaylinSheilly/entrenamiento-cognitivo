@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import './MemoriaSecuencial.css';
+import React, { useState, useEffect, useRef } from 'react';
+import './Sigue-la-secuencia.css';
 
 const MemoriaSecuencial = () => {
+  // Nuevo estado para la pantalla de inicio
+  const [gameStarted, setGameStarted] = useState(false);
+
   const [stage, setStage] = useState(1);
   const [sequence, setSequence] = useState([]);
   const [userInput, setUserInput] = useState([]);
@@ -12,17 +15,24 @@ const MemoriaSecuencial = () => {
   const [maxErrors, setMaxErrors] = useState(2);
   const [currentClicked, setCurrentClicked] = useState(null);
   const [previousClicked, setPreviousClicked] = useState(null);
+  const [notification, setNotification] = useState("");
+
+  const [maxMemorySpan, setMaxMemorySpan] = useState(0);
+  const [totalResponseTime, setTotalResponseTime] = useState(0);
+  const [correctSequenceCount, setCorrectSequenceCount] = useState(0);
+  const [omissionErrors, setOmissionErrors] = useState(0);
+  const [sequenceStartTime, setSequenceStartTime] = useState(null);
+
+  // Ref para bloquear entradas mientras se procesa la respuesta actual
+  const isProcessingRef = useRef(false);
+  // Ref para el timer de error de omisión
+  const omissionTimerRef = useRef(null);
 
   useEffect(() => {
-    import('./MemoriaSecuencial.css');
-    return () => {
-        // Limpia el CSS al salir de la vista, si es necesario
-    };
-  }, []);
-
-  useEffect(() => {
-    generateSequence(stage);
-  }, [stage]);
+    if (gameStarted) {
+      generateSequence(stage);
+    }
+  }, [stage, gameStarted]);
 
   useEffect(() => {
     if (sequence.length > 0) {
@@ -31,11 +41,11 @@ const MemoriaSecuencial = () => {
   }, [sequence]);
 
   const generateSequence = (currentStage) => {
-    const sequenceLength = currentStage * 2;
+    const sequenceLength = currentStage + 1;
     let lastNumber = null;
     let secondLastNumber = null;
     const newSequence = [];
-  
+
     for (let i = 0; i < sequenceLength; i++) {
       let randomNumber;
       do {
@@ -45,14 +55,14 @@ const MemoriaSecuencial = () => {
       secondLastNumber = lastNumber;
       lastNumber = randomNumber;
     }
-  
+
     setCurrentClicked(null);
     setPreviousClicked(null);
     setSequence(newSequence);
     setUserInput([]);
     setSelectedIndices([]);
     setHighlightIndex(-1);
-  
+
     console.log(newSequence);
   };
 
@@ -65,48 +75,92 @@ const MemoriaSecuencial = () => {
       if (index === sequence.length + 1) {
         clearInterval(intervalId);
         setHighlightIndex(-1);
+        // Inicia el tiempo de respuesta cuando se oculta el patrón:
+        setSequenceStartTime(new Date());
       }
     }, timeInterval);
   };
 
   const handleUserInput = (number) => {
+    // Si ya se está procesando un input, lo ignoramos
+    if (isProcessingRef.current) {
+      console.log("Procesamiento en curso, se ignora input:", number);
+      return;
+    }
+    isProcessingRef.current = true;
+
+    // Cancelamos el timer de omisión, ya que el usuario está respondiendo
+    clearTimeout(omissionTimerRef.current);
+
     const currentInputIndex = userInput.length;
     const isCorrect = sequence[currentInputIndex] === number;
-  
-    setUserInput([...userInput, number]);
-  
+
+    const newInput = [...userInput, number];
+    setUserInput(newInput);
+
     setPreviousClicked(currentClicked);
     setCurrentClicked(number);
-  
+
     if (!isCorrect) {
-      setErrorCount(errorCount + 1);
-      if (errorCount >= maxErrors) {
-        setTimeout(() => {
-          setIsGameOver(true);
-        }, 1000);
-      } else {
-        setTimeout(() => {
-          setUserInput([]);
-          setSelectedIndices([]);
-          generateSequence(stage);
-        }, 1000);
-      }
+      setErrorCount((prevErrors) => {
+        const newErrorCount = prevErrors + 1;
+        if (newErrorCount >= maxErrors) {
+          setTimeout(() => {
+            setIsGameOver(true);
+            isProcessingRef.current = false;
+          }, 1000);
+        } else {
+          setNotification("Has cometido un error, inténtalo de nuevo.");
+          setTimeout(() => {
+            setNotification("")
+            setUserInput([]);
+            setSelectedIndices([]);
+            generateSequence(stage);
+            isProcessingRef.current = false;
+          }, 1000);
+        }
+        return newErrorCount;
+      });
     } else if (currentInputIndex + 1 === sequence.length) {
+      // Calcula el tiempo de respuesta para esta secuencia
+      const responseTime = new Date() - sequenceStartTime;
+      setTotalResponseTime(prev => prev + responseTime);
+      setCorrectSequenceCount(prev => prev + 1);
+      // Actualiza el lapso de memoria si corresponde
+      if (sequence.length > maxMemorySpan) {
+        setMaxMemorySpan(sequence.length);
+      }
       if (stage === 9) {
         setTimeout(() => {
-          alert("¡Has completado el juego!");
+          setNotification("¡Has completado el juego!");
           setIsGameOver(true);
+          setTimeout(() => setNotification(""), 3000);
+          isProcessingRef.current = false;
         }, 1000);
       } else {
         setTimeout(() => {
-          alert("¡Correcto! Pasas a la siguiente etapa.");
-          setStage(stage + 1);
+          setNotification("¡Correcto! Pasas a la siguiente etapa.");
+          setErrorCount(0);
+          setStage(prevStage => prevStage + 1);
+          setTimeout(() => setNotification(""), 3000);
+          isProcessingRef.current = false;
         }, 1000);
       }
+    } else {
+      console.log(`Entrada correcta hasta el momento en la etapa ${stage}: ${newInput}`);
+      isProcessingRef.current = false;
+      // Reinicia el timer de omisión para la siguiente entrada, si fuera necesario
+      omissionTimerRef.current = setTimeout(() => {
+        console.log("Error de omisión detectado durante la secuencia parcial.");
+        setOmissionErrors(prev => prev + 1);
+        generateSequence(stage);
+      }, 10000);
     }
   };
 
   const getCircleClass = (number) => {
+    // Ejemplo de función para asignar clases según el estado
+    // (Ajusta según la lógica de tu aplicación)
     if (number === currentClicked) {
       return 'circle correct';
     }
@@ -120,18 +174,51 @@ const MemoriaSecuencial = () => {
     return selected ? (selected.isCorrect ? 'correct' : 'incorrect') : '';
   };
 
+  // Si el juego no ha empezado, muestra la pantalla de inicio.
+  if (!gameStarted) {
+    return (
+      <div className="start-screen-secuencial">
+        <h1>Memoria Secuencial</h1>
+        <button
+          className="start-button-secuencial"
+          onClick={() => {
+            setGameStarted(true);
+          }}
+        >
+          Empezar a jugar
+        </button>
+      </div>
+    );
+  }
+
   if (isGameOver) {
     return (
       <div className="game-over-screen-secuancial">
         <h1>Juego terminado</h1>
         <p>Has cometido dos errores. Inténtalo de nuevo.</p>
+        <div className="game-stats">
+          <p>
+            <strong>Lapso de memoria:</strong> {maxMemorySpan > 10 ? 10 : maxMemorySpan}
+          </p>
+          <p>
+            <strong>Tiempo de respuesta:</strong> {correctSequenceCount > 0 ? Math.round(totalResponseTime / correctSequenceCount) : 0} ms
+          </p>
+          <p>
+            <strong>Errores de omisión:</strong> {omissionErrors}
+          </p>
+        </div>
         <button 
           className="restart-button-secuancial"
           onClick={() => {
-            setStage(1);        
-            setErrorCount(0);   
-            setIsGameOver(false); 
-            generateSequence(1);  
+            setStage(1);
+            setErrorCount(0);
+            setIsGameOver(false);
+            // Reiniciar estadísticas:
+            setMaxMemorySpan(0);
+            setTotalResponseTime(0);
+            setCorrectSequenceCount(0);
+            setOmissionErrors(0);
+            generateSequence(1);
           }}
         >
           Reiniciar juego
@@ -142,6 +229,7 @@ const MemoriaSecuencial = () => {
 
   return (
     <div className="centered-game-secuencia">
+      {/* Si hay mensaje de notificación, se muestra en un contenedor especial */}
       <div className="game-container-secuancial">
         <h1>Memoria Secuencial</h1>
         <p>Etapa: {stage}</p>
@@ -157,6 +245,11 @@ const MemoriaSecuencial = () => {
           ))}
         </div>
       </div>
+      {notification && (
+        <div className="secuencia-notification">
+          {notification}
+        </div>
+      )}
     </div>
   );
 };

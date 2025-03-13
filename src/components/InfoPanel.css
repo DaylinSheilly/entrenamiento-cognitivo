@@ -1,9 +1,9 @@
 /* src/components/InfoPanel.css */
-.info-panel {
-    width: 400px; /* Ajusta el ancho según lo necesites */
-    padding: 20px;
-    background-color: #1a1a1a; /* Mismo fondo que el GameContainer */
-    color: #ffffff;
+.compo-info-panel {
+    width: 380px; /* Ajusta el ancho según lo necesites */
+    padding: 0 10px;
+    background-color: #ffffff; /* Mismo fondo que el GameContainer */
+    color: #1a1a1a;
     border: 2px solid #f0a500;
     border-radius: 8px;
     box-sizing: border-box;

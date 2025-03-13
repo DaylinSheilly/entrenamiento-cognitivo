@@ -4,15 +4,53 @@ import './mira-la-direccion.css';
 const MiraLaDireccion = () => {
   const [timeLeft, setTimeLeft] = useState(45);
   const [score, setScore] = useState(50);
-  const [level, setLevel] = useState(1);
   const [stars, setStars] = useState(0);
-  const [correctCount, setCorrectCount] = useState(0);
-  const [errorCount, setErrorCount] = useState(0);
-  const [streak, setStreak] = useState(0); // Aciertos consecutivos
-  const [feedback, setFeedback] = useState(''); // Indica si la respuesta fue correcta o incorrecta
+  const [totalAnswers, setTotalAnswers] = useState(0);
+  const [correctAnswers, setCorrectAnswers] = useState(0);
+  const [consecutiveCorrect, setConsecutiveCorrect] = useState(0);
+  const [gameStarted, setGameStarted] = useState(false);
   const [gameOver, setGameOver] = useState(false);
-  const [objects, setObjects] = useState({ objects: [], isCase1: true });
   const [isInputActive, setIsInputActive] = useState(true); // Controla si las teclas están activas
+  const [countdown, setCountdown] = useState(null);
+  const [feedback, setFeedback] = useState(null); // 'correct' o 'incorrect'
+
+  useEffect(() => {
+    setObjects(generateObjects());
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => handleKeyPress(event);
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [gameOver, isInputActive]);
+
+  // Manejo del temporizador
+  useEffect(() => {
+    if (timeLeft > 0) {
+      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      return () => clearTimeout(timer);
+    } else {
+      setGameStarted(false);
+      setGameOver(true);
+    }
+  }, [timeLeft, gameStarted]);
+
+  const startGame = () => {
+    setGameOver(false);
+    setGameStarted(true);
+    setTimeLeft(45);
+    setScore(50);
+    setStars(0);
+    setTotalAnswers(0);
+    setCorrectAnswers(0);
+    setObjects(generateObjects()); // Asegura que objects siempre tiene datos
+    setIsInputActive(false); // Bloquea teclas hasta que los objetos estén listos
+
+    setTimeout(() => {
+      setIsInputActive(true); // Activa entrada después de inicializar objects
+    }, 250);
+  };
 
   const generateObjects = () => {
     const directions = ['↑', '↓', '←', '→'];
@@ -31,12 +69,27 @@ const MiraLaDireccion = () => {
     return { objects: newObjects, isCase1 };
   };
 
-  useEffect(() => {
-    setObjects(generateObjects());
-  }, []);
+  const [objects, setObjects] = useState(generateObjects());
+
+  const startCountdown = () => {
+    setGameOver(false); // Asegurar que se oculta la pantalla de fin de juego
+    setCountdown(3); // Inicia en 3 segundos
+    let timeLeft = 3;
+    const interval = setInterval(() => {
+      timeLeft -= 1;
+      setCountdown(timeLeft);
+      if (timeLeft === 0) {
+        clearInterval(interval);
+        setCountdown(null);
+        startGame(); // Iniciar el juego cuando llega a 0
+      }
+    }, 1000);
+  };
 
   const handleKeyPress = (event) => {
-    if (!isInputActive || gameOver) return; // Ignora entradas si las teclas están desactivadas o el juego terminó
+    if (!isInputActive || gameOver || !objects.objects || objects.objects.length === 0) return;
+
+    setTotalAnswers((prev) => prev + 1);
 
     const keyToSymbol = {
       ArrowUp: '↑',
@@ -53,116 +106,84 @@ const MiraLaDireccion = () => {
     if (objects.isCase1) {
       correctDirection = objects.objects[0];
     } else {
-      const uniqueObject = objects.objects.find(
-        (item, index, arr) => arr.indexOf(item) === arr.lastIndexOf(item)
+      const uniqueObjects = objects.objects.filter(
+        (item, _, arr) => arr.indexOf(item) === arr.lastIndexOf(item)
       );
-      correctDirection = uniqueObject;
+      correctDirection = uniqueObjects.length > 0 ? uniqueObjects[0] : objects.objects[0];
     }
 
-    setIsInputActive(false); // Desactiva las entradas del teclado
+    if (!correctDirection) return; // Previene errores
+
+    setIsInputActive(false);
 
     if (pressedKey === correctDirection) {
+      setFeedback('correct'); // Activa el feedback verde
+      setCorrectAnswers((prev) => prev + 1);
+      const newConsecutive = consecutiveCorrect + 1;
+      setConsecutiveCorrect(newConsecutive);
       setScore((prev) => prev + 50);
-      setCorrectCount((prev) => prev + 1);
-      setStreak((prev) => {
-        const newStreak = prev + 1;
-        if (newStreak % 4 === 0) {
-          setStars((prevStars) => prevStars + 1);
-          setLevel((prevLevel) => prevLevel + 1);
-        }
-        return newStreak;
-      });
-      setFeedback('correct'); // Indicación visual de acierto
+      if (newConsecutive % 4 === 0) {
+        const bonus = 100 + ((newConsecutive / 4 - 1) * 50);
+        setScore((prev) => prev + bonus);
+        setStars((prev) => prev + 1);
+      }
     } else {
-      setErrorCount((prev) => prev + 1);
-      setStreak(0); // Reinicia la racha si hay un error
-      setFeedback('incorrect'); // Indicación visual de error
+      setFeedback('incorrect'); // Puedes manejar un feedback rojo si quieres
+      setScore((prev) => prev - 50);
+      setConsecutiveCorrect(0);
     }
 
+    // Espera 500ms antes de generar nuevos objetos y limpiar el feedback
     setTimeout(() => {
-      setFeedback(''); // Limpia el feedback
-      setObjects(generateObjects()); // Genera nuevos objetos
-      setIsInputActive(true); // Reactiva las entradas del teclado
-    }, 250); // Tiempo para mostrar el feedback (1 segundo)
-  };
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyPress);
-    return () => {
-      window.removeEventListener('keydown', handleKeyPress);
-    };
-  }, [objects, gameOver, isInputActive]);
-
-  // Manejo del temporizador
-  useEffect(() => {
-    if (timeLeft > 0) {
-      const timer = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
-
-      return () => clearInterval(timer);
-    } else {
-      setGameOver(true);
-    }
-  }, [timeLeft]);
-
-  const convertDirectionToClass = (dir) => {
-    switch (dir) {
-      case '↑':
-        return 'up';
-      case '↓':
-        return 'down';
-      case '←':
-        return 'left';
-      case '→':
-        return 'right';
-      default:
-        return '';
-    }
+      setObjects(generateObjects());
+      setIsInputActive(true);
+      setFeedback(null); // Limpia el feedback para restaurar el color original
+    }, 250);
   };
 
   return (
     <div
-      className={`mira.game-container ${feedback === 'correct'
-        ? 'correct-bg'
-        : feedback === 'incorrect'
-          ? 'incorrect-bg'
-          : ''
-        }`}
+      className="mira-game-container"
     >
-
-      <div className="fullscreen-container">
-        {!gameOver ? (
-          <div className="mira">
-            <h1>Mira la Dirección</h1>
-            <div className="mira.stats">
-              <p>Tiempo Restante: {timeLeft}s</p>
-              <p>Puntaje: {score}</p>
-              <p>Estrellas: {stars}</p>
-              <p>Nivel: {level}</p>
-            </div>
-
-            <div className="mira.grid">
-              {objects.objects.map((dir, index) => (
-                <div key={index} className={`mira arrow ${convertDirectionToClass(dir)}`}>{dir}
-                  {/* Los triángulos son visuales; no es necesario mostrar texto */}
-                </div>
-              ))}
-            </div>
+      {gameOver ? (
+        <div className="mira-fin-juego-container">
+          <h1>Fin del juego</h1>
+          <p>🎯 Puntaje final: {score}</p>
+          <p>✅ Correctas: {correctAnswers} de {totalAnswers}</p>
+          <p>📊 Precisión: {totalAnswers > 0 ? ((correctAnswers / totalAnswers) * 100).toFixed(2) : "0"}%</p>
+          <p>⭐ Estrellas: {stars}</p>
+          <button onClick={startCountdown}>
+            Jugar de nuevo
+          </button>
+        </div>
+      ) : !gameStarted ? (
+        countdown === null ? ( // Mostrar pantalla de inicio si NO hay cuenta regresiva
+          <div className="mira-start-screen">
+            <h2>¡Bienvenido a Mira la dirección!</h2>
+            <button onClick={startCountdown}>Comenzar Juego</button>
           </div>
         ) : (
-          <div className="mira.end-game">
-            <div className="mira">
-              <h1>Fin del Juego</h1>
-              <p>Puntaje Final: {score}</p>
-              <p>Nivel Máximo: {level}</p>
-              <p>Aciertos: {correctCount}</p>
-              <p>Errores: {errorCount}</p>
-              <button onClick={() => window.location.reload()}>Jugar de Nuevo</button>
-            </div>
+          <div className="mira-countdown">{countdown}</div>
+        )
+      ) : (
+        <>
+          <h2 className="mira-score">🎯 Puntaje: {score}</h2>
+          <h3 className="mira-stars">⭐ Estrellas: {stars}</h3>
+          <h3 className="mira-timer">⏳ Tiempo restante: {timeLeft}s</h3>
+
+          <div className="mira-grid">
+            {Array.isArray(objects.objects) && objects.objects.length > 0 ? (
+              objects.objects.map((direction, index) => (
+                <div key={index} className={`mira-arrow ${feedback}`}>
+                  {direction}
+                </div>
+              ))
+            ) : (
+              <p>Cargando...</p>
+            )}
           </div>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 };

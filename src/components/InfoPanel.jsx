@@ -1,5 +1,6 @@
-// src/components/InfoPanel.js
+// src/components/InfoPanel.jsx
 import React from 'react';
+import './InfoPanel.css';
 import { useLocation } from 'react-router-dom';
 
 const gameInfo = {
@@ -20,7 +21,7 @@ const gameInfo = {
   },
   "/games/matriz-de-memoria": {
     title: "Matriz de Memoria",
-    description: "Recuerda los recuadros iluminados.",
+    description: "Recuerda los patrones.",
     instructions: "Haz clic solo en los cuadrados que se iluminaron."
   },
   "/games/juego-de-atencion": {
@@ -36,7 +37,7 @@ const gameInfo = {
   "/games/recuerda-los-objetos": {
     title: "Recuerda los Objetos",
     description: "Memoriza un grupo de objetos y luego identifícalos entre distractores.",
-    instructions: "Observa y memoriza los objetos; luego, selecciona aquellos que viste inicialmente."
+    instructions: "Observa y memoriza los objetos; luego, selecciona aquellos que viste inicialmente en el orden que se presentaron."
   },
   "/games/concentrate-en-objetivo": {
     "title": "LE FALTA UN NOMBRE",
@@ -46,7 +47,7 @@ const gameInfo = {
   "/games/no-pierdas-los-objetos": {
     "title": "No Pierdas los Objetos",
     "description": "Identifica los objetos en el tablero en constante movimiento.",
-    "instructions": "Observa el tablero que apaercen en el tablero; luego cuando nuevos objetos aparezcan y se mezclen, debes identificar los primeros al detenerse."
+    "instructions": "Observa el tablero que apaercen en el tablero; luego cuando nuevos objetos aparezcan y se mezclen, debes identificar los primeros al detenerse. Si el tiempo acaba tienes 10 segundos para terminar el nivel en el que estés."
   },
   "/games/concentrarse-en-el-objetivo": {
     "title": "Concentrate en el Objetivo",
@@ -89,7 +90,7 @@ const InfoPanel = () => {
   };
 
   return (
-    <div className="info-panel">
+    <div className="compo-info-panel">
       <h2>{info.title}</h2>
       <p>{info.description}</p>
       <p>{info.instructions}</p>

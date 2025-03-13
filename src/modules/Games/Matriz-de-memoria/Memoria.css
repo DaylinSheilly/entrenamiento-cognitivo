@@ -2,29 +2,33 @@
 
 .memory-body {
   box-sizing: border-box;
-  background-color: #1a1a1a;
-  color: #ffffff;
+  background-color: #fff;
+  color: #1a1a1a;
   margin: 0;
-  padding: 20px;
-  }
+  display: flex;
+  flex-direction: column;
+  align-items: center;        /* Centra horizontalmente */
+  justify-content: center;    /* Centra verticalmente */
+  min-height: 600px;          /* Ocupa el alto completo de la ventana */
+}
 
 .memory-game {
   box-sizing: border-box;
-  background-color: #1a1a1a;
+  background-color: #fff;
+  color: #1a1a1a;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
-  max-width: 800px;
+  width: 600px;
   margin: 0 auto;
-  /*background-color: #f5f6fa;*/
 }
 
 /* Pantalla de inicio */
 .memory-start-screen {
   text-align: center;
   padding: 2rem;
-  background-color: white;
+  background-color: #9ebde6;
+  border: 2px solid #f0a500;
   border-radius: 15px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   margin: 2rem;
@@ -49,36 +53,35 @@
 /* Información del juego */
 .memory-game-info {
   text-align: center;
-  margin-bottom: 2rem;
 }
 
 /* Estilos para títulos */
-memory-h1 {
-  color: #ffffff;
-  margin-bottom: 20px;
+.memory-h1 {
+  color: #1a1a1a;
+  margin-bottom: 0px;
+  margin-block-start: 0.25em;
   text-align: center;
   font-size: 2.5em;
 }
 
-memory-h2 {
-  color: #34495e;
+.memory-h2 {
+  color: #1a1a1a;
   margin: 15px 0;
   font-size: 2em;
 }
 
-memory-h3 {
-  color: #ffffff;
-  margin: 15px 0;
-  font-size: 2em;
+.memory-h3 {
+  color: #1a1a1a;
+  margin: 0px 0;
+  font-size: 1.5em;
 }
 
 /* Mensajes del juego */
 .memory-message {
   font-size: 1.2em;
-  color: #7f8c8d;
-  margin: 10px 0;
-  padding: 10px;
-  border-radius: 5px;
+  color: #1a1a1a;
+  border: 10px;
+  margin-block: 5px;
   transition: all 0.3s ease;
 }
 
@@ -93,15 +96,16 @@ memory-h3 {
   gap: 10px;
   padding: 20px;
   background-color: white;
+  border: 2px solid #f0a500;
   border-radius: 15px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
+  max-height: 440px;
 }
 
 /* Cuadrados individuales */
 .memory-square {
-  width: 40px;
-  height: 40px;
+  width: 33px;
+  height: 33px;
   background-color: white;
   border: 3px solid #bdc3c7;
   border-radius: 10px;
@@ -130,19 +134,19 @@ memory-h3 {
 
 /* Botones */
 memory-button {
-  margin: 20px;
-  padding: 12px 24px;
+  margin: 10px;
+  padding: 6px 12px;
   font-size: 1.1em;
   color: white;
-  background-color: #3498db;
-  border: none;
+  background-color: #75e78e;
+  border: 2px solid #61bd75;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 memory-button:hover:not(:disabled) {
-  background-color: #2980b9;
+  background-color: #61bd75;
   transform: translateY(-2px);
 }
 
@@ -155,7 +159,8 @@ memory-button:disabled {
 .memory-game-over {
   text-align: center;
   padding: 2rem;
-  background-color: white;
+  background-color: #9ebde6;
+  border: 2px solid #f0a500;
   border-radius: 15px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
@@ -187,19 +192,6 @@ memory-button:disabled {
   .memory-square {
     width: 60px;
     height: 60px;
-  }
-  
-  memory-h1 {
-    font-size: 2em;
-  }
-  
-  memory-h2 {
-    font-size: 1.5em;
-  }
-  
-  memory-button {
-    padding: 10px 20px;
-    font-size: 1em;
   }
   
   .memory-message {

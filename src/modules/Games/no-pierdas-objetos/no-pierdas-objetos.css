@@ -1,8 +1,40 @@
-.no-pierdas-body {
-  background-color: #1a1a1a;
-  margin: 0;
-  padding: 20px;
-  min-height: 100vh;
+.no-pierdas-game-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 600px;
+  width: 600px;
+  background-color: transparent;
+  text-align: center;
+}
+
+/* Estilos para títulos */
+.no-pierdas-game-container h1 {
+  color: #ffffff;
+  margin: 0px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.no-pierdas-game-container h2 {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #222;
+  margin-bottom: 8px;
+}
+
+.no-pierdas-game-container h3 {
+  font-size: 1.5rem;
+  font-weight: normal;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+.no-pierdas-game-container p {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 2px;
 }
 
 .no-pierdas-objetos {
@@ -11,9 +43,41 @@
   margin: 0 auto; /* Centra el contenedor en su contenedor padre */
 }
 
+/* Pantalla de inicio */
+.no-pierdas-start-screen {
+  text-align: center;
+  padding: 2rem;
+  background-color: #9ebde6;
+  border: 2px solid #f0a500;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin: 2rem;
+}
+
+.no-pierdas-start-screen button {
+  font-size: 1.2em;
+  padding: 15px 30px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.no-pierdas-start-screen button:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+}
 
 .no-pierdas-info {
-  margin-bottom: 20px;
+  text-align: center;
+  padding: 0.5rem 2rem;
+  background-color: #9ebde6;
+  border: 2px solid #f0a500;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin: 0.5rem;
 }
 
 .no-pierdas-area-de-juego {
@@ -36,6 +100,22 @@
   position: relative;
   margin: 0 auto;
   border: 2px solid #000;
+  transition: background-color 0.3s ease-in-out !important;
+}
+
+.no-pierdas-tablero-fondo-espera {
+  background-color: #fff5cb; /* Amarillo cálido */
+  transition: background-color 0.5s ease-in-out;
+}
+
+.no-pierdas-tablero-fondo-exito {
+  background-color: #b6e29e; /* Verde éxito */
+  transition: background-color 0.3s ease-in-out;
+}
+
+.no-pierdas-tablero-fondo-error {
+  background-color: #e57373; /* Rojo indicativo de error */
+  transition: background-color 0.3s ease-in-out;
 }
 
 .no-pierdas-objeto {
@@ -62,6 +142,60 @@
     opacity: 1;
   }
   50% {
-    opacity: 0.1;
+    opacity: 0.3;
   }
+}
+
+.no-pierdas-countdown {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 6rem;
+  font-weight: bold;
+  color: #222;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -60%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.no-pierdas-fin-juego-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Arial', sans-serif;
+  text-align: center;
+  background-color: #3498db;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  animation: aparecer 0.5s ease-out;
+}
+  
+.no-pierdas-fin-juego-container button {
+  background-color: #75e78e;
+  border: 2px solid #61bd75;
+  color: white;
+  padding: 12px 30px;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  margin-top: 15px;
+}
+
+.no-pierdas-fin-juego-container button:hover {
+  background-color: #61bd75;
+  transform: translateY(-2px);
 }
