@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import './App.css';
 import './styles/index.css';
 import Home from './pages/Home';
+import Register from "./pages/auth/Register";
+import Login from "./pages/auth/Login";
 import Dashboard from './modules/Dashboard/Dashboard';
 import GameLayout from './components/GameLayout';
 import Games from './modules/Games/games/games.js';
@@ -28,6 +30,9 @@ function App() {
       <div className="App">
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/home" element={<Home />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/games" element={<Games />} />
           <Route path="/dashboard" element={<Dashboard />} />
 
