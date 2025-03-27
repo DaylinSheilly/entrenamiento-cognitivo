@@ -15,9 +15,18 @@ const gameInfo = {
     instructions: "Selecciona letras adyacentes para formar las palabras."
   },
   "/games/a-fin": {
-    "title": "A Fin",
-    "description": "Identifica la mayor cantidad de sinónimos de una palabra objetivo en el tiempo asignado.",
-    "instructions": "En cada nivel debes lograr al menos 10 aciertos.  - Nivel 1: Se muestran 2 opciones. Tienes 60 segundos. Pasaras de nivel si aciertas el 70% de tus intentos. \n   - Nivel 2: Se presentan 2 opciones. Tienes 60 segundos. Pasaras de nivel si aciertas el 70% de tus intentos.\n   - Nivel 3: Se ofrecen 3 opciones. Tienes 45 segundos. Pasaras de nivel si aciertas el 75% de tus intentos.\n   - Nivel 4: Se muestran 3 opciones. Tienes 45 segundos. Pasaras de nivel si aciertas el 80% de tus intentos.\n   - Nivel 5: Se presentan 4 opciones. Tienes 30 segundos. Pasaras de nivel si aciertas el 90% de tus intentos. \nSi superas el nivel tendras 10 segundos antes de avanzar automáticamente al siguiente nivel. En caso contrario tendrás la opción de reintentar el nivel.\n\n¡Buena suerte y disfruta del desafío!"
+    title: "A Fin",
+    description: "Identifica la mayor cantidad de sinónimos de una palabra objetivo en el tiempo asignado.",
+    instructions: 
+      "En cada nivel debes lograr al menos 10 aciertos.\n\n" +
+      "- Nivel 1: 2 opciones, 60 segundos, pasa con 70% de aciertos.\n" +
+      "- Nivel 2: 2 opciones, 60 segundos, pasa con 70% de aciertos.\n" +
+      "- Nivel 3: 3 opciones, 45 segundos, pasa con 75% de aciertos.\n" +
+      "- Nivel 4: 3 opciones, 45 segundos, pasa con 80% de aciertos.\n" +
+      "- Nivel 5: 4 opciones, 30 segundos, pasa con 90% de aciertos.\n\n" +
+      "Si superas el nivel, tendrás 10 segundos antes de avanzar automáticamente.\n" +
+      "Si fallas, puedes reintentar el nivel.\n\n" +
+      "¡Buena suerte y disfruta del desafío!"
   },
   "/games/matriz-de-memoria": {
     title: "Matriz de Memoria",
@@ -30,10 +39,25 @@ const gameInfo = {
     instructions: "Pon atención a la figura que se presenta. Debes identificar si es igual o diferente a la mostrada anteriormente."
   },
   "/games/comparacion-de-colores": {
-    title: "Comparación de Colores",
-    description: "Compara y encuentra diferencias entre colores.",
-    instructions: "Selecciona el color que cambia."
-  },
+    "title": "Comparación de Colores",
+    "description": "Decide si la condición se cumple o no se cumple.",
+    "instructions": 
+      "➡️ Flecha derecha: Si la condición del nivel se cumple.\n" +
+      "⬅️ Flecha izquierda: Si la condición del nivel NO se cumple.\n\n" +
+      "Condiciones de los niveles:\n" +
+      "1. Si ambos colores son iguales.\n" +
+      "2. Si la palabra en la izquierda coincide con el color de la derecha.\n" +
+      "3. Si ni la palabra ni el color coinciden en ambas tarjetas.\n" +
+      "4. Si la palabra en la izquierda coincide con el color de la derecha, pero la palabra de la derecha NO coincide con su color.\n\n" +
+      "📈 Progresión:\n" +
+      "🔹 Cada 4 aciertos consecutivos, subes de nivel.\n" +
+      "🔹 Si fallas, pierdes la racha y debes acumular nuevamente 4 aciertos seguidos para subir de nivel.\n\n" +
+      "🎯 Puntaje:\n" +
+      "🔹 Inicias con 50 puntos.\n" +
+      "🔹 +10 puntos por acierto, -5 puntos por error.\n" +
+      "🔹 Bono de 100 puntos y 1 estrella por 4 aciertos seguidos.\n\n" +
+      "Presiona 'Comenzar Juego' para empezar. ¡Responde rápido y acumula puntos!"
+},
   "/games/recuerda-los-objetos": {
     title: "Recuerda los Objetos",
     description: "Memoriza un grupo de objetos y luego identifícalos entre distractores.",
@@ -92,8 +116,10 @@ const InfoPanel = () => {
   return (
     <div className="compo-info-panel">
       <h2>{info.title}</h2>
-      <p>{info.description}</p>
-      <p>{info.instructions}</p>
+      <div className="info-content">
+        <p>{info.description}</p>
+        <p>{info.instructions}</p>
+      </div>
     </div>
   );
 };

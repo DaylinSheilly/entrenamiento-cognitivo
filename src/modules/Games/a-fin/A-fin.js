@@ -19,11 +19,11 @@ const LEVEL_TIME = {
 };
 
 const MIN_SCORE_REQUIRED = {
-  1: 10,
-  2: 10,
-  3: 10,
-  4: 10,
-  5: 10,
+  1: 15,
+  2: 15,
+  3: 15,
+  4: 15,
+  5: 15,
 };
 
 const words = {
@@ -105,6 +105,55 @@ const SynonymGame = () => {
   const [gameOver, setGameOver] = useState(false);
   const [levelPassed, setLevelPassed] = useState(false);
   const [nextLevelTimer, setNextLevelTimer] = useState(null);
+  const [gameStarted, setGameStarted] = useState(false);
+  const [countdown, setCountdown] = useState(null);
+
+  // Ref para guardar la hora de inicio de la partida y de cada palabra
+  const startTimeRef = useRef(Date.now());
+  const lastWordTimestampRef = useRef(Date.now());
+  const [lastErrorTimestamp, setLastErrorTimestamp] = useState(null);
+
+  const startCountdown = () => {
+    setGameOver(false);
+    setGameStarted(false);
+    setCountdown(3); // Inicia en 3 segundos
+    let timeLeft = 3;
+    const interval = setInterval(() => {
+      timeLeft -= 1;
+      setCountdown(timeLeft);
+      if (timeLeft === 0) {
+        clearInterval(interval);
+        setCountdown(null);
+        startGame(); // Iniciar el juego cuando llega a 0
+      }
+    }, 1000);
+  };
+
+  const startGame = () => {
+    // Reiniciar estado de la partida
+    setGameStarted(true);
+    setLevel(1);
+    setScore(0);
+    setErrors(0);
+    setTime(LEVEL_TIME[1]);
+    setCurrentWord('');
+    setOptions([]);
+    setGameOver(false);
+    setLevelPassed(false);
+    setCountdown(null); // Asegurar que el contador también se reinicie
+  
+    // Limpiar temporizador de cambio de nivel si existía
+    if (nextLevelTimer) {
+      clearTimeout(nextLevelTimer);
+    }
+    setNextLevelTimer(null);
+  
+    // Reiniciar referencias de tiempo
+    const now = Date.now();
+    startTimeRef.current = now;
+    lastWordTimestampRef.current = now;
+    setLastErrorTimestamp(null);
+  };
 
   // Estados para estadísticas globales (se acumulan entre niveles)
   const [globalStats, setGlobalStats] = useState({
@@ -115,27 +164,25 @@ const SynonymGame = () => {
     recoveryTimes: [],      // Array de tiempos de recuperación tras un error
   });
 
-  // Ref para guardar la hora de inicio de la partida y de cada palabra
-  const startTimeRef = useRef(Date.now());
-  const lastWordTimestampRef = useRef(Date.now());
-  const [lastErrorTimestamp, setLastErrorTimestamp] = useState(null);
 
   // Temporizador del nivel
   useEffect(() => {
+    if (countdown !== null) return; // Si hay cuenta regresiva, no restar tiempo
+  
     if (time > 0 && !gameOver) {
       const timer = setTimeout(() => setTime(time - 1), 1000);
       return () => clearTimeout(timer);
     } else if (time === 0 && !gameOver) {
       evaluateLevel();
     }
-  }, [time, gameOver]);
+  }, [time, gameOver, countdown]);  // Se añade countdown como dependencia
 
   // Cada vez que se active el nivel y no haya finalizado, mostrar una nueva palabra
   useEffect(() => {
     if (!gameOver) {
       newWord();
     }
-  }, [level, gameOver]);
+  }, [level, gameOver, gameStarted]);
 
   // Temporizador para avanzar al siguiente nivel (en caso de victoria)
   useEffect(() => {
@@ -181,19 +228,20 @@ const SynonymGame = () => {
         setLastErrorTimestamp(null);
       }
       setScore(score + 1);
+      console.log('Correcto!');
     } else {
+      setErrors(errors + 1);
       // Si es el primer error en una secuencia, registrar el tiempo de error
       if (lastErrorTimestamp === null) {
         setLastErrorTimestamp(Date.now());
       }
-      setErrors(errors + 1);
     }
     newWord();
   };
 
   // Evalúa las condiciones del nivel al finalizar el tiempo
   const evaluateLevel = () => {
-    const errorPercentage = errors > 0 ? (errors / (score + errors)) * 100 : 0;
+    const errorPercentage = score + errors > 0 ? ((errors / (score + errors)) * 100) : 0;
     let passed = false;
     if (level === 5) {
       // Para el nivel 5: se requiere alcanzar el mínimo y tener máximo 1 error.
@@ -208,12 +256,12 @@ const SynonymGame = () => {
       totalErrors: prev.totalErrors + errors,
       totalCorrect: prev.totalCorrect + score,
     }));
-    setLevelPassed(passed);
-    setGameOver(true);
     // Si se pasa el nivel y no es el último, iniciar el temporizador de 10 segundos
     if (passed && level < 5) {
       setNextLevelTimer(10);
     }
+    setLevelPassed(passed);
+    setGameOver(true);
   };
 
   // Avanza al siguiente nivel (cuando se vence el temporizador de 10 segundos)
@@ -228,147 +276,114 @@ const SynonymGame = () => {
 
   // Reinicia el nivel actual en caso de derrota
   const retryLevel = () => {
-    setScore(0);
-    setErrors(0);
-    setTime(LEVEL_TIME[level]);
-    setGameOver(false);
+    setGameOver(false);  // El juego ya no está en "Game Over"
+    setGameStarted(false); // Se detiene el juego mientras se hace la cuenta regresiva
+    setCountdown(3); // Inicia en 3 segundos
+  
+    let timeLeft = 3;
+    const interval = setInterval(() => {
+      timeLeft -= 1;
+      setCountdown(timeLeft);
+      
+      if (timeLeft === 0) {
+        clearInterval(interval);
+        setCountdown(null);
+  
+        // Reiniciar estados del nivel
+        setScore(0);
+        setErrors(0);
+        setTime(LEVEL_TIME[level]);
+        setCurrentWord('');
+        setOptions([]);
+        setGameStarted(true); // Ahora sí, el juego comienza
+  
+        // Reiniciar referencias de tiempo
+        startTimeRef.current = Date.now();
+        lastWordTimestampRef.current = Date.now();
+        setLastErrorTimestamp(null);
+      }
+    }, 1000);
   };
 
-  // Reinicia el nivel actual en caso de derrota
-  const retryGame = () => {
-    setLevel(1);
-    setScore(0);
-    setErrors(0);
-    setTime(LEVEL_TIME[1]);
-    setCurrentWord('');
-    setOptions([]);
-    setGameOver(false);
-    setLevelPassed(false);
-    setNextLevelTimer(null);
-
-    // Reiniciar referencias de tiempo
-    startTimeRef.current = Date.now();
-    lastWordTimestampRef.current = Date.now();
-    setLastErrorTimestamp(null);
+  const calculateGameTime = () => {
+    const startTime = startTimeRef.current;
+    return Math.floor((Date.now() - startTime) / 1000);
   };
-
-  // Interfaz final según la evaluación del nivel
-  if (gameOver) {
-    const errorPercentage = errors > 0 ? (errors / (score + errors)) * 100 : 0;
-    // Si el nivel fue superado
-    if (levelPassed) {
-      // Si es nivel 5, el juego termina y se muestran las estadísticas globales
-      if (level === 5) {
-        const totalTime = Math.floor((Date.now() - startTimeRef.current) / 1000);
-        // Calcular promedio de tiempo de recuperación (si hay alguno registrado)
-        const recoveryAvg =
-          globalStats.recoveryTimes.length > 0
-            ? Math.floor(
-              globalStats.recoveryTimes.reduce((acc, t) => acc + t, 0) /
-              globalStats.recoveryTimes.length
-            )
-            : 0;
-        return (
-          <div className="afin-centered-game">
-            <div className="afin-game-container afin-game-over">
-              <h2 className="afin-h2">¡Felicidades, completaste el juego!</h2>
-              <p className="afin-message">Tiempo total: {totalTime} segundos</p>
-              <p className="afin-message">
-                Puntaje final: {globalStats.totalScore + score}
-              </p>
-              <p className="afin-message">
-                Respuestas rápidas (&lt; 1s): {globalStats.fastAnswers}
-              </p>
-              <p className="afin-message">
-                Errores totales: {globalStats.totalErrors + errors}
-              </p>
-              <p className="afin-message">
-                Correctas: {globalStats.totalCorrect + score} / Incorrectas: {globalStats.totalErrors + errors}
-              </p>
-              <p className="afin-message">
-                Promedio de tiempo para recuperarse de un error: {recoveryAvg} ms
-              </p>
-              <button className="afin-restart-button" onClick={retryGame}>
-                Volver a jugar
-              </button>
-            </div>
-          </div>
-        );
-      } else {
-        // Para niveles 1 a 4, mostrar la interfaz de victoria con temporizador para avanzar
-        return (
-          <div className="afin-centered-game">
-            <div className="afin-game-container afin-game-over">
-              <h2 className="afin-h2">¡Nivel superado!</h2>
-              <p className="afin-message">Puntaje: {score}</p>
-              <p className="afin-message">
-                Errores: {errors} ({errorPercentage.toFixed(2)}%)
-              </p>
-              <p className="afin-message">
-                Pasarás al siguiente nivel en: {nextLevelTimer} segundos
-              </p>
-            </div>
-          </div>
-        );
-      }
-    } else {
-      // Interfaz de derrota: muestra causas y botón para reintentar el nivel
-      let causeMessage = '';
-      if (score < MIN_SCORE_REQUIRED[level]) {
-        causeMessage += `No alcanzaste el puntaje mínimo requerido (${MIN_SCORE_REQUIRED[level]}). `;
-      }
-      if (errorPercentage >= ERROR_THRESHOLD[level]) {
-        causeMessage += `El porcentaje de errores (${errorPercentage.toFixed(
-          2
-        )}%) excede el límite permitido (${ERROR_THRESHOLD[level]}%).`;
-      }
-      return (
-        <div className="afin-centered-game">
-          <div className="afin-game-container afin-game-over">
-            <h2 className="afin-h2">¡Nivel no superado!</h2>
-            <p className="afin-message">Puntaje: {score}</p>
-            <p className="afin-message">
-              Errores: {errors} ({errorPercentage.toFixed(2)}%)
-            </p>
-            <p className="afin-message">{causeMessage}</p>
-            <button className="afin-restart-button" onClick={retryLevel}>
-              Reintentar nivel
-            </button>
-          </div>
-        </div>
-      );
-    }
-  }
 
   // Interfaz del juego en curso
   return (
-    <div className="afin-body">
-      <div className="afin-centered-game">
+    <div className="afin-game-container">
+      {gameOver ? (
+        <>
+          {levelPassed ? (
+            level === 5 ? (
+              <div className="colores-fin-juego-container">
+                <h1>Fin del juego</h1>
+                <p>🕒 Tiempo total de juego: {calculateGameTime()} segundos</p>
+                <p>✅ Correctas: {globalStats.totalCorrect} de {globalStats.totalCorrect + globalStats.totalErrors}</p>
+                <p>❌ Errores: {globalStats.totalErrors}</p>
+                <p>📊 Precisión: {globalStats.totalCorrect + globalStats.totalErrors > 0
+                  ? ((globalStats.totalCorrect / (globalStats.totalCorrect + globalStats.totalErrors)) * 100).toFixed(2)
+                  : "0"}%</p>
+                <p>⚡ Respuestas rápidas (&lt; 1s): {globalStats.fastAnswers}</p>
+                <p>🕒 Tiempo de recuperación: {globalStats.recoveryTimes.length > 0
+                  ? Math.floor(globalStats.recoveryTimes.reduce((acc, t) => acc + t, 0) / globalStats.recoveryTimes.length)
+                  : "0"} ms</p>
+                <button onClick={startCountdown}>
+                  Jugar de nuevo
+                </button>
+              </div>
+            ) : (
+              <div className="afin-start-screen">
+                <h2>¡Nivel superado!</h2>
+                <p>Puntaje: {score}</p>
+                <p>Errores: {errors} ({score + errors > 0 ? ((errors / (score + errors)) * 100).toFixed(2) : "0"}%)</p>
+                <p>Pasarás al siguiente nivel en: {nextLevelTimer} segundos</p>
+              </div>
+            )
+          ) : (
+            <div className="afin-start-screen">
+              <h2>¡Nivel no superado!</h2>
+              <p>Puntaje: {score}</p>
+              <p>Errores: {errors} ({score + errors > 0 ? ((errors / (score + errors)) * 100).toFixed(2) : "0"}%)</p>
+              <p>
+                {score < MIN_SCORE_REQUIRED[level] ? `No alcanzaste el puntaje mínimo requerido (${MIN_SCORE_REQUIRED[level]}). ` : ''}
+                {((errors / (score + errors)) * 100) >= ERROR_THRESHOLD[level] ? `El porcentaje de errores (${((errors / (score + errors)) * 100).toFixed(2)}%) excede el límite permitido (${ERROR_THRESHOLD[level]}%).` : ''}
+              </p>
+              <button onClick={retryLevel}>Reintentar nivel</button>
+            </div>
+          )}
+        </>
+      ) : !gameStarted ? (
+        countdown === null ? (
+          <div className="colores-start-screen">
+            <h2>¡Bienvenido a Colorea el camino!</h2>
+            <button onClick={startCountdown}>Comenzar Juego</button>
+          </div>
+        ) : (
+          <div className="colores-countdown">{countdown}</div>
+        )
+      ) : (
         <div className="afin-game-container">
-          <h2 className="afin-h2">Juego de Sinónimos</h2>
           <div className="afin-game-info">
-            <p className="afin-titles">Nivel: {level}</p>
-            <p className="afin-titles">Puntaje: {score}</p>
-            <p className="afin-titles">Errores: {errors}</p>
-            <p className="afin-titles">Tiempo: {time}s</p>
+            <p>Nivel: {level}</p>
+            <p>Puntaje: {score}</p>
+            <p>Errores: {errors}</p>
+            <p>Tiempo: {time}s</p>
           </div>
           <div className="afin-word-container">
             <h2 className="afin-h2">Palabra objetivo:</h2>
-            <p className="afin-target-word">{currentWord}</p>
+            <h2>{currentWord}</h2>
           </div>
           <div className="afin-options-container">
             {options.map((option, index) => (
-              <button
-                key={index}
-                className="afin-option-button"
-                onClick={() => handleChoice(option)}
-              >
+              <button key={index} onClick={() => handleChoice(option)}>
                 {option}
               </button>
             ))}
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

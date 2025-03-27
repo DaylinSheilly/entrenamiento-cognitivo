@@ -11,24 +11,87 @@ const WordSearch = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [foundCoordinates, setFoundCoordinates] = useState([]);
   const [score, setScore] = useState(0);
+  const [finalScore, setFinalScore] = useState(0);
   const [time, setTime] = useState(0);
   const [errors, setErrors] = useState(0);
+  const [finalErrors, setFinalErrors] = useState(0);
+  const [correctAnswers, setCorrectAnswers] = useState(0);
+  const [totalAnswers, setTotalAnswers] = useState(0);
   const [lastErrorTime, setLastErrorTime] = useState(null);
   const [wordCoordinates, setWordCoordinates] = useState({});
   const [fullWordCoordinates, setFullWordCoordinates] = useState({});
+  const [message, setMessage] = useState("");
+  const [totalTime, setTotalTime] = useState(0);
+  const [startTime, setStartTime] = useState(Date.now());
+  const [gameStarted, setGameStarted] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
+  const [countdown, setCountdown] = useState(null);
 
   const getLevelConfig = useCallback((level) => {
-    switch(level) {
+    switch (level) {
       case 1:
         return { gridSize: 7, wordCount: 10 };
       case 2:
         return { gridSize: 11, wordCount: 15 };
       case 3:
-        return { gridSize: 14, wordCount: 20 };
+        return { gridSize: 12, wordCount: 18 };
       default:
         return { gridSize: 7, wordCount: 10 };
     }
   }, []);
+
+  const startCountdown = () => {
+    setGameOver(false);
+    setGameStarted(false);
+    setCountdown(3); // Inicia en 3 segundos
+    let timeLeft = 3;
+    const interval = setInterval(() => {
+      timeLeft -= 1;
+      setCountdown(timeLeft);
+      if (timeLeft === 0) {
+        clearInterval(interval);
+        setCountdown(null);
+        startGame(); // Iniciar el juego cuando llega a 0
+      }
+    }, 1000);
+  };
+
+  const startGame = () => {
+    console.log("Iniciando juego...");
+
+    // Reiniciar niveles y estados generales del juego
+    setLevel(1); 
+    setGameOver(false);
+    setGameStarted(true);
+
+    // Reiniciar tiempos y puntajes
+    setTime(0);
+    setTotalTime(0);
+    setStartTime(Date.now());
+    setCountdown(null);
+    setScore(0);
+    setFinalScore(0);
+    setErrors(0);
+    setFinalErrors(0);
+    setCorrectAnswers(0);
+    setTotalAnswers(0);
+    setLastErrorTime(null);
+
+    // Reiniciar palabras y tablero
+    setWordGrid([]);
+    setWords([]);
+    setWordCoordinates({});
+    setFullWordCoordinates({});
+    setWordsFound([]);
+    setCurrentSelection([]);
+    setFoundCoordinates([]);
+
+    // Reiniciar interacciones
+    setIsDragging(false);
+    setMessage("");
+
+    startNewGame();
+  };
 
   // Función para obtener palabras aleatorias
   const getRandomWords = (words, count) => {
@@ -39,13 +102,9 @@ const WordSearch = () => {
   const generateWords = useCallback((count, nivel) => {
     // Obtener las palabras del nivel especificado
     const palabrasNivel = wordsData.niveles.find(n => n.nivel === nivel).palabras;
-    
+
     // Seleccionar aleatoriamente 'count' palabras de ese nivel
     return getRandomWords(palabrasNivel, count);
-  }, []);
-
-  const generateEmptyGrid = useCallback((size) => {
-    return Array(size).fill(null).map(() => Array(size).fill('_'));
   }, []);
 
   const canPlaceWord = (word, grid, row, col, dx, dy) => {
@@ -161,22 +220,23 @@ const WordSearch = () => {
       }
     }
   };
-  
+
 
   const startNewGame = useCallback(() => {
+    setFinalScore(prev => prev + score);
+    setFinalErrors(prev => prev + errors);
+
     const { gridSize, wordCount } = getLevelConfig(level);
     const newWords = generateWords(wordCount, level);
     const { grid, placedWords } = placeWordsInGrid(newWords, gridSize, setWordCoordinates, setFullWordCoordinates, level);
-    
+
     setWordGrid(grid);
     setWords(placedWords);
     setCurrentSelection([]);
     setWordsFound([]);
     setIsDragging(false);
     setFoundCoordinates([]);
-    setScore(0);
     setTime(0);
-    setErrors(0);
     setLastErrorTime(null);
   }, [level, getLevelConfig, generateWords, placeWordsInGrid]);
 
@@ -191,53 +251,114 @@ const WordSearch = () => {
     return () => clearInterval(timer);
   }, []);
 
+  /**
+ * Inicia la selección de celdas cuando el usuario hace clic en una celda.
+ * 
+ * @param {number} rowIndex - Índice de la fila de la celda seleccionada.
+ * @param {number} colIndex - Índice de la columna de la celda seleccionada.
+ */
   const handleMouseDown = useCallback((rowIndex, colIndex) => {
     setIsDragging(true);
     setCurrentSelection([{ rowIndex, colIndex }]);
   }, []);
 
+  /**
+   * Maneja la selección de celdas mientras el usuario arrastra el mouse.
+   * Permite seleccionar palabras en horizontal, vertical o diagonal.
+   * 
+   * @param {number} rowIndex - Índice de la fila de la celda actual.
+   * @param {number} colIndex - Índice de la columna de la celda actual.
+   */
   const handleMouseEnter = useCallback((rowIndex, colIndex) => {
-    if (!isDragging) return;
-    setCurrentSelection(prev => [...prev, { rowIndex, colIndex }]);
-  }, [isDragging]);
+    if (!isDragging || currentSelection.length === 0) return;
 
-  const resetGridStyles = () => {
-    const cells = document.querySelectorAll('.cell');
-    cells.forEach(cell => {
-      cell.classList.remove('found');
-    });
-  };  
+    const startCell = currentSelection[0]; // Primera celda seleccionada
+    const dx = colIndex - startCell.colIndex;
+    const dy = rowIndex - startCell.rowIndex;
 
+    let path = [];
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+      // Movimiento horizontal
+      const step = dx > 0 ? 1 : -1;
+      for (let x = startCell.colIndex; x !== colIndex + step; x += step) {
+        path.push({ rowIndex: startCell.rowIndex, colIndex: x });
+      }
+    } else if (Math.abs(dx) < Math.abs(dy)) {
+      // Movimiento vertical
+      const step = dy > 0 ? 1 : -1;
+      for (let y = startCell.rowIndex; y !== rowIndex + step; y += step) {
+        path.push({ rowIndex: y, colIndex: startCell.colIndex });
+      }
+    } else {
+      // Movimiento diagonal
+      const stepX = dx > 0 ? 1 : -1;
+      const stepY = dy > 0 ? 1 : -1;
+      let x = startCell.colIndex;
+      let y = startCell.rowIndex;
+      while (x !== colIndex + stepX && y !== rowIndex + stepY) {
+        path.push({ rowIndex: y, colIndex: x });
+        x += stepX;
+        y += stepY;
+      }
+    }
+
+    setCurrentSelection(path);
+  }, [isDragging, currentSelection]);
+
+  /**
+   * Finaliza la selección de celdas cuando el usuario suelta el botón del mouse.
+   * Valida la palabra seleccionada y actualiza el estado del juego.
+   */
   const handleMouseUp = useCallback(() => {
     if (!isDragging) return;
-  
+    setTotalAnswers((prev) => prev + 1);
+
     const selectedWord = getSelectedWord(currentSelection);
-  
-    if (words.includes(selectedWord) && !wordsFound.includes(selectedWord)) {
-      setWordsFound(prev => [...prev, selectedWord]);
+    const reversedWord = selectedWord.split('').reverse().join('');
+
+    if (
+      (words.includes(selectedWord) || words.includes(reversedWord)) &&
+      !wordsFound.includes(selectedWord) &&
+      !wordsFound.includes(reversedWord)
+    ) {
+      const foundWord = words.includes(selectedWord) ? selectedWord : reversedWord;
+
+      setMessage(`¡Palabra ${foundWord} encontrada!`);
+      setCorrectAnswers((prev) => prev + 1);
+      setWordsFound(prev => [...prev, foundWord]);
       setFoundCoordinates(prev => [...prev, ...currentSelection]);
-      setScore(prevScore => prevScore + selectedWord.length);
-  
+      setScore(prevScore => prevScore + foundWord.length);
+
       if (wordsFound.length + 1 === words.length) {
+        setMessage(`¡Nivel ${level} completado!`);
         setTimeout(() => {
-          alert(`¡Nivel ${level} completado!`);
-          
-          // Resetea el estilo de las celdas
           resetGridStyles();
-  
-          // Cambia al siguiente nivel
-          setLevel(prevLevel => (prevLevel < 3 ? prevLevel + 1 : 1));
+          if (level < 3) {
+            setLevel(prevLevel => prevLevel + 1); // Deja que el useEffect maneje finalScore
+          } else {
+            setMessage("¡Felicidades! Has completado el juego.");
+            setTotalTime(Date.now() - startTime);
+            setGameOver(true);
+          }
         }, 500);
       }
     } else {
+      setMessage(`Esa no es una palabra de la lista. ¡Intentalo de nuevo!`);
       setErrors(prevErrors => prevErrors + 1);
       setLastErrorTime(Date.now());
     }
-  
+
     setIsDragging(false);
     setCurrentSelection([]);
   }, [isDragging, currentSelection, words, wordsFound, level]);
-  
+
+  const resetGridStyles = () => {
+    const cells = document.querySelectorAll('.sopa-cell'); // Asegúrate de que la clase es correcta
+    if (cells.length === 0) return; // Evitar ejecución innecesaria
+
+    cells.forEach(cell => cell.classList.remove('found', 'selected', 'highlight')); // Remueve más clases si es necesario
+  };
 
   const getSelectedWord = useCallback((selection) => {
     return selection.map(({ rowIndex, colIndex }) => wordGrid[rowIndex][colIndex]).join('');
@@ -260,18 +381,21 @@ const WordSearch = () => {
     if (unFoundWords.length > 0) {
       const randomWord = unFoundWords[Math.floor(Math.random() * unFoundWords.length)];
       const hintCoord = findWordCoordinate(randomWord);
-  
+
       if (hintCoord) {
         const [row, col] = hintCoord;
-  
+        setErrors(prevErrors => prevErrors + 1);
+        setScore(prevScore => prevScore - 1); // Resta puntos
+        setTotalAnswers((prev) => prev + 1);
+
         // Selecciona la celda en el tablero
         const cellId = `${row}-${col}`;
         const cellElement = document.getElementById(cellId);
-  
+
         if (cellElement) {
           // Añade la clase 'highlight' para aplicar el color
           cellElement.classList.add('highlight');
-  
+
           // Remueve la clase 'highlight' después de 1.5 segundos (coincide con la transición)
           setTimeout(() => {
             cellElement.classList.remove('highlight');
@@ -281,7 +405,7 @@ const WordSearch = () => {
         alert(`La palabra "${randomWord}" no está en el tablero.`);
       }
     }
-  }, [words, wordsFound, findWordCoordinate]);  
+  }, [words, wordsFound, findWordCoordinate]);
 
   const getWordCoordinates = useCallback((word) => {
     // Verificar si la palabra existe en el diccionario
@@ -298,28 +422,30 @@ const WordSearch = () => {
     if (unFoundWords.length > 0) {
       const randomWord = unFoundWords[Math.floor(Math.random() * unFoundWords.length)];
       setWordsFound(prev => [...prev, randomWord]);
-      
+
       // Obtiene las coordenadas de toda la palabra
       const wordCoords = getWordCoordinates(randomWord);
       console.log(wordCoords)
-      
+
       if (wordCoords) {
         // Aplica la clase "found" a todas las coordenadas de la palabra
+        setScore(prevScore => prevScore - randomWord.length); // Resta puntos
+        setErrors(prevErrors => prevErrors + 1);
+        setTotalAnswers((prev) => prev + 1);
         wordCoords.forEach(([row, col]) => {
           const cell = document.getElementById(`${row}-${col}`);  // Selecciona por id
           if (cell) {
             cell.classList.add('found');  // Aplica la clase CSS
           }
         });
-  
+
         setFoundCoordinates(prev => [...prev, ...wordCoords]);
-        setScore(prevScore => prevScore - randomWord.length); // Resta puntos
       }
     }
     if (wordsFound.length + 1 === words.length) {
       setTimeout(() => {
         alert(`¡Nivel ${level} completado!`);
-        
+
         // Resetea el estilo de las celdas
         resetGridStyles();
 
@@ -328,53 +454,104 @@ const WordSearch = () => {
       }, 500);
     }
   }, [words, wordsFound, getWordCoordinates, fullWordCoordinates]);
-  
 
+  useEffect(() => {
+    if (level > 1 || gameOver) {
+      setFinalScore(prevFinalScore => prevFinalScore + score);
+      setFinalErrors(prevTotalErrors => prevTotalErrors + errors);
+
+      if (!gameOver) {
+        setScore(0);
+        setErrors(0);
+      }
+    }
+  }, [level, gameOver]);
 
   return (
-    <div class="body-sopa">
-    <div className={`game-container-sopa level-${level}`}>
-      <h1-sopa>Sopa de Letras - Nivel {level}</h1-sopa>
-      <div className="game-info">
-        <div>Puntuación: {score}</div>
-        <div>Errores: {errors}</div>
-      </div>
-      <div className="game-info">
-        <div>Tiempo: {time} segundos</div>
-      </div>
-      <div id="wordSearchContainer" onMouseUp={handleMouseUp}>
-        {wordGrid.map((row, rowIndex) =>
-          row.map((cell, colIndex) => (
-            <div
-              id={`${rowIndex}-${colIndex}`}  // Añadir id basado en las coordenadas
-              key={`${rowIndex}-${colIndex}`}
-              className={`cell ${
-                isCellFound(rowIndex, colIndex) ? 'found' : 
-                currentSelection.some(selection => selection.rowIndex === rowIndex && selection.colIndex === colIndex) ? 'selected' : ''
-              }`}
-              onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
-              onMouseEnter={() => handleMouseEnter(rowIndex, colIndex)}
-            >
-              {cell}
-            </div>
-          ))
-        )}
-      </div>
-      <div id="wordsList" className="wordsList">
-        {words.map(word => (
-          <div key={word} className={wordsFound.includes(word) ? 'found' : ''}>
-            {word}
+    <div className="sopa-game-container">
+      {gameOver ? (
+        <div className="sopa-fin-juego-container">
+          <h1>Fin del juego</h1>
+          <p>🎯 Puntaje final: {finalScore}</p>
+          <p>✅ Correctas: {correctAnswers} de {totalAnswers}</p>
+          <p>❌ Errores: {finalErrors}</p>
+          <p>📊 Precisión: {totalAnswers > 0 ? ((correctAnswers / totalAnswers) * 100).toFixed(2) : "0"}%</p>
+          <p>🕒 Tiempo total de juego: {(totalTime / 1000).toFixed(2)} segundos</p>
+          <button onClick={startCountdown}>
+            Jugar de nuevo
+          </button>
+        </div>
+      ) : !gameStarted ? (
+        countdown === null ? ( // Mostrar pantalla de inicio si NO hay cuenta regresiva
+          <div className="sopa-start-screen">
+            <h2>¡Bienvenido a Sopa de letras!</h2>
+            <button onClick={startCountdown}>Comenzar Juego</button>
           </div>
-        ))}
-      </div>
-      <div className="button-container-sopa">
-        <button className="button-sopa hint-button-sopa" onClick={giveHint}>Dar Pista</button>
-        <button className="button-sopa reveal-button-sopa" onClick={revealWord}>Revelar Palabra</button>
-        <button className="button-sopa new-game-button-sopa" onClick={startNewGame}>Nueva Partida</button>
-      </div>
-    </div>
+        ) : (
+          <div className="sopa-countdown">{countdown}</div>
+        )
+      ) : (
+        <div className='sopa-app'>
+          <>
+            <div className="sopa-game-info">
+              <div className="sopa-game-stats">
+                <p>Nivel: {level}</p>
+                <p>Puntaje: {score}</p>
+                <p>Errores: {errors}</p>
+                <p>Tiempo: {time} segundos</p>
+              </div>
+              {message && <p>{message}</p>}
+            </div>
+          </>
+          <main className="sopa-main" style={{ "--level": level }}>
+            <div
+              id="sopa-grid"
+              style={{ "--grid-cols": wordGrid[0]?.length, "--grid-rows": wordGrid.length }}
+              onMouseUp={handleMouseUp}
+            >
+              {wordGrid.map((row, rowIndex) =>
+                row.map((cell, colIndex) => (
+                  <div
+                    id={`${rowIndex}-${colIndex}`}
+                    key={`${rowIndex}-${colIndex}`}
+                    className={`sopa-cell ${isCellFound(rowIndex, colIndex)
+                      ? "found"
+                      : currentSelection.some(
+                        (selection) =>
+                          selection.rowIndex === rowIndex &&
+                          selection.colIndex === colIndex
+                      )
+                        ? "selected"
+                        : ""
+                      }`}
+                    onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
+                    onMouseEnter={() => handleMouseEnter(rowIndex, colIndex)}
+                  >
+                    {cell}
+                  </div>
+                ))
+              )}
+            </div>
+            <div id="sopa-wordsList" className="sopa-words-list">
+              {words.map(word => (
+                <div key={word} className={wordsFound.includes(word) ? 'found' : ''}>
+                  {word}
+                </div>
+              ))}
+            </div>
+            <div className="sopa-button-container">
+              <button className="sopa-button hint-button-sopa" onClick={giveHint}>
+                Dar Pista
+              </button>
+              <button className="sopa-button reveal-button-sopa" onClick={revealWord}>
+                Revelar Palabra
+              </button>
+            </div>
+          </main>
+        </div>
+      )}
     </div>
   );
 };
 
-export default React.memo(WordSearch);
+export default WordSearch;

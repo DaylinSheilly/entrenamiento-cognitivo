@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Clock, Star } from 'lucide-react';
 import './comparacion.css';
 
 const COLORS = ['red', 'blue', 'green', 'yellow', 'purple'];
@@ -20,24 +19,83 @@ const NAMES_TO_COLOR = {
 
 const MAX_LEVEL = 4;
 
+const GAME_TIME = 45;
+
 const CognitiveInhibitionGame = () => {
     const [gameState, setGameState] = useState({
-        timeLeft: 45,
+        timeLeft: GAME_TIME,
         score: 50,
         level: 1,
         maxLevelReached: 1,  // Nuevo estado para almacenar el nivel máximo alcanzado
         stars: 0,
         correctCount: 0,
+        totalErrors: 0,  // Nuevo estado para almacenar el total de errores
         totalCount: 0,
         consecutiveCorrect: 0,
         leftCard: { color: '', word: '' },
         rightCard: { color: '', word: '' },
         gameStarted: false,
         gameOver: false,
+        feedbackColor: null,  // Nuevo estado para mostrar aciertos/errores
     });
+
+    const [countdown, setCountdown] = useState(null);
+    const [reactionTimes, setReactionTimes] = useState([]);
+    const precision = gameState.totalCount > 0 ? ((gameState.correctCount / gameState.totalCount) * 100).toFixed(2) : '0.00';
 
     const [lastGeneratedColor, setLastGeneratedColor] = useState(null);
     const timerRef = useRef(null);
+
+    const startCountdown = () => {
+        if (timerRef.current) clearInterval(timerRef.current); // Limpiar cualquier temporizador previo
+        setGameState(prevState => ({
+            ...prevState,
+            gameOver: false,
+            gameStarted: false,
+        }));
+        setCountdown(3);
+        timerRef.current = setInterval(() => {
+            setCountdown(prev => {
+                if (prev === 1) {
+                    clearInterval(timerRef.current);
+                    setCountdown(null);
+                    startGame(); // Iniciar el juego cuando llegue a 0
+                }
+                return prev - 1;
+            });
+        }, 1000);
+    };
+
+    const startGame = () => {
+        if (timerRef.current) clearInterval(timerRef.current);
+
+        setGameState({
+            timeLeft: 45,
+            score: 50,
+            level: 1,
+            maxLevelReached: 1,
+            stars: 0,
+            correctCount: 0,
+            totalErrors: 0,
+            totalCount: 0,
+            consecutiveCorrect: 0,
+            leftCard: { color: '', word: '' },
+            rightCard: { color: '', word: '' },
+            ...generateCards(1),
+            gameStarted: true,
+            gameOver: false,
+        });
+
+        setCountdown(null);
+        setReactionTimes([]);
+        setLastGeneratedColor(null);
+    };
+
+    const getTextContrastColor = (bgColor) => {
+        const lightColors = ['yellow']; // Colores donde el texto debe ser negro
+        return lightColors.includes(bgColor) ? 'black' : 'white';
+    };
+
 
     const generateRandomColor = useCallback((excludeColor = null) => {
         let color;
@@ -56,24 +114,24 @@ const CognitiveInhibitionGame = () => {
 
         switch (level) {
             case 1:
-                // Los colores de las tarjetas coinciden
+                // Los comparacion de las tarjetas coinciden
                 leftWord = '';
                 rightColor = shouldMatch ? leftColor : generateRandomColor();
                 rightWord = '';
                 break;
 
             case 2:
-                // Palabra de la derecha coincide con el color de la tarjeta de la izquierda
-                leftWord = '';
+                // Palabra de la izquierda coincide con el color de la tarjeta de la derecha
                 rightColor = generateRandomColor();
-                rightWord = shouldMatch ? COLOR_NAMES[leftColor] : COLOR_NAMES[generateRandomColor()];
+                leftWord = shouldMatch ? COLOR_NAMES[rightColor] : COLOR_NAMES[generateRandomColor()];
+                rightWord = '';
                 break;
 
             case 3:
                 // Las palabras no coinciden con el color de sus tarjetas
-                leftWord = !shouldMatch ? COLOR_NAMES[leftColor] : COLOR_NAMES[generateRandomColor(leftColor)];
+                leftWord = !shouldMatch ? COLOR_NAMES[leftColor] : COLOR_NAMES[generateRandomColor()];
                 rightColor = generateRandomColor();
-                rightWord = !shouldMatch ? COLOR_NAMES[rightColor] : COLOR_NAMES[generateRandomColor(rightColor)];
+                rightWord = !shouldMatch ? COLOR_NAMES[rightColor] : COLOR_NAMES[generateRandomColor()];
                 break;
 
             case 4:
@@ -92,11 +150,8 @@ const CognitiveInhibitionGame = () => {
 
     }, [generateRandomColor]);
 
-    const startGame = () => {
-        if (timerRef.current) clearInterval(timerRef.current);
-
-        setGameState({ timeLeft: 45, score: 50, level: 1, maxLevelReached: 1, stars: 0, correctCount: 0, totalCount: 0, consecutiveCorrect: 0, ...generateCards(1), gameStarted: true, gameOver: false });
-    };
+    const reactionStartTime = useRef(0);
+    let reactionEndTime = 0;
 
     useEffect(() => {
         if (!gameState.gameStarted) return;
@@ -104,60 +159,63 @@ const CognitiveInhibitionGame = () => {
         const handleKeyDown = (event) => {
             if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
                 let isMatch = false;
+                const reactionEndTime = Date.now();
+
+                if (reactionStartTime.current === 0) {
+                    // Evita el primer cálculo incorrecto
+                    reactionStartTime.current = reactionEndTime;
+                    return;
+                }
+
+                console.log("⏳ Tiempo inicial:", reactionStartTime.current);
+                console.log("⏳ Tiempo actual:", reactionEndTime);
 
                 switch (gameState.level) {
                     case 1:
-                        // Los colores de las tarjetas coinciden
-                        isMatch = COLOR_NAMES[gameState.leftCard.color] === COLOR_NAMES[gameState.rightCard.color];
+                        // Nivel 1: Coincidencia exacta de colores.
+                        isMatch = gameState.leftCard.color === gameState.rightCard.color;
                         break;
 
                     case 2:
-                        // Palabra de la derecha coincide con el color de la tarjeta de la izquierda
-                        isMatch = gameState.rightCard.word === COLOR_NAMES[gameState.leftCard.color];
+                        // Nivel 2: La palabra en la izquierda debe coincidir con el color en la derecha.
+                        isMatch = gameState.leftCard.word === COLOR_NAMES[gameState.rightCard.color];
                         break;
 
                     case 3:
-                        // Las palabras no coinciden con el color de sus tarjetas
+                        // Nivel 3: Ni la palabra ni el color pueden coincidir entre ambas tarjetas.
                         isMatch = (gameState.leftCard.word !== COLOR_NAMES[gameState.leftCard.color]) &&
                             (gameState.rightCard.word !== COLOR_NAMES[gameState.rightCard.color]);
                         break;
 
                     case 4:
-                        // La palabra de la izquierda es de otro color al de su tarjeta,
-                        // la palabra de la derecha coincide con el color de la tarjeta de la izquierda pero el color de su tarjeta es distinto
-                        isMatch = (gameState.leftCard.word !== COLOR_NAMES[gameState.leftCard.color]) &&
-                            (gameState.rightCard.word === COLOR_NAMES[gameState.leftCard.color]) &&
-                            (COLOR_NAMES[gameState.rightCard.color] !== gameState.rightCard.word);
+                        // Nivel 4: La palabra en la izquierda debe coincidir con el color de la derecha,
+                        // pero la palabra de la derecha NO debe coincidir con su propio color.
+                        isMatch = (gameState.leftCard.word === COLOR_NAMES[gameState.rightCard.color]) &&
+                            (gameState.rightCard.word !== COLOR_NAMES[gameState.rightCard.color]);
                         break;
 
                     default:
+                        isMatch = false;
                         break;
                 }
 
                 const correctKey = isMatch ? 'ArrowRight' : 'ArrowLeft';
                 const playerCorrect = event.key === correctKey;
 
-                console.log(playerCorrect);
+                const reactionTime = reactionEndTime - reactionStartTime.current;
+                console.log("⏱ Tiempo de reacción calculado:", reactionTime);
+                setReactionTimes(prevTimes => [...prevTimes, reactionTime]);
 
                 setGameState(prev => {
-                    // Actualiza la racha de aciertos
                     const newConsecutiveCorrect = playerCorrect ? prev.consecutiveCorrect + 1 : 0;
-
-                    // Puntos básicos: +10 si acierta, -5 si falla
                     const baseScore = playerCorrect ? 10 : -5;
-
-                    // Variables para bono, incremento de estrella y nuevo nivel
                     let bonus = 0;
                     let starIncrement = 0;
                     let newLevel = prev.level;
 
-                    // Si la respuesta es correcta y se completa un bloque de 4 aciertos consecutivos:
                     if (playerCorrect && newConsecutiveCorrect % 4 === 0) {
-                        // Calcula el bono: 100 para el primer bloque, 150 para el segundo, etc.
                         bonus = 100 + ((newConsecutiveCorrect / 4 - 1) * 50);
-                        // Suma una estrella por cada bloque completado
                         starIncrement = 1;
-                        // Si aún no se alcanza el nivel máximo, se incrementa el nivel
                         if (prev.level < MAX_LEVEL) {
                             newLevel = prev.level + 1;
                         }
@@ -169,14 +227,26 @@ const CognitiveInhibitionGame = () => {
                     return {
                         ...prev,
                         score: newScore,
-                        correctCount: playerCorrect ? prev.correctCount + 1 : prev.correctCount,
                         totalCount: prev.totalCount + 1,
+                        correctCount: playerCorrect ? prev.correctCount + 1 : prev.correctCount,
+                        totalErrors: !playerCorrect ? prev.totalErrors + 1 : prev.totalErrors,
                         consecutiveCorrect: newConsecutiveCorrect,
                         level: newLevel,
+                        maxLevelReached: Math.max(prev.maxLevelReached, newLevel),
                         stars: newStars,
-                        ...generateCards(newLevel),
+                        feedbackColor: playerCorrect ? "#4CAF50" : "#FF4C4C",
+                        ...generateCards(newLevel), // 🔹 Genera nuevas tarjetas
                     };
                 });
+                reactionStartTime.current = Date.now();
+
+                // Quitar el color de retroalimentación después de 500ms
+                setTimeout(() => {
+                    setGameState(prev => ({
+                        ...prev,
+                        feedbackColor: null
+                    }));
+                }, 500);
             }
         };
 
@@ -215,100 +285,94 @@ const CognitiveInhibitionGame = () => {
 
     }, [gameState.gameStarted]);
 
-    const precision = gameState.totalCount > 0 ? ((gameState.correctCount / gameState.totalCount) * 100).toFixed(2) : '0.00';
+    const calculateReactionTime = () => {
+        console.log("Calculando tiempo de reacción...");
+
+        if (!reactionTimes || reactionTimes.length === 0) {
+            console.log("No hay tiempos de reacción registrados.");
+            return 0;
+        }
+
+        // Filtrar valores no numéricos o inválidos
+        const validTimes = reactionTimes.filter(time => typeof time === "number" && !isNaN(time));
+        console.log("Tiempos válidos:", validTimes);
+
+        if (validTimes.length === 0) {
+            console.log("No hay tiempos de reacción válidos.");
+            return 0;
+        }
+
+        const sum = validTimes.reduce((acc, time) => acc + time, 0);
+        const average = parseFloat((sum / validTimes.length).toFixed(2));
+
+        console.log(`Suma total: ${sum}, Cantidad: ${validTimes.length}, Promedio: ${average}`);
+
+        return average;
+    };
 
     return (
-        <div class="comparacion-body">
-            <div className="comparacion-juego-contenedor">
-                <h1 className="text-2xl font-bold mb-4">Comparación de colores</h1>
-
-                {!gameState.gameStarted && !gameState.gameOver && (
-                    <div className="comparacion-instrucciones-contenedor">
-                        <h2 className="text-lg font-semibold mb-2">Objetivo del Juego</h2>
-                        <p className="mb-4"> Decide rápidamente si el significado de la palabra en la tarjeta izquierda coincide con el color de la tarjeta derecha:</p>
-
-                        <ul className="list-disc pl-6 mb-4">
-                            <li>Flecha derecha si el significado corresponde.</li>
-                            <li>Flecha izquierda si no corresponde.</li>
-                        </ul>
-
-                        <h3 className="text-md font-semibold mb-2">Niveles de Dificultad</h3>
-                        <p className="mb-2">Cada nivel aumenta la dificultad de la correspondencia:</p>
-
-                        <ul className="list-disc pl-6 mb-4">
-                            <li>Nivel 1: Colores sin palabras.</li>
-                            <li>Nivel 2: Palabra en izquierda, color en derecha.</li>
-                            <li>Nivel 3: Palabras sin coincidencia de significado y color.</li>
-                            <li>Nivel 4: Combinación compleja de palabra y color.</li>
-                        </ul>
-
-                        <h3 className="text-md font-semibold mb-2">Sistema de Puntaje</h3>
-
-                        <ul className="list-disc pl-6 mb-4">
-                            <li>Inicias con 50 puntos.</li>
-                            <li>+10 puntos por acierto, -5 por error.</li>
-                            <li>Bono de 100 puntos por cuatro aciertos consecutivos.</li>
-                        </ul>
-
-                        <button onClick={startGame} className="comparacion-button w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"> Comenzar Juego </button>
+        <div className="comparacion-game-container">
+            {gameState.gameOver ? (
+                <div className="comparacion-fin-juego-container">
+                    <h1>Fin del juego</h1>
+                    <p>🕒 Tiempo total de juego: {GAME_TIME} segundos</p>
+                    <p>🏅 <strong>Puntaje final:</strong> {gameState.score}</p>
+                    <p>🎯 <strong>Nivel máximo:</strong> {gameState.maxLevelReached}</p>
+                    <p>✅ Correctas: {gameState.correctCount} de {gameState.totalCount}</p>
+                    <p>❌ Errores: {gameState.totalErrors}</p>
+                    <p>📊 Precisión: {precision}%</p>
+                    <p>⭐ <strong>Estrellas obtenidas:</strong> {gameState.stars}</p>
+                    <p>🕒 Tiempo de reacción: {(calculateReactionTime() / 1000).toFixed(2)} s</p>
+                    <button onClick={startCountdown}>
+                        Jugar de nuevo
+                    </button>
+                </div>
+            ) : !gameState.gameStarted ? (
+                countdown === null ? ( // Mostrar pantalla de inicio si NO hay cuenta regresiva
+                    <div className="comparacion-start-screen">
+                        <h2>¡Bienvenido a Comparación de colores!</h2>
+                        <button onClick={startCountdown}>Comenzar Juego</button>
                     </div>
-                )}
-
-                {gameState.gameStarted && (
-                    <div>
-                        <div className="comparacion-flex comparacion-justify-between mb-4">
-                            <div className="comparacion-canvas-contenedor w-1/2 mr-2 p-4 text-center" style={{ backgroundColor: gameState.leftCard.color }}>
-                                {gameState.leftCard.word}
-                            </div>
-
-                            <div className="comparacion-canvas-contenedor w-1/2 ml-2 p-4 text-center" style={{ backgroundColor: gameState.rightCard.color }}>
-                                {gameState.rightCard.word}
-                            </div>
+                ) : (
+                    <div className="comparacion-countdown">{countdown}</div>
+                )
+            ) : (
+                <div>
+                    <div className="comparacion-game-app comparacion-justify-between mb-4" style={{ backgroundColor: gameState.feedbackColor || "#9ebde6" }}>
+                        <div
+                            className="comparacion-canvas-contenedor w-1/2 mr-2 p-4 text-center"
+                            style={{
+                                backgroundColor: gameState.leftCard.color,
+                                color: getTextContrastColor(gameState.leftCard.color)
+                            }}
+                        >
+                            {gameState.leftCard.word}
                         </div>
 
-                        <div className="text-center text-gray-600"> ← Falso o Verdadero → </div>
-
-                        {/* Marcadores y tiempo */}
-                        <div className="comparacion-marcadores">
-                            <div className="comparacion-marcador-item">
-                                <div>
-                                    <Clock className="mr-2" /> {gameState.timeLeft}s
-                                </div>
-                                <div>
-                                    <Star className="mr-2" /> {gameState.stars}
-                                </div>
-                                <div className="text-center font-bold text-lg">
-                                    Puntaje: {gameState.score}
-                                </div>
-                                <div className="text-center font-bold text-lg">
-                                    Nivel actual: {gameState.level}
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                )}
-
-                {gameState.gameOver && (
-                    <div className="comparacion-fin-juego">
-                        <h2 className="text-xl font-bold mb-4">Juego Terminado</h2>
-
-                        {/* Resultados finales */}
-                        <div>
-                            <p>Puntaje Final: {gameState.score}</p>
-                            <p>Nivel máximo alcanzado: {gameState.maxLevelReached}</p>
-                            <p>Estrellas: {gameState.stars}</p>
-                            <p>Tarjetas Correctas: {gameState.correctCount} de {gameState.totalCount}</p>
-                            <p>Precisión: {precision}%</p>
-
-                            {/* Botón para reiniciar juego */}
-                            <button onClick={startGame} className="comparacion-button mt-4 w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"> Jugar de Nuevo </button>
-
+                        <div
+                            className="comparacion-canvas-contenedor w-1/2 ml-2 p-4 text-center"
+                            style={{
+                                backgroundColor: gameState.rightCard.color,
+                                color: getTextContrastColor(gameState.rightCard.color)
+                            }}
+                        >
+                            {gameState.rightCard.word}
                         </div>
                     </div>
-                )}
 
-            </div>
+                    <div className="text-center text-gray-600"> ← Falso o Verdadero → </div>
+
+                    {/* Marcadores y tiempo */}
+                    <div className="comparacion-game-info">
+                        <p>Nivel: {gameState.level}</p>
+                        <p>Puntaje: {gameState.score}</p>
+                        <p>Estrellas: {gameState.stars}</p>
+                        <p>Errores: {gameState.totalErrors}</p>
+                        <p>Tiempo: {gameState.timeLeft}s</p>
+                    </div>
+
+                </div>
+            )}
         </div>
     );
 };

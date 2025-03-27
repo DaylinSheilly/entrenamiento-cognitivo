@@ -3,18 +3,23 @@ import './colorea-el-camino.css';
 
 const ColoreaElCamino = () => {
   // Estado global: tiempo de inicio del juego (no se reinicia)
-  const [gameStartTime] = useState(Date.now());
+  const [countdown, setCountdown] = useState(null);
+  const [totalTime, setTotalTime] = useState(0);
 
   // Estado para el nivel actual 
   const [nivel, setNivel] = useState(10);
   const hasAdvanced = useRef(false);
+  const [message, setMessage] = useState("");
 
   // Estados de rendimiento global
   const [resolutionTime, setResolutionTime] = useState(null);
   const [totalErrors, setTotalErrors] = useState(0);
+  const [gameStarted, setGameStarted] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [currentLevelTime, setCurrentLevelTime] = useState(0);
+  const [correctAnswers, setCorrectAnswers] = useState(0);
+  const [totalAnswers, setTotalAnswers] = useState(0);
 
   // Estados para medir tiempo de recuperación (se mide solo si el nivel se reinicia por error)
   const [recoveryStart, setRecoveryStart] = useState(null);
@@ -26,7 +31,25 @@ const ColoreaElCamino = () => {
   // Tiempo de inicio de cada nivel (se reinicia al cambiar de nivel)
   const [startTime, setStartTime] = useState(Date.now());
 
+  const errorTimeRef = useRef(null);
+
   // FUNCIONES DE LÓGICA DEL JUEGO -------------------------------------------- //
+
+  const startCountdown = () => {
+    setGameOver(false);
+    setGameStarted(false);
+    setCountdown(3); // Inicia en 3 segundos
+    let timeLeft = 3;
+    const interval = setInterval(() => {
+      timeLeft -= 1;
+      setCountdown(timeLeft);
+      if (timeLeft === 0) {
+        clearInterval(interval);
+        setCountdown(null);
+        startGame(); // Iniciar el juego cuando llega a 0
+      }
+    }, 1000);
+  };
 
   // Función para inicializar el nivel
   const initializeLevel = useCallback((level) => {
@@ -219,6 +242,25 @@ const ColoreaElCamino = () => {
       return { grid: tempGrid, activeBlocks: tempActiveBlocks, numRows: rows, numCols: cols };
     }
   }, []);
+
+  const startGame = () => {
+    setGameStarted(true);
+    setMessage("");
+    setTotalErrors(0);
+    setGameOver(false);
+    setNivel(1); // Restablece el nivel inicial
+    setResolutionTime(null);
+    setIsResetting(false);
+    setCurrentLevelTime(0);
+    setRecoveryStart(null);
+    setRecoveryTimes([]);
+    setIsDrawing(false);
+    setCurrentBlockIndex(null);
+    setStartTime(Date.now()); // Reinicia el tiempo de inicio del nivel
+
+    initializeLevel(1);
+  };
+
   // Configuración inicial del nivel
   const [initialLevelConfig, setInitialLevelConfig] = useState(() => initializeLevel(1));
   // Configuración actual del nivel
@@ -329,32 +371,32 @@ const ColoreaElCamino = () => {
   }
 
   // Reinicia el nivel usando la configuración inicial.
-  const resetBoard = useCallback((incrementError = false) => {
-    if (incrementError) {
-      // Se suma error solo una vez por reinicio válido.
-      setTotalErrors(prev => prev + 1);
-      if (recoveryStart !== null) {
-        const recTime = Date.now() - recoveryStart;
-        setRecoveryTimes(prev => [...prev, recTime]);
-        setRecoveryStart(null);
-      }
+  const resetBoard = useCallback((button) => {
+    setTotalAnswers((prev) => prev + 1);
+    setTotalErrors(prev => prev + 1);
+    errorTimeRef.current = Date.now();
+    if (button) {
+      setMessage("");
     }
     setLevelConfig(initialLevelConfig);
     setIsDrawing(false);
     setCurrentBlockIndex(null);
-  }, [recoveryStart, initialLevelConfig]);
+  }, [initialLevelConfig]);
 
   // Al completar el nivel, se registra el tiempo y se pasa al siguiente nivel.
   const nextLevel = useCallback(() => {
     const levelTime = Date.now() - startTime;
     setResolutionTime(levelTime);
-    // Si existe una medición de recuperación, la registramos y detenemos la medición.
-    if (recoveryStart) {
-      const validRecoveryTime = Date.now() - recoveryStart;
-      setRecoveryTimes(prev => [...prev, validRecoveryTime]);
-      setRecoveryStart(null);
+
+    // Si hubo un error previo, calcular el tiempo de recuperación
+    if (errorTimeRef.current) {
+      const recoveryTime = Date.now() - errorTimeRef.current;
+      setRecoveryTimes(prev => [...prev, recoveryTime]);
+      errorTimeRef.current = null; // Reiniciar para la siguiente ronda
     }
+
     if (nivel >= 10) {
+      setTotalTime(Date.now() - startTime);
       setGameOver(true);
     } else {
       setTimeout(() => {
@@ -366,11 +408,10 @@ const ColoreaElCamino = () => {
         setCurrentBlockIndex(null);
         setStartTime(Date.now());
         setResolutionTime(null);
-        setRecoveryTimes([]);
-        setRecoveryStart(null);
+        setRecoveryStart(null);  // Esto se mantiene null para evitar mediciones erróneas
       }, 500);
     }
-  }, [nivel, recoveryStart, startTime]);
+  }, [nivel, startTime]);
 
   // Verifica si dos celdas son adyacentes (solo horizontales o verticales).
   const isAdjacent = (cell1, cell2) => {
@@ -463,18 +504,13 @@ const ColoreaElCamino = () => {
     setCurrentBlockIndex(null);
   };
 
-  const resetGame = () => {
-    setNivel(1); // Restablece el nivel inicial
-    setResolutionTime(null);
-    setTotalErrors(0);
-    setGameOver(false);
-    setIsResetting(false);
-    setCurrentLevelTime(0);
-    setRecoveryStart(null);
-    setRecoveryTimes([]);
-    setIsDrawing(false);
-    setCurrentBlockIndex(null);
-    setStartTime(Date.now()); // Reinicia el tiempo de inicio del nivel
+  const calculateRecoveryTime = () => {
+    if (recoveryTimes.length === 0) return "0.00";
+
+    const avgRecoveryTimeSeconds =
+      recoveryTimes.reduce((a, b) => a + b, 0) / recoveryTimes.length / 1000;
+
+    return avgRecoveryTimeSeconds.toFixed(2);
   };
 
   // EFECTOS DE REACT -------------------------------------------------------- //
@@ -491,17 +527,26 @@ const ColoreaElCamino = () => {
   }, [nivel, initializeLevel]);
 
   useEffect(() => {
-    const gridFull = levelConfig.grid.every(row =>
-      row.every(cell => cell !== 0)
-    );
-    console.log("¿Tablero completo?", gridFull);
-  
+    const gridFull = levelConfig.grid.every(row => row.every(cell => cell !== 0));
+
     if (gridFull && !hasAdvanced.current) {
       hasAdvanced.current = true;
+
+      // Si hubo un error antes de completar el nivel, registramos el tiempo de recuperación
+      if (errorTimeRef.current) {
+        const recoveryTime = Date.now() - errorTimeRef.current;
+        setRecoveryTimes((prev) => [...prev, recoveryTime]); // Guardamos el tiempo de recuperación
+        errorTimeRef.current = null; // Reiniciar el tiempo de error
+      }
+
+      setTotalAnswers((prev) => prev + 1);
+      setCorrectAnswers((prev) => prev + 1);
+      setMessage("¡Excelente trabajo! Has completado el nivel con éxito.");
       nextLevel();
+
       setTimeout(() => {
         hasAdvanced.current = false;
-      }, 100); // Un pequeño retraso para evitar llamadas repetidas en un mismo ciclo
+      }, 100);
     }
   }, [levelConfig.grid, nextLevel]);
 
@@ -512,15 +557,14 @@ const ColoreaElCamino = () => {
     const allBlocked = activeBlocks.every(block => getAvailableMoves(block).length === 0);
 
     if (allBlocked) {
-      if (!recoveryStart) {
-        setRecoveryStart(Date.now());
-      }
+      setMessage("¡Ups! Te queadaste sin movimientos. Por favor, inténtalo de nuevo.");
 
-      console.log("Todas las cabezas están bloqueadas. Reiniciando nivel por error.");
+      // Si ya había registrado un tiempo de error, significa que se volvió a equivocar. Descartamos el tiempo anterior.
+      errorTimeRef.current = Date.now();
 
       setIsResetting(true);
       setTimeout(() => {
-        resetBoard(true);
+        resetBoard(false);
         setIsResetting(false);
       }, 500);
     }
@@ -545,7 +589,7 @@ const ColoreaElCamino = () => {
     }
   }, [startTime, gameOver, resolutionTime]);
 
-  const cellSize = 100;
+  const cellSize = 45;
   const gridStyle = {
     display: 'grid',
     gridTemplateColumns: `repeat(${numCols}, ${cellSize}px)`,
@@ -555,95 +599,86 @@ const ColoreaElCamino = () => {
     width: `${numCols * (cellSize + 2)}px`
   };
 
-  if (gameOver) {
-    const totalGameTimeSeconds = Math.round((Date.now() - gameStartTime) / 1000);
-    const avgRecoveryTimeSeconds =
-      recoveryTimes.length > 0
-        ? Math.round(recoveryTimes.reduce((a, b) => a + b, 0) / recoveryTimes.length / 1000)
-        : 0;
-    return (
-      <div className="colores-gameover-container">
-        <h1 className="colores-gameover-title">¡Juego Terminado!</h1>
-        <h2 className="colores-gameover-subtitle">Resumen de Rendimiento Global</h2>
-        <div className="colores-gameover-stats">
-          <div className="colores-stat">
-            <span className="colores-stat-label">Tiempo Total: </span>
-            <span className="colores-stat-value">{totalGameTimeSeconds}s</span>
-          </div>
-          <div className="colores-stat">
-            <span className="colores-stat-label">Cantidad de Errores: </span>
-            <span className="colores-stat-value">{totalErrors}</span>
-          </div>
-          <div className="colores-stat">
-            <span className="colores-stat-label">Tiempo Promedio de Recuperación: </span>
-            <span className="colores-stat-value">{avgRecoveryTimeSeconds}s</span>
-          </div>
-        </div>
-        <button
-          className="colores-restart-button"
-          onClick={resetGame}
-        >
-          Volver a Jugar
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <div className="colores-layout">
-      <div className="colores-grid-container">
-        <div
-          className="colores-grid"
-          style={gridStyle}
-          onMouseDown={(e) => e.preventDefault()}
-          onMouseLeave={() => setIsDrawing(false)}
-          onMouseUp={handleMouseUp}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          {grid.map((row, rowIndex) =>
-            row.map((cell, colIndex) => {
-              let backgroundColor = "white";
-              if (cell === -1) {
-                backgroundColor = "#7f8c8d";
-              } else if (cell !== 0) {
-                const block = activeBlocks.find(b => b.id === cell);
-                if (block) {
-                  backgroundColor = (block.row === rowIndex && block.col === colIndex)
-                    ? block.headColor
-                    : block.color;
-                }
-              }
-              return (
-                <div
-                  key={`${rowIndex}-${colIndex}`}
-                  className="colores-celda"
-                  data-row={rowIndex}
-                  data-col={colIndex}
-                  onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
-                  onMouseEnter={() => handleMouseEnter(rowIndex, colIndex)}
-                  onTouchStart={() => handleTouchStart(rowIndex, colIndex)}
-                  style={{ width: cellSize, height: cellSize, backgroundColor }}
-                ></div>
-              );
-            })
-          )}
+    <div className="colores-game-container">
+      {gameOver ? (
+        <div className="colores-fin-juego-container">
+          <h1>Fin del juego</h1>
+          <p>🕒 Tiempo total de juego: {(totalTime / 1000).toFixed(2)} segundos</p>
+          <p>✅ Correctas: {correctAnswers} de {totalAnswers}</p>
+          <p>❌ Errores: {totalErrors}</p>
+          <p>📊 Precisión: {totalAnswers > 0 ? ((correctAnswers / totalAnswers) * 100).toFixed(2) : "0"}%</p>
+          <p>🕒 Tiempo de recuperación: {calculateRecoveryTime()}</p>
+          <button onClick={startCountdown}>
+            Jugar de nuevo
+          </button>
         </div>
-      </div>
+      ) : !gameStarted ? (
+        countdown === null ? ( // Mostrar pantalla de inicio si NO hay cuenta regresiva
+          <div className="colores-start-screen">
+            <h2>¡Bienvenido a Colorea el camino!</h2>
+            <button onClick={startCountdown}>Comenzar Juego</button>
+          </div>
+        ) : (
+          <div className="colores-countdown">{countdown}</div>
+        )
+      ) : (
+        <div className="colores-app">
+          <div className="colores-grid-container">
+            <>
+              <div className="colores-game-info">
+                <div className="colores-game-stats">
+                  <p>Nivel: {nivel}</p>
+                  <p>Errores: {totalErrors}</p>
+                  <p>Tiempo de resolución: {currentLevelTime ? Math.round(currentLevelTime / 1000) + " s" : "0" + " s"}</p>
+                </div>
+                {message && <p>{message}</p>}
 
-      <div className="colores-info">
-        <h1 className="colores-titulo">Colorea el camino</h1>
-        <h2 className="colores-nivel">Nivel: {nivel}</h2>
-        <p className="colores-descripcion">
-          Completa el rompecabezas cubriendo todo el área con colores sin dejar huecos.
-        </p>
-        <p className="colores-descripcion">
-          Errores: {totalErrors} | Tiempo de resolución: {currentLevelTime ? Math.round(currentLevelTime / 1000) + " s" : "En progreso..."}
-        </p>
-        <button className="colores-reset-btn" onClick={() => resetBoard(true)}>
-          Reiniciar Tablero
-        </button>
-      </div>
+              </div>
+            </>
+            <div
+              className="colores-grid"
+              style={gridStyle}
+              onMouseDown={(e) => e.preventDefault()}
+              onMouseLeave={() => setIsDrawing(false)}
+              onMouseUp={handleMouseUp}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
+              {grid.map((row, rowIndex) =>
+                row.map((cell, colIndex) => {
+                  let backgroundColor = "white";
+                  if (cell === -1) {
+                    backgroundColor = "#7f8c8d";
+                  } else if (cell !== 0) {
+                    const block = activeBlocks.find(b => b.id === cell);
+                    if (block) {
+                      backgroundColor = (block.row === rowIndex && block.col === colIndex)
+                        ? block.headColor
+                        : block.color;
+                    }
+                  }
+                  return (
+                    <div
+                      key={`${rowIndex}-${colIndex}`}
+                      className="colores-celda"
+                      data-row={rowIndex}
+                      data-col={colIndex}
+                      onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
+                      onMouseEnter={() => handleMouseEnter(rowIndex, colIndex)}
+                      onTouchStart={() => handleTouchStart(rowIndex, colIndex)}
+                      style={{ width: cellSize, height: cellSize, backgroundColor }}
+                    ></div>
+                  );
+                })
+              )}
+            </div>
+            <button onClick={() => resetBoard(true)}>
+              Reiniciar Tablero
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
