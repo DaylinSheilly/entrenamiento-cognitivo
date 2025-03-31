@@ -1,4 +1,3 @@
-// Home.js
 import React, { useEffect, useState } from 'react';
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
@@ -11,29 +10,54 @@ function Home() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-  
+
     if (token) {
       axios.get("http://localhost:5000/auth/me", {
         headers: { Authorization: `Bearer ${token}` },
       })
-      .then(response => {
-        setIsAuthenticated(true);
-        setUserData(response.data);
-      })
-      .catch(error => {
-        console.error("Error al obtener datos del usuario:", error);
-        setIsAuthenticated(false);
-      });
+        .then(response => {
+          setIsAuthenticated(true);
+          setUserData(response.data);
+        })
+        .catch(error => {
+          console.error("Error al obtener datos del usuario:", error);
+          setIsAuthenticated(false);
+        });
     }
   }, []);
 
   const handleLogout = () => {
     console.log("Cerrando sesión...");
-    localStorage.removeItem('token'); // Eliminar token
-    localStorage.removeItem('userData'); // Eliminar datos del usuario
-    setIsAuthenticated(false); // Actualizar estado
+    localStorage.removeItem('token');
+    localStorage.removeItem('userData');
+    setIsAuthenticated(false);
     setUserData(null);
-    navigate('/'); // Redirigir a la página principal
+    navigate('/');
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!window.confirm("¿Estás seguro de que quieres eliminar tu cuenta? Esta acción es irreversible.")) {
+        return;
+    }
+
+    try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            alert("No estás autenticado.");
+            return;
+        }
+
+        await axios.delete("http://localhost:5000/auth/delete", {
+            headers: { Authorization: `Bearer ${token}` },
+            data: {} // Solución para algunos servidores Express que no manejan bien el cuerpo en DELETE
+        });
+
+        alert("Cuenta eliminada correctamente.");
+        handleLogout(); // Cierra la sesión después de eliminar la cuenta
+    } catch (error) {
+        console.error("Error al eliminar la cuenta:", error);
+        alert(error.response?.data?.message || "Hubo un error al eliminar tu cuenta.");
+    }
   };
 
   return (
@@ -53,13 +77,16 @@ function Home() {
         ) : (
           <p>No has iniciado sesión.</p>
         )}
-
         <div className="home-buttons">
-          <button onClick={() => navigate('/games')}>Games</button>
-          <button onClick={() => navigate('/dashboard')}>Dashboard</button>
-
           {isAuthenticated ? (
-            <button onClick={handleLogout}>Cerrar Sesión</button>
+            <>
+              <button onClick={() => navigate('/games')}>Games</button>
+              <button onClick={() => navigate('/dashboard')}>Dashboard</button>
+              <button onClick={handleLogout}>Cerrar Sesión</button>
+              <button onClick={handleDeleteAccount} style={{ backgroundColor: 'red', color: 'white' }}>
+                Eliminar Cuenta
+              </button>
+            </>
           ) : (
             <>
               <button onClick={() => navigate('/register')}>Registrarse</button>

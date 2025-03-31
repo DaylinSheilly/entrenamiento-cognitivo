@@ -116,4 +116,38 @@ router.get('/me', async (req, res) => {
     }
 });
 
+// 📌 Eliminar cuenta del usuario autenticado
+router.delete('/delete', async (req, res) => {
+    try {
+        const token = req.headers.authorization?.split(" ")[1]; // Extraer token del header
+        if (!token) {
+            return res.status(401).json({ message: "No autorizado" });
+        }
+
+        // Verificar el token
+        let decoded;
+        try {
+            decoded = jwt.verify(token, process.env.JWT_SECRET);
+        } catch (err) {
+            return res.status(401).json({ message: "Token inválido o expirado" });
+        }
+
+        // Eliminar el usuario de la base de datos
+        const result = await pool.query(
+            'DELETE FROM "Users" WHERE id_usuario = $1 RETURNING *',
+            [decoded.userId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: "Usuario no encontrado" });
+        }
+
+        res.json({ message: "Cuenta eliminada exitosamente" });
+
+    } catch (error) {
+        console.error("Error al eliminar usuario:", error);
+        res.status(500).json({ message: "Error en el servidor" });
+    }
+});
+
 module.exports = router;
