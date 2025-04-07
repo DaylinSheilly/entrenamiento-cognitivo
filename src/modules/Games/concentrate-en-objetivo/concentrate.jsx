@@ -1,16 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './concentrate.css';
 
+const GAME_TIME = 45; // Tiempo total del juego en segundos
+
 const ConcentranteEnElObjetivo = () => {
   const [showIntro, setShowIntro] = useState(true); // Nueva vista inicial
   const [gameStarted, setGameStarted] = useState(false);
+  const [round, setRound] = useState(0);
   const [stage, setStage] = useState(1);
   const [score, setScore] = useState(50);
   const [correctAnswers, setCorrectAnswers] = useState(0);
+  const [consecutiveCorrect, setConsecutiveCorrect] = useState(0);
+  const [totalErrors, setTotalErrors] = useState(0);
   const [totalCards, setTotalCards] = useState(0);
+  const [gameOver, setGameOver] = useState(false);
   const [stars, setStars] = useState(0);
   const [targetDirection, setTargetDirection] = useState('');
-  const [timer, setTimer] = useState(45);
+  const [countdown, setCountdown] = useState(null);
+  const [timer, setTimer] = useState(GAME_TIME);
   const [circles, setCircles] = useState([]);
   const circleSize = 55; // Tamaño del círculo
   const directions = ['↑', '↓', '←', '→'];
@@ -18,43 +25,85 @@ const ConcentranteEnElObjetivo = () => {
   const targetDirectionRef = useRef();
   const [consecutiveCorrectAnswers, setConsecutiveCorrectAnswers] = useState(0);
   const [bonusMultiplier, setBonusMultiplier] = useState(100); // Comienza en 100
+  const [startTime, setStartTime] = useState(null);
+  const [reactionTimes, setReactionTimes] = useState([]);
 
-  useEffect(() => {
-    if (!showIntro) {
-      const countdown = setInterval(() => {
-        setTimer((prev) => Math.max(prev - 1, 0));
-      }, 1000);
-      return () => clearInterval(countdown);
-    }
-  }, [showIntro]);
+  const startCountdown = () => {
+    setGameOver(false);
+    setGameStarted(false);
+    setCountdown(3); // Inicia en 3 segundos
+    let timeLeft = 3;
+    const interval = setInterval(() => {
+      timeLeft -= 1;
+      setCountdown(timeLeft);
+      if (timeLeft === 0) {
+        clearInterval(interval);
+        setCountdown(null);
+        startGame(); // Iniciar el juego cuando llega a 0
+      }
+    }, 1000);
+  };
 
-  useEffect(() => {
-    if (timer === 0) endGame();
-  }, [timer]);
-
-  useEffect(() => {
-    if (!showIntro) {
-      generateCircles();
-
-      const handleKeyPress = (e) => {
-        const directionMap = {
-          ArrowUp: '↑',
-          ArrowDown: '↓',
-          ArrowLeft: '←',
-          ArrowRight: '→',
-        };
-        if (directionMap[e.key]) handleInput(directionMap[e.key]);
-      };
-      window.addEventListener('keydown', handleKeyPress);
-
-      return () => window.removeEventListener('keydown', handleKeyPress);
-    }
-  }, [stage, showIntro]);
+  const handleKeyPress = (e) => {
+    const directionMap = {
+      ArrowUp: '↑',
+      ArrowDown: '↓',
+      ArrowLeft: '←',
+      ArrowRight: '→',
+    };
+    if (directionMap[e.key]) handleInput(directionMap[e.key]);
+  };
 
   const startGame = () => {
     setGameStarted(true);
-    setShowIntro(false);
+    setStage(1);
+    setScore(50);
+    setCorrectAnswers(0);
+    setTotalErrors(0);
+    setTotalCards(0);
+    setGameOver(false);
+    setStars(0);
+    setTargetDirection('');
+    setCountdown(null);
+    setTimer(GAME_TIME);
+    setCircles([]);
+    setTargetColor('');
+    setConsecutiveCorrectAnswers(0);
+    setBonusMultiplier(100);
+    setReactionTimes([]);
+
+    generateCircles();
+    window.addEventListener('keydown', handleKeyPress);
   };
+
+  useEffect(() => {
+    if (gameOver) {
+      window.removeEventListener('keydown', handleKeyPress);
+    }
+  }, [gameOver]);
+
+  useEffect(() => {
+    const countdown = setInterval(() => {
+      setTimer((prev) => Math.max(prev - 1, 0));
+    }, 1000);
+    return () => clearInterval(countdown);
+  });
+
+  useEffect(() => {
+    if (countdown !== null) return; // Si hay cuenta regresiva, no restar tiempo
+
+    if (timer > 0 && !gameOver && gameStarted) {
+      const time = setTimeout(() => setTimer(timer - 1), 1000);
+      return () => clearTimeout(time);
+    } else if (gameStarted && timer === 0) {
+      setGameStarted(false);
+      setGameOver(true);
+    }
+  }, [timer]);
+
+  useEffect(() => {
+    generateCircles();
+  }, [stage, round]);
 
   const generateCircles = () => {
     console.log(stage);
@@ -85,8 +134,12 @@ const ConcentranteEnElObjetivo = () => {
         targetDirectionRef.current = targetDir;
         console.log(`Debes presionar la flecha común: ${targetDir}`);
 
-        newCircles = Array.from({ length: numColumns }).map(() => ({
-          direction: Math.random() < 0.5 ? targetDir : directions[Math.floor(Math.random() * directions.length)],
+        const numTarget = Math.ceil(numColumns * 0.6);
+        const mixedDirections = [...Array(numTarget).fill(targetDir),
+        ...Array(numColumns - numTarget).fill(null)]
+          .map(dir => dir ?? directions[Math.floor(Math.random() * directions.length)]);
+        newCircles = mixedDirections.map(direction => ({
+          direction,
           color: 'white',
         }));
         break;
@@ -98,11 +151,32 @@ const ConcentranteEnElObjetivo = () => {
 
         console.log(`Debes presionar la flecha correcta: ${targetDir}`);
 
-        newCircles = Array.from({ length: numColumns }).map((_, index) => ({
-          direction: index < 2 ? targetDir : directions[Math.floor(Math.random() * directions.length)],
+        // Generar direcciones aleatorias excluyendo la dirección objetivo
+        const directionsSet = Array.from({ length: numColumns }).map(() => {
+          let randomDir;
+          do {
+            randomDir = directions[Math.floor(Math.random() * directions.length)];
+          } while (randomDir === targetDir); // Evitar la dirección objetivo
+          return randomDir;
+        });
+
+        // Elegir dos posiciones aleatorias para asignarles la dirección objetivo
+        const indices = [];
+        while (indices.length < 2) {
+          const randomIndex = Math.floor(Math.random() * numColumns);
+          if (!indices.includes(randomIndex)) indices.push(randomIndex);
+        }
+
+        // Asignar la dirección objetivo a esas posiciones
+        indices.forEach(index => directionsSet[index] = targetDir);
+
+        // Crear los círculos con las direcciones asignadas
+        newCircles = directionsSet.map(direction => ({
+          direction,
           color: 'white',
         }));
 
+        // Mezclar los círculos para mayor aleatoriedad
         newCircles = newCircles.sort(() => Math.random() - 0.5);
         break;
 
@@ -126,63 +200,88 @@ const ConcentranteEnElObjetivo = () => {
 
         console.log(`Busca la flecha ${targetDir}`);
 
-        // Generar círculos con flechas aleatorias y color blanco
+        // Generar círculos con fondo negro y flechas blancas en direcciones aleatorias
         newCircles = Array.from({ length: numColumns * numRows }).map(() => ({
           direction: directions[Math.floor(Math.random() * directions.length)], // Flecha aleatoria
-          color: 'white', // Color estándar
+          color: 'black', // Fondo negro
+          arrowColor: 'white' // Flechas blancas
         }));
 
-        // Seleccionar un círculo aleatorio para ser el correcto
+        // Seleccionar un círculo al azar para la flecha verde correcta
         const targetIndex = Math.floor(Math.random() * newCircles.length);
         newCircles[targetIndex] = {
-          direction: targetDir, // Flecha correcta
-          color: '#ffffff93', // Color objetivo
+          direction: targetDir, // Flecha apunta a la dirección objetivo
+          color: 'black', // Fondo negro
+          arrowColor: 'blue' // Flecha azul
         };
+
         break;
     }
 
     setCircles(newCircles.map((circle) => {
       let col, row, xPos, yPos;
+      const margen = numColumns > 1 ? (600 - (numColumns * circleSize)) / (numColumns - 1) : 0; // Espaciado entre círculos
+      const offsetTopRows = 1; // Número de filas reservadas para el encabezado
+      const minSpacing = circleSize * 1.2; // Espacio mínimo entre círculos
+      const maxWidth = 600 - circleSize; // Límite derecho del área de juego
+      const maxHeight = 550 - circleSize; // Límite inferior del área de juego
+
+      let isOverlapping;
+
       do {
+        isOverlapping = false; // Reiniciar estado de superposición
+
         if (stage === 4) {
-          // Ajustar para centrar el tablero y aplicar lógica sesgada
           const biasFactor = Math.random() < 0.7 ? targetDir : directions[Math.floor(Math.random() * directions.length)];
+
           switch (biasFactor) {
-            case '↑':
-              row = Math.floor(Math.random() * Math.floor(numRows / 3));
-              col = Math.floor(Math.random() * (numColumns - 6)) + 3; // Excluye las 3 primeras y últimas columnas
+            case '↑': // Favorecer la parte superior (pero no en la zona del encabezado)
+              row = Math.floor(Math.random() * Math.ceil((numRows - offsetTopRows) * 0.4)) + offsetTopRows;
+              col = Math.floor(Math.random() * numColumns);
               break;
-            case '↓':
-              row = Math.floor(numRows * (2 / 3)) + Math.floor(Math.random() * Math.floor(numRows / 3));
-              col = Math.floor(Math.random() * (numColumns - 6)) + 3;
+            case '↓': // Favorecer la parte inferior
+              row = Math.floor((numRows - offsetTopRows) * 0.6) + Math.floor(Math.random() * Math.ceil((numRows - offsetTopRows) * 0.4)) + offsetTopRows;
+              col = Math.floor(Math.random() * numColumns);
               break;
-            case '←':
-              col = Math.floor(Math.random() * Math.floor((numColumns - 6) / 3)) + 3;
-              row = Math.floor(Math.random() * numRows);
+            case '←': // Favorecer la izquierda
+              col = Math.floor(Math.random() * Math.ceil(numColumns * 0.4));
+              row = Math.floor(Math.random() * (numRows - offsetTopRows)) + offsetTopRows;
               break;
-            case '→':
-              col = Math.floor((numColumns - 6) * (2 / 3)) + Math.floor(Math.random() * Math.floor((numColumns - 6) / 3)) + 10;
-              row = Math.floor(Math.random() * numRows);
+            case '→': // Favorecer la derecha
+              col = Math.floor(numColumns * 0.6) + Math.floor(Math.random() * Math.ceil(numColumns * 0.4));
+              row = Math.floor(Math.random() * (numRows - offsetTopRows)) + offsetTopRows;
               break;
-            default:
-              col = Math.floor(Math.random() * (numColumns - 6)) + 3;
-              row = Math.floor(Math.random() * numRows);
+            default: // Distribución normal
+              col = Math.floor(Math.random() * numColumns);
+              row = Math.floor(Math.random() * (numRows - offsetTopRows)) + offsetTopRows;
               break;
           }
         } else {
-          col = Math.floor(Math.random() * numColumns) + 3;
-          row = Math.floor(Math.random() * numRows);
+          col = Math.floor(Math.random() * numColumns);
+          row = Math.floor(Math.random() * (numRows - offsetTopRows)) + offsetTopRows; // Evita la parte superior
         }
 
-        xPos = col * (circleSize + 20);
-        yPos = row * (circleSize + 20);
-      } while (positions.some(pos => pos.col === col && pos.row === row));
+        // Calcular la posición en píxeles
+        xPos = col * (circleSize + margen);
+        yPos = row * (circleSize + margen);
 
-      positions.push({ col, row });
-      return { ...circle, x: xPos, y: yPos };
+        // 📌 Asegurar que los círculos no se salgan del área de juego
+        xPos = Math.min(xPos, maxWidth);
+        yPos = Math.min(yPos, maxHeight);
+
+        // Verificar si esta posición está demasiado cerca de otro círculo
+        isOverlapping = positions.some(pos => {
+          const dx = pos.x - xPos;
+          const dy = pos.y - yPos;
+          return Math.sqrt(dx * dx + dy * dy) < minSpacing; // Verifica si la distancia es menor al mínimo permitido
+        });
+
+      } while (isOverlapping); // Si se solapan, repetir hasta encontrar una posición válida
+
+      positions.push({ col, row, x: xPos, y: yPos }); // Guardar posición con coordenadas
+      return { ...circle, x: xPos, y: yPos, color: "#1a1a1a" }; // Color inicial negro
     }));
-
-    setTotalCards((prev) => prev + 1);
+    setStartTime(Date.now());
   };
 
   const handleInput = (direction) => {
@@ -191,131 +290,143 @@ const ConcentranteEnElObjetivo = () => {
 
     let isCorrect = false;
 
-    // Validación utilizando la referencia
-    switch (stage) {
-      case 1:
-        isCorrect = direction === targetDirectionRef.current;
-        break;
+    const endTime = Date.now();
+    const reactionTime = endTime - startTime;
+    setReactionTimes(prev => [...prev, reactionTime]);
 
-      case 2:
-        isCorrect = direction === targetDirectionRef.current;
+    isCorrect = direction === targetDirectionRef.current;
 
-        break;
-      case 3:
-        isCorrect = direction === targetDirectionRef.current;
-        break;
-      case 4:
-        isCorrect = direction === targetDirectionRef.current;
-        break;
-      case 5:
-        isCorrect = direction === targetDirectionRef.current;
-        break;
-      default:
-        break;
-    }
+    setTotalCards((prev) => prev + 1); // Aumentar total de intentos
 
     if (isCorrect) {
-      setScore((prev) => prev + 50); // Aumentar por acierto
-  
-      setConsecutiveCorrectAnswers((prev) => {
-        const newCorrectAnswers = prev + 1;
-  
-        if (newCorrectAnswers % 4 === 0) {
-          setBonusMultiplier((prevMultiplier) => prevMultiplier + 50); // Incrementar el multiplicador de bonificación
-          setScore((prevScore) => prevScore + bonusMultiplier); // Aplicar la bonificación
-          setStars((prevStars) => Math.min(prevStars + 1, 45));
-          setStage((prevStage) => (prevStage < 5 ? prevStage + 1 : prevStage));
+      setCorrectAnswers((prev) => prev + 1);
+      setScore((prev) => prev + 50);
+
+      // Cambiar color a verde
+      setCircles((prev) =>
+        prev.map((circle) => ({ ...circle, color: "green" }))
+      );
+
+      setConsecutiveCorrect((prevConsecutive) => {
+        const updatedConsecutive = prevConsecutive + 1;
+
+        if (updatedConsecutive % 4 === 0) {
+          const bonus = 100 + ((updatedConsecutive / 4 - 1) * 50);
+          setScore((prev) => prev + bonus);
+          setStars((prev) => prev + 1);
+
+          setTimeout(() => {
+            setStage((prev) => (prev < 5 ? prev + 1 : prev));
+            generateCircles(); // Solo se llama si se sube de nivel
+          }, 300);
+        } else {
+          setTimeout(() => {
+            setRound((prev) => prev + 1);
+            generateCircles(); // Solo se llama si NO se sube de nivel
+          }, 300);
         }
-  
-        return newCorrectAnswers;
+
+        return updatedConsecutive;
       });
     } else {
-      setStars((prev) => Math.max(prev - 1, 0));
-      setConsecutiveCorrectAnswers(0);
-      setBonusMultiplier(100); // Reiniciar la bonificación
-    }
+      setTotalErrors((prev) => prev + 1);
+      setScore((prev) => prev - 50);
+      setConsecutiveCorrect(0);
 
-    generateCircles();
+      // Cambiar color a rojo
+      setCircles((prev) =>
+        prev.map((circle) => ({ ...circle, color: "red" }))
+      );
+
+      setTimeout(() => {
+        setRound((prev) => prev + 1);
+        generateCircles(); // Nueva ronda tras error
+      }, 300);
+    }
   };
 
-  const endGame = () => {
-    alert(`¡Juego terminado! Puntaje final: ${score}. Precisión: ${Math.round((correctAnswers / totalCards) * 100)}%`);
+  const calculateReactionTime = () => {
+    console.log("Calculando tiempo de reacción...");
+
+    if (!reactionTimes || reactionTimes.length === 0) {
+      console.log("No hay tiempos de reacción registrados.");
+      return 0;
+    }
+
+    // Filtrar valores no numéricos o inválidos
+    const validTimes = reactionTimes.filter(time => typeof time === "number" && !isNaN(time));
+    console.log("Tiempos válidos:", validTimes);
+
+    if (validTimes.length === 0) {
+      console.log("No hay tiempos de reacción válidos.");
+      return 0;
+    }
+
+    const sum = validTimes.reduce((acc, time) => acc + time, 0);
+    const average = parseFloat((sum / validTimes.length).toFixed(2));
+
+    console.log(`Suma total: ${sum}, Cantidad: ${validTimes.length}, Promedio: ${average}`);
+
+    return average;
   };
 
   return (
-    <div className="concentrate-body">
-      {!gameStarted ? (
-        <div className="concentrate-instructions">
-          <h1>Concentrante en el Objetivo</h1>
-          <p>
-            Bienvenido a "Concentrante en el Objetivo", un juego que pondrá a prueba tu atención focalizada, velocidad de procesamiento y precisión.
-            Sigue las instrucciones a continuación y prepárate para el desafío.
-          </p>
-
-          <h2>¿Cómo jugar?</h2>
-          <ul>
-            <li>Debes seleccionar la dirección correcta de las flechas en pantalla, usando el teclado o haciendo clic en la dirección correcta.</li>
-            <li>El juego dura 45 segundos. Intenta acumular tantos puntos como sea posible.</li>
-          </ul>
-
-          <h2>Niveles del juego:</h2>
-          <ol>
-            <li>
-              <strong>Nivel 1:</strong> Todos los círculos tienen flechas apuntando en la misma dirección. Selecciona esa dirección.
-            </li>
-            <li>
-              <strong>Nivel 2:</strong> Flechas en diferentes direcciones, pero todas coinciden en una dirección correcta. Encuentra y selecciona esa dirección.
-            </li>
-            <li>
-              <strong>Nivel 3:</strong> Solo dos flechas apuntan en la misma dirección. Encuentra esas flechas y selecciona la dirección correcta.
-            </li>
-            <li>
-              <strong>Nivel 4:</strong> No hay flechas visibles. Debes deducir la dirección correcta con las pistas visuales.
-            </li>
-            <li>
-              <strong>Nivel 5:</strong> Aparecen flechas con colores. Debes elegir la flecha que coincida con el color objetivo.
-            </li>
-          </ol>
-
-          <h2>Puntuación y bonificaciones:</h2>
-          <ul>
-            <li>Obtienes 50 puntos por cada respuesta correcta.</li>
-            <li>Por cada 4 aciertos consecutivos, subes de nivel y recibes bonificaciones adicionales (+100, +150, etc.).</li>
-            <li>Un error te hace perder una estrella acumulada.</li>
-          </ul>
-
-          <h2>¡Prepárate para el desafío!</h2>
-          <p>Cuando estés listo, haz clic en el botón para comenzar.</p>
-          <button className="concentrate-start-button" onClick={startGame}>Comenzar Juego</button>
-        </div>
-      ) : (
-        <>
-          <div className="concentrate-game-info">
-            <p>Puntaje: {score}</p>
-            <p>Estrellas: {stars}</p>
-            <p>Tiempo restante: {timer}s</p>
-            <p>Precisión: {Math.round((correctAnswers / totalCards) * 100) || 0}%</p>
+    <div className="concentrate-body relative w-full h-screen bg-gray-900 flex items-center justify-center">
+      <div className="concentrate-game-container relative">
+        {gameOver ? (
+          <div className="concentrate-fin-juego-container">
+            <h1>Fin del juego</h1>
+            <p>🕒 Tiempo total de juego: {GAME_TIME} segundos</p>
+            <p>🏅 <strong>Puntaje final:</strong> {score}</p>
+            <p>✅ Correctas: {correctAnswers} de {totalCards}</p>
+            <p>❌ Errores: {totalErrors}</p>
+            <p>📊 Precisión: {totalCards > 0 ? ((correctAnswers / totalCards) * 100).toFixed(2) : "0"}%</p>
+            <p>🕒 Tiempo de reacción: {(calculateReactionTime() / 1000).toFixed(2)} s</p>
+            <button onClick={startCountdown}>
+              Jugar de nuevo
+            </button>
           </div>
-          <div className="concentrate-game-area">
-            {circles.map((circle, index) => (
-              <div
-                key={index}
-                className="concentrate-circle"
-                style={{
-                  backgroundColor: circle.color,
-                  position: 'absolute',
-                  top: `${circle.y}px`,
-                  left: `${circle.x}px`,
-                  width: `${circleSize}px`,
-                  height: `${circleSize}px`,
-                }}
-              >
-                <span>{circle.direction}</span>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
+        ) : !gameStarted ? (
+          countdown === null ? ( // Mostrar pantalla de inicio si NO hay cuenta regresiva
+            <div className="concentrate-start-screen">
+              <h2>¡Bienvenido a Juego de atención!</h2>
+              <button onClick={startCountdown}>Comenzar Juego</button>
+            </div>
+          ) : (
+            <div className="concentrate-countdown">{countdown}</div>
+          )
+        ) : (
+          <>
+            <h2 className="concentrate-score">🎯 Puntaje: {score}</h2>
+            <h3 className="concentrate-stars">📈 Nivel: {stage}</h3>
+            <h3 className="concentrate-timer">⏳ Tiempo restante: {timer}s</h3>
+            <div className="concentrate-grid">
+              {circles.map((circle, index) => (
+                <div
+                  key={index}
+                  className="concentrate-circle"
+                  style={{
+                    backgroundColor: circle.color, // Aplica el color dinámico
+                    color: "#fff",
+                    position: "absolute",
+                    top: `${circle.y}px`,
+                    left: `${circle.x}px`,
+                    width: `${circleSize}px`,
+                    height: `${circleSize}px`,
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    transition: "background-color 0.3s ease",
+                  }}
+                >
+                  <span>{circle.direction}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 };

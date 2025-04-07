@@ -64,9 +64,15 @@ const gameInfo = {
     instructions: "Observa y memoriza los objetos; luego, selecciona aquellos que viste inicialmente en el orden que se presentaron."
   },
   "/games/concentrate-en-objetivo": {
-    "title": "LE FALTA UN NOMBRE",
+    "title": "Concentrante en el Objetivo",
     "description": "Desafía tu atención, velocidad y precisión en 45 segundos seleccionando la dirección correcta de las flechas.",
-    "instructions": "Usa el teclado para elegir la dirección correcta. - Nivel 1: Todas las flechas iguales. - Nivel 2: Una dirección común entre varias. - Nivel 3: Solo dos flechas iguales. - Nivel 4: Sin flechas visibles, deduce la dirección. - Nivel 5: Flechas con colores: elige la que coincida con el color objetivo. Gana 50 puntos por acierto, recibe bonificaciones por rachas y pierde una estrella con cada error."
+    "instructions": "Usa el teclado o haz clic para elegir la dirección correcta.\n" +
+      "\n" + "- Nivel 1: Todas las flechas apuntan igual.\n" +
+      "- Nivel 2: Una dirección común entre varias.\n" +
+      "- Nivel 3: Solo dos flechas iguales.\n" +
+      "- Nivel 4: Sin flechas visibles, deduce la dirección.\n" +
+      "- Nivel 5: Flechas con colores, elige la que coincida con el color objetivo.\n" +
+      "\n" + "Gana 50 puntos por acierto, recibe bonificaciones por rachas y pierde una estrella con cada error."
   },
   "/games/no-pierdas-los-objetos": {
     "title": "No Pierdas los Objetos",
