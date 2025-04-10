@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './Sigue-la-secuencia.css';
 
-const MemoriaSecuencial = () => {
+const MemoriaSecuencial = ({ onGameEnd }) => {
   // Nuevo estado para la pantalla de inicio
   const [gameStarted, setGameStarted] = useState(false);
 
@@ -10,6 +10,7 @@ const MemoriaSecuencial = () => {
   const [userInput, setUserInput] = useState([]);
   const [errorCount, setErrorCount] = useState(0);
   const [isGameOver, setIsGameOver] = useState(false);
+  const [gameStartTime, setGameStartTime] = useState(null);
   const [highlightIndex, setHighlightIndex] = useState(-1);
   const [selectedIndices, setSelectedIndices] = useState([]);
   const [maxErrors, setMaxErrors] = useState(2);
@@ -27,6 +28,32 @@ const MemoriaSecuencial = () => {
   const isProcessingRef = useRef(false);
   // Ref para el timer de error de omisión
   const omissionTimerRef = useRef(null);
+
+  const gameData = {
+    game_name: "Sigue la secuencia",
+    level: stage,
+    difficulty: stage <= 3 ? "fácil" : stage <= 6 ? "medio" : "difícil",
+    actions_taken: correctSequenceCount + errorCount + omissionErrors,
+    accuracy: Math.round(
+      (correctSequenceCount /
+        (correctSequenceCount + errorCount + omissionErrors)) * 100
+    ),
+    streaks: correctSequenceCount,
+    errors: errorCount + omissionErrors,
+    score: maxMemorySpan * 100 + correctSequenceCount * 10
+  };
+
+  const handleGameEnd = () => {
+    // Envía los datos al GameLayout
+    onGameEnd(gameData);
+  };
+
+  useEffect(() => {
+    if (isGameOver) {
+      clearTimeout(omissionTimerRef.current);
+      handleGameEnd(); // ← Función que envia los datos del juego al backend
+    }
+  }, [isGameOver]);
 
   useEffect(() => {
     if (gameStarted) {
@@ -84,7 +111,6 @@ const MemoriaSecuencial = () => {
   const handleUserInput = (number) => {
     // Si ya se está procesando un input, lo ignoramos
     if (isProcessingRef.current) {
-      console.log("Procesamiento en curso, se ignora input:", number);
       return;
     }
     isProcessingRef.current = true;
@@ -106,7 +132,7 @@ const MemoriaSecuencial = () => {
         const newErrorCount = prevErrors + 1;
         if (newErrorCount >= maxErrors) {
           setTimeout(() => {
-            setIsGameOver(true);
+            setIsGameOver(true); // Esto activará el useEffect que llama a handleGameEnd
             isProcessingRef.current = false;
           }, 1000);
         } else {
@@ -147,7 +173,6 @@ const MemoriaSecuencial = () => {
         }, 1000);
       }
     } else {
-      console.log(`Entrada correcta hasta el momento en la etapa ${stage}: ${newInput}`);
       isProcessingRef.current = false;
       // Reinicia el timer de omisión para la siguiente entrada, si fuera necesario
       omissionTimerRef.current = setTimeout(() => {
@@ -183,6 +208,7 @@ const MemoriaSecuencial = () => {
           className="start-button-secuencial"
           onClick={() => {
             setGameStarted(true);
+            setGameStartTime(new Date());
           }}
         >
           Empezar a jugar
@@ -207,17 +233,18 @@ const MemoriaSecuencial = () => {
             <strong>Errores de omisión:</strong> {omissionErrors}
           </p>
         </div>
-        <button 
+        <button
           className="restart-button-secuancial"
           onClick={() => {
+            // Reiniciar todos los estados
             setStage(1);
             setErrorCount(0);
             setIsGameOver(false);
-            // Reiniciar estadísticas:
             setMaxMemorySpan(0);
             setTotalResponseTime(0);
             setCorrectSequenceCount(0);
             setOmissionErrors(0);
+            setGameStartTime(new Date());
             generateSequence(1);
           }}
         >

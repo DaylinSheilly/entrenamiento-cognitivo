@@ -5,8 +5,8 @@ const { Pool } = require('pg');
 
 const router = express.Router();
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
 });
 
 // 📌 Registro de usuario
@@ -67,7 +67,7 @@ router.post('/login', async (req, res) => {
 
         // Enviar el token y los datos del usuario
         res.json({
-            token,
+            token, // ← Este es el JWT enviado al frontend
             user: {
                 id_usuario: user.rows[0].id_usuario,
                 nombre_usuario: user.rows[0].nombre_usuario,

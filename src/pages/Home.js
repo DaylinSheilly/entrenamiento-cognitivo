@@ -9,7 +9,7 @@ function Home() {
   const [userData, setUserData] = useState(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("neurogames_token");
 
     if (token) {
       axios.get("http://localhost:5000/auth/me", {
@@ -28,7 +28,7 @@ function Home() {
 
   const handleLogout = () => {
     console.log("Cerrando sesión...");
-    localStorage.removeItem('token');
+    localStorage.removeItem('neurogames_token');
     localStorage.removeItem('userData');
     setIsAuthenticated(false);
     setUserData(null);

@@ -14,26 +14,33 @@ const Login = () => {
 
   const navigate = useNavigate(); // Hook de navegación
 
+  // Manejar cambios en los inputs del formulario
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Manejar envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage(""); // Limpiar mensaje anterior
 
     try {
+      // Llamada al backend para iniciar sesión
       const response = await axios.post("http://localhost:5000/auth/login", formData);
       console.log("Respuesta del backend:", response.data);
 
       if (response.data.token) {
-        localStorage.setItem("token", response.data.token); // Guardar token en localStorage
-        localStorage.setItem("userData", JSON.stringify(response.data.user)); // Guardar datos del usuario
+        // Guardar el token con un nombre más específico
+        localStorage.setItem("neurogames_token", response.data.token);
+        
+        // Guardar datos del usuario
+        localStorage.setItem("userData", JSON.stringify(response.data.user));
 
         setMessage("Inicio de sesión exitoso"); // Mensaje de éxito
         setMessageType("success");
 
-        setTimeout(() => navigate("/home"), 2000); // Redirigir después de 2s
+        // Redirigir al usuario después de un pequeño retraso
+        setTimeout(() => navigate("/home"), 1000);
       } else {
         setMessage("Error: No se recibió el token");
         setMessageType("error");
@@ -53,8 +60,20 @@ const Login = () => {
         <h2>Iniciar sesión</h2>
 
         <form onSubmit={handleSubmit}>
-          <input type="email" name="correo_electronico" placeholder="Correo electrónico" onChange={handleChange} required />
-          <input type="password" name="contraseña" placeholder="Contraseña" onChange={handleChange} required />
+          <input
+            type="email"
+            name="correo_electronico"
+            placeholder="Correo electrónico"
+            onChange={handleChange}
+            required
+          />
+          <input
+            type="password"
+            name="contraseña"
+            placeholder="Contraseña"
+            onChange={handleChange}
+            required
+          />
           {/* Mensaje de éxito o error */}
           {message && (
             <div className={`auth-message ${messageType}`}>{message}</div>
