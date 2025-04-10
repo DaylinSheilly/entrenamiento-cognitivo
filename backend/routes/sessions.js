@@ -126,7 +126,7 @@ router.patch(
   }
 );
 
-// Endpoint POST /start mejorado
+// Endpoint POST /start
 router.post(
   '/start',
   authenticateToken,
@@ -151,8 +151,8 @@ router.post(
       }
 
       const newSession = await pool.query(
-        `INSERT INTO "Sessions" (id_usuario) 
-         VALUES ($1) 
+        `INSERT INTO "Sessions" (id_usuario, total_games) 
+         VALUES ($1, 0) 
          RETURNING id_session, start_time`,
         [userId]
       );
@@ -167,7 +167,7 @@ router.post(
   }
 );
 
-// Endpoint PUT /end/:id_session mejorado
+// Endpoint PUT /end/:id_session
 router.put(
   '/end/:id_session',
   [
@@ -205,7 +205,7 @@ router.put(
   }
 );
 
-// Endpoint GET /user-history/:id_usuario mejorado
+// Endpoint GET /user-history/:id_usuario
 router.get(
   '/user-history/:id_usuario',
   [
@@ -248,6 +248,51 @@ router.get(
       });
     } catch (error) {
       next(error);
+    }
+  }
+);
+
+// Cerrar sesión activa
+router.put(
+  '/end',
+  authenticateToken,
+  async (req, res) => {
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const userId = req.user.userId;
+
+      // 1. Buscar sesión activa
+      const activeSession = await client.query(
+        `SELECT id_session FROM "Sessions" 
+         WHERE id_usuario = $1 AND end_time IS NULL
+         ORDER BY start_time DESC LIMIT 1`,
+        [userId]
+      );
+
+      if (!activeSession.rows.length) {
+        return res.status(404).json({ error: 'No hay sesión activa' });
+      }
+
+      // 2. Actualizar sesión
+      const sessionId = activeSession.rows[0].id_session;
+      const result = await client.query(
+        `UPDATE "Sessions"
+         SET 
+           end_time = NOW(),
+           total_time = EXTRACT(EPOCH FROM (NOW() - start_time))
+         WHERE id_session = $1
+         RETURNING *`,
+        [sessionId]
+      );
+
+      await client.query('COMMIT');
+      res.json(result.rows[0]);
+    } catch (error) {
+      await client.query('ROLLBACK');
+      res.status(500).json({ error: 'Error al cerrar sesión' });
+    } finally {
+      client.release();
     }
   }
 );

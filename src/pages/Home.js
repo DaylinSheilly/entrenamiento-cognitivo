@@ -26,13 +26,27 @@ function Home() {
     }
   }, []);
 
-  const handleLogout = () => {
-    console.log("Cerrando sesión...");
-    localStorage.removeItem('neurogames_token');
-    localStorage.removeItem('userData');
-    setIsAuthenticated(false);
-    setUserData(null);
-    navigate('/');
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem("neurogames_token");
+      
+      // Cerrar sesión en el backend
+      if (token) {
+        await axios.put('http://localhost:5000/sessions/end', {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+    } finally {
+      // Limpiar frontend
+      localStorage.removeItem('neurogames_token');
+      localStorage.removeItem('userData');
+      localStorage.removeItem('currentSession'); // Si lo estás almacenando
+      setIsAuthenticated(false);
+      setUserData(null);
+      navigate('/');
+    }
   };
 
   const handleDeleteAccount = async () => {
