@@ -3,7 +3,8 @@
   padding: 10px;
   background-color: #ffffff; /* Mismo fondo que el GameContainer */
   color: #1a1a1a;
-  border: 2px solid #f0a500;
+  box-shadow: 0px 12px 24px rgba(0, 0, 0, 0.2), 
+              0px -8px 16px rgba(0, 0, 0, 0.05); /* Sombra por todos lados */
   border-radius: 8px;
   box-sizing: border-box;
   max-height: 220px; /* Ajusta la altura para que tenga scroll cuando el contenido sea extenso */

@@ -1,44 +1,34 @@
 .games-body {
     box-sizing: border-box;
-    background-color: #1a1a1a;
-    color: #ffffff;
+    background-color: #eeeeee; /* Fondo suave */
+    color: #333333; /* Texto oscuro */
     margin: 0;
     padding: 20px;
     min-height: 100vh;
-    }
+    font-family: "Roboto", sans-serif; /* Fuente moderna */
+}
 
 .games-container {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: #2d2d2d;
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    position: fixed; /* Mantener el contenedor centrado en la pantalla */
+    top: 50%; /* Centrar verticalmente */
+    left: 50%; /* Centrar horizontalmente */
+    transform: translate(-50%, -50%); /* Ajustar al centro exacto */
+    box-shadow: 0px 12px 24px rgba(0, 0, 0, 0.2), 
+                0px -8px 16px rgba(0, 0, 0, 0.05); /* Sombra por todos lados */
+    max-width: 1000px; /* Ancho máximo */
+    margin: auto; /* Asegurar que esté centrado */
+    padding: 20px; /* Espaciado interno */
+    background-color: #ffffff; /* Fondo blanco limpio */
+    border-radius: 15px; /* Bordes redondeados más suaves */
     text-align: center;
-    animation: aparecer 0.5s ease-out;
+    animation: fadeInScaleShadow 0.5s ease-out; /* Animación de entrada */
 }
 
 .games-container-title {
-    color: #ffffff;
+    color: #333333; /* Texto oscuro */
     margin-bottom: 30px;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-    font-size: 2rem;
-}
-
-.games-button {
-    padding: 12px 24px;
-    font-size: 16px;
-    background-color: #3498db;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-transform: uppercase;
-    font-weight: bold;
-    letter-spacing: 1px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    min-width: 200px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1); /* Sombra ligera */
+    font-size: 2.5rem; /* Tamaño aumentado */
 }
 
 .games-buttons-container {
@@ -49,28 +39,43 @@
     margin-top: 20px;
 }
 
-.games-buttons-container button{
-    padding: 12px 24px;
-    font-size: 16px;
-    background-color: #3498db;
-    color: white;
+.games-buttons-container button {
+    padding: 14px 28px; /* Botones más grandes */
+    font-size: 18px; /* Texto más grande */
+    background-color: #3498db; /* Azul moderno */
+    color: white; /* Texto blanco */
     border: none;
-    border-radius: 8px;
+    border-radius: 8px; /* Bordes redondeados */
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s ease-in-out; /* Transición suave */
     text-transform: uppercase;
     font-weight: bold;
-    letter-spacing: 1px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    min-width: 200px;
+    letter-spacing: 1.2px; /* Espaciado mejorado */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra más marcada */
 }
 
 .games-buttons-container button:hover {
-    background-color: #2980b9;
-    transform: translateY(-2px);
+    background-color: #2980b9; /* Hover más oscuro */
+    transform: translateY(-3px); /* Efecto hover elevado */
 }
 
 .games-buttons-container button:focus {
     outline: none;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 10px rgba(52,152,219,0.6); /* Sombra azul brillante al enfocar */
 }
+
+/* Animación de entrada centrada y con escala */
+@keyframes fadeInScaleShadow {
+    from {
+      opacity: 0; /* Comienza invisible */
+      transform: translate(-50%, -50%) scale(0.9); /* Escala inicial más pequeña */
+      box-shadow: none; /* Sin sombra al inicio */
+    }
+    to {
+      opacity: 1; /* Totalmente visible */
+      transform: translate(-50%, -50%) scale(1); /* Escala normal */
+      box-shadow: 
+        0px 12px 24px rgba(0, 0, 0, 0.2), 
+        0px -8px 16px rgba(0, 0, 0, 0.05); /* Sombra por todos lados al final */
+    }
+  }
