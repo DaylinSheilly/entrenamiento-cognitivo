@@ -1,10 +1,11 @@
 html, body {
+  box-sizing: border-box;
   margin: 0;
   padding: 0;
   height: 100%;
   width: 100%;
-  overflow: hidden; /* Evita scroll */
-  background-color: #1a1a1a;
+  overflow: auto;
+  background-color: #e2e2e2;
   color: #ffffff;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',

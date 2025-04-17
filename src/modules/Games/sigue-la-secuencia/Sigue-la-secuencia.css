@@ -1,23 +1,27 @@
 .centered-game-secuencia {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  height: 100vh;
-  background-color: #1a1a1a; /* Color oscuro de fondo */
+  justify-content: center;
+  background-color: #fff/*#1a1a1a; /* Color oscuro de fondo */
 }
-
 
 .game-container-secuancial {
   width: 400px;
   padding: 30px;
-  background-color: #cccccc; /* Fondo oscuro del contenedor */
-  border-radius: 15px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-  text-align: center;
+  background-color: #9ebde6; /* Fondo oscuro del contenedor */
+  border: 2px solid #f0a500;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   color: #cccccc; /* Color de texto claro */
 }
 
-.game-container-secuencial h1, /* Aplica estilo oscuro al título */
+.game-container-secuancial h1, /* Aplica estilo oscuro al título */
 .game-container-secuancial p { /* Aplica estilo oscuro a la etapa */
   color: #1e1e1e;
 }
@@ -87,12 +91,19 @@
 }
 
 .game-over-screen-secuancial {
+  display: inline-block; /* Se ajusta al contenido */
   text-align: center;
   padding: 20px;
-  background-color: #2d2d2d; /* Fondo oscuro */
+  background-color: #9ebde6; /* Fondo claro */
   border-radius: 10px;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-  color: #cccccc;
+  color: #333;
+  max-width: 90%;
+  width: auto;
+  height: auto; /* Altura ajustable según el contenido */
+  min-width: 300px;
+  align-self: center;  /* Evita que se estire verticalmente */
+  margin: auto;        /* Centrado en el contenedor flex */
 }
 
 .restart-button-secuancial {
@@ -120,4 +131,49 @@
 .restart-button-secuancial:focus {
   outline: none;
   box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+/* Estilos para la pantalla de inicio */
+.start-screen-secuencial {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 600px;         /* Ocupa toda la altura de la ventana */
+  background-color: #fff;   /* Fondo claro para destacar */
+  color: #333;               /* Color de texto oscuro */
+  text-align: center;
+  padding: 20px;
+}
+
+.start-screen-secuencial h1 {
+  font-size: 3rem;
+  margin-bottom: 2rem;
+}
+
+.start-button-secuencial {
+  padding: 1rem 2rem;
+  font-size: 1.5rem;
+  background-color: #3498db; /* Azul vibrante */
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.start-button-secuencial:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+}
+
+.secuencia-notification {
+  margin-top: 20px; /* Separa la notificación del contenedor del juego */
+  text-align: center;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  display: inline-block;
 }

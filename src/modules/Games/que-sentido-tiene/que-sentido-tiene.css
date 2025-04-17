@@ -1,76 +1,192 @@
 /* General container styles */
-#sentido-container {
+.sentido-game-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 600px;
+  width: 600px;
+  background-color: transparent;
   text-align: center;
-  padding: 20px;
-  font-family: Arial, sans-serif;
+  position: relative; /* Asegura que los elementos absolutos se posicionen dentro */
+  overflow: hidden; /* Previene que los elementos sobresalgan */
 }
 
-/* Title styles */
-#sentido-title {
-  font-size: 2.5em;
-  font-weight: bold;
-  margin-bottom: 10px;
-  color: #d4d4d4;
-}
-
-/* Instructions styles */
-#sentido-instructions {
-  font-size: 1.2em;
-  color: #afafaf;
-  margin: 10px 0;
-}
-
-#sentido-instructions strong {
+/* Estilos para títulos */
+.sentido-game-container h1 {
   color: #ffffff;
+  margin-bottom: 0px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.sentido-game-container h2 {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.sentido-game-container h3 {
+  font-size: 1.5rem;
+  font-weight: normal;
+  color: #444;
+  margin-bottom: 6px;
+}
+
+.sentido-game-container p {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.sentido-score,
+.sentido-stars,
+.sentido-timer {
+  position: absolute;
+  color: white;
+  font-size: 0.875rem; /* Reducido a 14px */
+  font-weight: bold;
+  white-space: nowrap; /* Evita saltos de línea */
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.sentido-score {
+  top: 0.5rem;
+  left: 0.5rem;
+}
+
+.sentido-stars {
+  top: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.sentido-timer {
+  top: 0.5rem;
+  right: 0.5rem;
+}
+
+/* Evitar conflictos con los estilos globales */
+.sentido-game-container .sentido-score,
+.sentido-game-container .sentido-stars,
+.sentido-game-container .sentido-timer {
+  font-size: 1rem; /* Asegurar tamaño menor dentro del contenedor */
+  color: #222 !important;
+}
+
+/* Pantalla de inicio */
+.sentido-start-screen {
+  text-align: center;
+  padding: 2rem;
+  background-color: #9ebde6;
+  border: 2px solid #f0a500;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin: 2rem;
+}
+
+.sentido-start-screen button {
+  font-size: 1.2em;
+  padding: 15px 30px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sentido-start-screen button:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+}
+
+.sentido-countdown {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 6rem;
+  font-weight: bold;
+  color: #222;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Contenedor principal del juego */
+.sentido-objetos-juego-contenedor {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Arial', sans-serif;
+  text-align: center;
+  background-color: #3498db;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  animation: aparecer 0.5s ease-out;
+}
+
+/* Título del juego */
+.sentido-objetos-juego-contenedor h3 {
+  font-size: 1.5rem;
+  font-weight: normal;
+  color: #fff;
+  margin-bottom: 6px;
 }
 
 /* Word display styles */
-#sentido-word {
+.sentido-word {
   font-size: 2em;
   font-weight: bold;
-  color: #007BFF;
+  background-color: #e1ecf4;
+  color: #4a90e2;
   margin: 20px 0;
   padding: 10px;
-  border: 2px solid #007BFF;
+  border: 2px solid #4a90e2;
   border-radius: 8px;
   display: inline-block;
 }
 
-/* Score and stats container styles */
-#sentido-stats {
-  margin-top: 30px;
+.sentido-word.correct {
+    background-color: #a8e6a2; /* Verde suave */
+    color: #2ecc71;
+    border-color: #2ecc71;
 }
 
-#sentido-stats h3 {
-  font-size: 1.5em;
-  color: #cfcfcf;
-  margin: 5px 0;
+.sentido-word.incorrect {
+    background-color: #f8a5a5; /* Rojo suave */
+    color: #e74c3c;
+    border-color: #e74c3c;
 }
 
-/* Keyboard instruction styles */
-#sentido-instructions-key {
-  font-weight: bold;
-  color: #007BFF;
+.sentido-fin-juego-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Arial', sans-serif;
+  text-align: center;
+  background-color: #3498db;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  animation: aparecer 0.5s ease-out;
 }
-
-/* Game over styles */
-#sentido-summary {
-  font-size: 1.5em;
-  color: #e0e0e0;
-  margin-bottom: 20px;
-}
-
-#sentido-restart-btn {
-  font-size: 1.2em;
-  padding: 10px 20px;
-  color: #ffffff;
-  background-color: #007BFF;
+  
+.sentido-fin-juego-container button {
+  background-color: #75e78e;
+  border: 2px solid #61bd75;
+  color: white;
+  padding: 12px 30px;
   border: none;
-  border-radius: 5px;
+  border-radius: 25px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  font-size: 16px;
+  font-weight: bold;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  margin-top: 15px;
 }
 
-#sentido-restart-btn:hover {
-  background-color: #0056b3;
+.sentido-fin-juego-container button:hover {
+  background-color: #61bd75;
+  transform: translateY(-2px);
 }

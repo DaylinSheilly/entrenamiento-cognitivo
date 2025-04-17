@@ -1,0 +1,101 @@
+/* Estilos para "Formulario de autenticación Auth.jsx" */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+.auth-wrapper {
+  display: flex;
+  justify-content: center; /* Centrar horizontalmente */
+  align-items: center; /* Centrar verticalmente */
+  height: 100vh; /* Ocupar toda la altura de la pantalla */
+  width: 100vw; /* Ocupar todo el ancho de la pantalla */
+  background-color: #e2e2e2; /* Fondo suave */
+}
+
+.auth-container {
+  position: fixed; /* Fijo para mantenerlo centrado */
+  top: 50%; /* Centrar verticalmente */
+  left: 50%; /* Centrar horizontalmente */
+  transform: translate(-50%, -50%); /* Ajustar al centro exacto */
+  text-align: center;
+  padding: 2rem;
+  background-color: #ffffff; /* Fondo blanco limpio */
+  color: #333333; /* Texto oscuro */
+  border-radius: 15px;
+  box-shadow: 0px 12px 24px rgba(0, 0, 0, 0.2), 
+              0px -8px 16px rgba(0, 0, 0, 0.05); /* Sombra por todos lados */
+  }
+  
+  .auth-container h2 {
+    font-size: 2.5rem;
+    color: #333333; /* Texto oscuro */
+    margin: 10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  
+  .auth-container input {
+    width: 90%;
+    padding: 8px;
+    margin: 8px 0;
+    border: 1px solid #333333;
+    border-radius: 4px;
+  }
+  
+  .auth-container button {
+    font-size: 1em; /* Tamaño de fuente ajustado */
+    padding: 12px 24px; /* Espaciado interno */
+    background-color: #3498db; /* Azul moderno */
+    color: white; /* Texto blanco */
+    border: none;
+    border-radius: 8px; /* Bordes redondeados */
+    cursor: pointer;
+    transition: all 0.3s ease-in-out; /* Transición suave */
+    margin-top: 15px;
+    font-weight: bold;
+  }
+  
+  .auth-container button:hover {
+    background-color: #2980b9; /* Hover más oscuro */
+    transform: translateY(-3px); /* Efecto hover elevado */
+  }  
+
+  .auth-container button:focus {
+      outline: none;
+      box-shadow: 0 0 10px rgba(52, 152, 219, 0.6); /* Sombra azul brillante al enfocar */
+  }
+
+  /* Mensajes de éxito y error */
+.auth-message {
+  margin-top: 15px;
+  padding: 12px;
+  border-radius: 5px;
+  text-align: center;
+  font-weight: bold;
+  width: calc(100% - 20px); /* Ajustar ancho */
+}
+
+.auth-message.success {
+  background-color: #d4edda; /* Verde claro */
+  color: #155724; /* Texto verde oscuro */
+  border: 1px solid #c3e6cb; /* Borde verde claro */
+}
+
+.auth-message.error {
+  background-color: #f8d7da; /* Rojo claro */
+  color: #721c24; /* Texto rojo oscuro */
+  border: 1px solid #f5c6cb; /* Borde rojo claro */
+}
+
+/* Animación de entrada para el contenedor principal */
+@keyframes fadeIn {
+  from {
+    opacity: 0; /* Comienza invisible */
+    transform: translate(-50%, -50%) scale(0.9); /* Escala inicial más pequeña */
+  }
+  to {
+    opacity: 1; /* Totalmente visible */
+    transform: translate(-50%, -50%) scale(1); /* Escala normal */
+  }
+}
+
+.auth-container {
+  animation: fadeIn 0.5s ease-out; /* Aplicar animación al contenedor */
+}

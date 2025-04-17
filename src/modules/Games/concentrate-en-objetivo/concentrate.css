@@ -1,11 +1,168 @@
+/* Fuente personalizada desde Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
 .concentrate-body {
-  background-color: #1a1a1a;
   color: #ffffff;
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
   overflow: hidden;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+  color: #ffffff;
+  margin: 0;
+  padding: 20px;
+}
+
+.concentrate-game-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 600px;
+  width: 600px;
+  background-color: transparent;
+  text-align: center;
+}
+  
+  /* Estilos para títulos */
+  .concentrate-game-container h1 {
+    color: #ffffff;
+    margin-bottom: 0px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  
+  .concentrate-game-container h2 {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 8px;
+  }
+  
+  .concentrate-game-container h3 {
+    font-size: 1.5rem;
+    font-weight: normal;
+    color: #444;
+    margin-bottom: 6px;
+  }
+  
+  .concentrate-score,
+  .concentrate-stars,
+  .concentrate-timer {
+    position: absolute;
+    color: white;
+    font-size: 0.875rem; /* Reducido a 14px */
+    font-weight: bold;
+    white-space: nowrap; /* Evita saltos de línea */
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  }
+  
+  .concentrate-score {
+    top: 0.5rem;
+    left: 0.5rem;
+  }
+  
+  .concentrate-stars {
+    top: 0.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  
+  .concentrate-timer {
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+  
+  /* Evitar conflictos con los estilos globales */
+  .concentrate-game-container .concentrate-score,
+  .concentrate-game-container .concentrate-stars,
+  .concentrate-game-container .concentrate-timer {
+    font-size: 1rem; /* Asegurar tamaño menor dentro del contenedor */
+    color: #222 !important;
+  }
+  
+  .concentrate-countdown {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 6rem;
+    font-weight: bold;
+    color: #222;
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  
+  /* Start Screen */
+  .concentrate-start-screen {
+    text-align: center;
+    padding: 2rem;
+    background-color: #9ebde6;
+    border: 2px solid #f0a500;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin: 2rem;
+  }
+  
+  .concentrate-start-screen h1 {
+    font-size: 2.5rem;
+    color: #1565c0;
+  }
+  
+  .concentrate-start-screen button {
+    font-size: 1.2em;
+    padding: 15px 30px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    margin: 20px auto; /* Separa el botón del resto y lo centra */
+    display: block; /* Asegura que el margen auto lo centre */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .concentrate-start-screen button:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+  }
+
+  .concentrate-start-screen button:active {
+      transform: scale(0.95);
+  }
+  
+  .concentrate-game-info {
+    display: flex;
+    justify-content: center; /* Alinea los elementos horizontalmente */
+    align-items: center; /* Alinea los elementos verticalmente */
+    gap: 1rem; /* Espacio entre elementos */
+    text-align: center;
+    padding: 0.5rem 2rem;
+    background-color: #9ebde6;
+    border: 2px solid #f0a500;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin: 0rem;
+  }
+  
+  .concentrate-game-stats {
+    display: flex;
+    justify-content: center; /* Centra horizontalmente */
+    align-items: center; /* Asegura alineación vertical */
+    gap: 20px; /* Espacio entre "Puntaje" y "Errores" */
+  }
+
+.concentrate-game-app {
+  width: auto;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Arial', sans-serif;
+  text-align: center;
+  background-color: #3498db;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  animation: aparecer 0.5s ease-out;
 }
 
 .concentrate-game-info {
@@ -16,10 +173,16 @@
   z-index: 10;
 }
 
-.concentrate-game-area {
-  width: 80%;
-  height: 80%;
+.concentrate-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 80px);
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
   position: relative;
+  width: 100%;
+  height: 100vh; /* O el tamaño adecuado */
+  overflow: hidden;
 }
 
 .concentrate-circle {
@@ -31,7 +194,8 @@
   border-radius: 50%;
   font-size: 2rem;
   pointer-events: none;
-  color: #1a1a1a;
+  color: #fff; /* Color del texto blanco */
+  background-color: #1a1a1a; /* Color de fondo oscuro */
   position: absolute;
   transition: all 0.5s ease-in-out;
 }
@@ -82,4 +246,39 @@
   margin: 20px auto;
   max-width: 800px;
   line-height: 1.6;
+}
+
+.concentrate-fin-juego-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Arial', sans-serif;
+  text-align: center;
+  background-color: #3498db;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  animation: aparecer 0.5s ease-out;
+}
+  
+.concentrate-fin-juego-container button {
+  background-color: #75e78e;
+  border: 2px solid #61bd75;
+  color: white;
+  padding: 12px 30px;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  margin-top: 15px;
+}
+
+.concentrate-fin-juego-container button:hover {
+  background-color: #61bd75;
+  transform: translateY(-2px);
+}
+.concentrate-fin-juego-container button:active {
+  transform: scale(0.95);
 }

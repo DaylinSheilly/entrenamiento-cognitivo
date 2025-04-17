@@ -1,26 +1,30 @@
 /* Estilos para la vista de Home */
 
 .home-body {
-    background-color: #1a1a1a;
-    color: #ffffff;
+    background-color: #e2e2e2; /* Fondo suave */
+    color: #333333; /* Texto oscuro */
     margin: 0;
     padding: 20px;
     min-height: 100vh;
     }
 
 .home-container {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: #2d2d2d;
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    position: fixed; /* Mantener el contenedor centrado en la pantalla */
+    top: 50%; /* Centrar verticalmente */
+    left: 50%; /* Centrar horizontalmente */
+    transform: translate(-50%, -50%); /* Ajustar al centro exacto */
+    max-width: 1000px; /* Ancho máximo */
+    margin: auto; /* Asegurar que esté centrado */
+    padding: 20px; /* Espaciado interno */
+    background-color: #ffffff; /* Fondo blanco limpio */
+    border-radius: 10px; /* Bordes redondeados */
+    box-shadow: 0px 12px 24px rgba(0, 0, 0, 0.2), 
+                0px -8px 16px rgba(0, 0, 0, 0.05); /* Sombra por todos lados */
     text-align: center;
-    animation: aparecer 0.5s ease-out;
 }
 
 .home-container h1 {
-    color: #ffffff;
+    color: #333333; /* Texto oscuro */
     margin-bottom: 30px;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
     font-size: 2rem;
@@ -59,10 +63,4 @@
 .home-buttons button:focus {
     outline: none;
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-}
-
-/* Animación de aparición */
-@keyframes aparecer {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
 }

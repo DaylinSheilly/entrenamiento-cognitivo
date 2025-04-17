@@ -1,149 +1,268 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'; 
-import { Clock, Star } from 'lucide-react'; 
-import './comparacion.css'; 
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import './comparacion.css';
 
-const COLORS = ['red', 'blue', 'green', 'yellow', 'purple']; 
-const COLOR_NAMES = { 
-    red: 'Rojo', 
-    blue: 'Azul', 
-    green: 'Verde', 
-    yellow: 'Amarillo', 
-    purple: 'Púrpura' 
-}; 
+const COLORS = ['red', 'blue', 'green', 'yellow', 'purple'];
+const COLOR_NAMES = {
+    red: 'Rojo',
+    blue: 'Azul',
+    green: 'Verde',
+    yellow: 'Amarillo',
+    purple: 'Púrpura'
+};
+const NAMES_TO_COLOR = {
+    'Rojo': 'red',
+    'Azul': 'blue',
+    'Verde': 'green',
+    'Amarillo': 'yellow',
+    'Púrpura': 'purple'
+};
 
-const MAX_LEVEL = 4; 
+const MAX_LEVEL = 4;
 
-const CognitiveInhibitionGame = () => { 
-    const [gameState, setGameState] = useState({ 
-        timeLeft: 45, 
-        score: 50, 
-        level: 1, 
-        stars: 1, 
-        correctCount: 0, 
-        totalCount: 0, 
-        consecutiveCorrect: 0, 
-        leftCard: { color: '', word: '' }, 
-        rightCard: { color: '', word: '' }, 
-        gameStarted: false, 
-        gameOver: false, 
-    }); 
+const GAME_TIME = 45;
 
-    const [lastGeneratedColor, setLastGeneratedColor] = useState(null); 
-    const timerRef = useRef(null); 
+const CognitiveInhibitionGame = () => {
+    const [gameState, setGameState] = useState({
+        timeLeft: GAME_TIME,
+        score: 50,
+        level: 1,
+        maxLevelReached: 1,  // Nuevo estado para almacenar el nivel máximo alcanzado
+        stars: 0,
+        correctCount: 0,
+        totalErrors: 0,  // Nuevo estado para almacenar el total de errores
+        totalCount: 0,
+        consecutiveCorrect: 0,
+        leftCard: { color: '', word: '' },
+        rightCard: { color: '', word: '' },
+        gameStarted: false,
+        gameOver: false,
+        feedbackColor: null,  // Nuevo estado para mostrar aciertos/errores
+    });
 
-    const generateRandomColor = useCallback((excludeColor = null) => { 
-        let color; 
-        do { 
-            color = COLORS[Math.floor(Math.random() * COLORS.length)]; 
-        } while (color === excludeColor || color === lastGeneratedColor); 
+    const [countdown, setCountdown] = useState(null);
+    const [reactionTimes, setReactionTimes] = useState([]);
+    const precision = gameState.totalCount > 0 ? ((gameState.correctCount / gameState.totalCount) * 100).toFixed(2) : '0.00';
 
-        setLastGeneratedColor(color); 
-        return color; 
-    }, [lastGeneratedColor]); 
+    const [lastGeneratedColor, setLastGeneratedColor] = useState(null);
+    const timerRef = useRef(null);
 
-    const generateCards = useCallback((level) => { 
-        const leftColor = generateRandomColor(); 
-        const shouldMatch = Math.random() < 0.5; 
-        
-        let leftWord = COLOR_NAMES[leftColor]; 
-        let rightColor, rightWord; 
-        
-        switch (level) { 
-            case 1: 
-                rightColor = shouldMatch ? leftColor : generateRandomColor(leftColor); 
-                leftWord = ''; 
-                rightWord = ''; 
-                break; 
+    const startCountdown = () => {
+        if (timerRef.current) clearInterval(timerRef.current); // Limpiar cualquier temporizador previo
+        setGameState(prevState => ({
+            ...prevState,
+            gameOver: false,
+            gameStarted: false,
+        }));
+        setCountdown(3);
+        timerRef.current = setInterval(() => {
+            setCountdown(prev => {
+                if (prev === 1) {
+                    clearInterval(timerRef.current);
+                    setCountdown(null);
+                    startGame(); // Iniciar el juego cuando llegue a 0
+                }
+                return prev - 1;
+            });
+        }, 1000);
+    };
 
-            case 2: 
-                leftWord = COLOR_NAMES[generateRandomColor(leftColor)]; 
-                rightColor = shouldMatch ? leftColor : generateRandomColor(leftColor); 
-                rightWord = ''; 
-                break; 
+    const startGame = () => {
+        if (timerRef.current) clearInterval(timerRef.current);
 
-            case 3: 
-                leftWord = COLOR_NAMES[generateRandomColor(leftColor)]; 
-                rightColor = generateRandomColor(); 
-                rightWord = shouldMatch ? leftWord : COLOR_NAMES[generateRandomColor(rightColor)]; 
-                break; 
+        setGameState({
+            timeLeft: 45,
+            score: 50,
+            level: 1,
+            maxLevelReached: 1,
+            stars: 0,
+            correctCount: 0,
+            totalErrors: 0,
+            totalCount: 0,
+            consecutiveCorrect: 0,
+            leftCard: { color: '', word: '' },
+            rightCard: { color: '', word: '' },
+            ...generateCards(1),
+            gameStarted: true,
+            gameOver: false,
+        });
 
-            case 4: 
-                leftWord = COLOR_NAMES[generateRandomColor(leftColor)]; 
-                rightColor = shouldMatch ? leftColor : generateRandomColor(leftColor); 
-                rightWord = ''; 
-                break; 
+        setCountdown(null);
+        setReactionTimes([]);
+        setLastGeneratedColor(null);
+    };
 
-            default: break; 
-        } 
-        
-        return { leftCard: { color: leftColor, word: leftWord }, rightCard: { color: rightColor, word: rightWord } }; 
-        
-    }, [generateRandomColor]); 
+    const getTextContrastColor = (bgColor) => {
+        const lightColors = ['yellow']; // Colores donde el texto debe ser negro
+        return lightColors.includes(bgColor) ? 'black' : 'white';
+    };
 
-    const startGame = () => { 
-        if (timerRef.current) clearInterval(timerRef.current); 
-        
-        setGameState({ timeLeft: 45, score: 50, level: 1, stars: 1, correctCount: 0, totalCount: 0, consecutiveCorrect: 0, ...generateCards(1), gameStarted: true, gameOver: false }); 
-    }; 
 
-    useEffect(() => {  
-        if (!gameState.gameStarted) return; 
-        
-        const handleKeyDown = (event) => {  
-            if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {  
-                let isMatch = false;  
-                
-                switch (gameState.level) {  
+    const generateRandomColor = useCallback((excludeColor = null) => {
+        let color;
+        do {
+            color = COLORS[Math.floor(Math.random() * COLORS.length)];
+        } while (color === excludeColor || color === lastGeneratedColor);
+
+        setLastGeneratedColor(color);
+        return color;
+    }, [lastGeneratedColor]);
+
+    const generateCards = useCallback((level) => {
+        const shouldMatch = Math.random() < 0.5;
+        const leftColor = generateRandomColor();
+        let rightColor, rightWord, leftWord;
+
+        switch (level) {
+            case 1:
+                // Los comparacion de las tarjetas coinciden
+                leftWord = '';
+                rightColor = shouldMatch ? leftColor : generateRandomColor();
+                rightWord = '';
+                break;
+
+            case 2:
+                // Palabra de la izquierda coincide con el color de la tarjeta de la derecha
+                rightColor = generateRandomColor();
+                leftWord = shouldMatch ? COLOR_NAMES[rightColor] : COLOR_NAMES[generateRandomColor()];
+                rightWord = '';
+                break;
+
+            case 3:
+                // Las palabras no coinciden con el color de sus tarjetas
+                leftWord = !shouldMatch ? COLOR_NAMES[leftColor] : COLOR_NAMES[generateRandomColor()];
+                rightColor = generateRandomColor();
+                rightWord = !shouldMatch ? COLOR_NAMES[rightColor] : COLOR_NAMES[generateRandomColor()];
+                break;
+
+            case 4:
+                // La palabra de la izquierda no coincide con el color de su tarjeta,
+                // La palabra de la derecha coincide con el color de la tarjeta de la izquierda
+                // El color de la tarjeta de las derecha no debe coincidir con la palabra de la derecha 
+                leftWord = !shouldMatch ? COLOR_NAMES[leftColor] : COLOR_NAMES[generateRandomColor(leftColor)];
+                rightWord = shouldMatch ? COLOR_NAMES[leftColor] : COLOR_NAMES[generateRandomColor()];
+                rightColor = !shouldMatch ? NAMES_TO_COLOR[rightWord] : generateRandomColor(NAMES_TO_COLOR[rightWord]);
+                break;
+
+            default: break;
+        }
+
+        return { leftCard: { color: leftColor, word: leftWord }, rightCard: { color: rightColor, word: rightWord } };
+
+    }, [generateRandomColor]);
+
+    const reactionStartTime = useRef(0);
+    let reactionEndTime = 0;
+
+    useEffect(() => {
+        if (!gameState.gameStarted) return;
+
+        const handleKeyDown = (event) => {
+            if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+                let isMatch = false;
+                const reactionEndTime = Date.now();
+
+                if (reactionStartTime.current === 0) {
+                    // Evita el primer cálculo incorrecto
+                    reactionStartTime.current = reactionEndTime;
+                    return;
+                }
+
+                console.log("⏳ Tiempo inicial:", reactionStartTime.current);
+                console.log("⏳ Tiempo actual:", reactionEndTime);
+
+                switch (gameState.level) {
                     case 1:
-                        isMatch = gameState.leftCard.color === gameState.rightCard.color;  
-                        break;  
+                        // Nivel 1: Coincidencia exacta de colores.
+                        isMatch = gameState.leftCard.color === gameState.rightCard.color;
+                        break;
+
                     case 2:
+                        // Nivel 2: La palabra en la izquierda debe coincidir con el color en la derecha.
+                        isMatch = gameState.leftCard.word === COLOR_NAMES[gameState.rightCard.color];
+                        break;
+
                     case 3:
-                        isMatch = gameState.leftCard.word === gameState.rightCard.color;  
-                        break;  
+                        // Nivel 3: Ni la palabra ni el color pueden coincidir entre ambas tarjetas.
+                        isMatch = (gameState.leftCard.word !== COLOR_NAMES[gameState.leftCard.color]) &&
+                            (gameState.rightCard.word !== COLOR_NAMES[gameState.rightCard.color]);
+                        break;
+
                     case 4:
-                        isMatch = gameState.leftCard.word === gameState.rightCard.color;  
-                        break;  
+                        // Nivel 4: La palabra en la izquierda debe coincidir con el color de la derecha,
+                        // pero la palabra de la derecha NO debe coincidir con su propio color.
+                        isMatch = (gameState.leftCard.word === COLOR_NAMES[gameState.rightCard.color]) &&
+                            (gameState.rightCard.word !== COLOR_NAMES[gameState.rightCard.color]);
+                        break;
+
                     default:
-                        break;  
-                }  
+                        isMatch = false;
+                        break;
+                }
 
-                const correctKey = isMatch ? 'ArrowRight' : 'ArrowLeft';  
-                const playerCorrect = event.key === correctKey;  
+                const correctKey = isMatch ? 'ArrowRight' : 'ArrowLeft';
+                const playerCorrect = event.key === correctKey;
 
-                setGameState(prev => {  
-                    const newConsecutiveCorrect = playerCorrect ? prev.consecutiveCorrect + 1 : 0;  
-                    const shouldLevelUp = playerCorrect && newConsecutiveCorrect >= 4 && prev.level < MAX_LEVEL;  
-                    const newLevel = shouldLevelUp ? prev.level + 1 : prev.level;  
-                    const newStars = shouldLevelUp ? prev.stars + 1 : prev.stars;  
+                const reactionTime = reactionEndTime - reactionStartTime.current;
+                console.log("⏱ Tiempo de reacción calculado:", reactionTime);
+                setReactionTimes(prevTimes => [...prevTimes, reactionTime]);
 
-                    return {  
+                setGameState(prev => {
+                    const newConsecutiveCorrect = playerCorrect ? prev.consecutiveCorrect + 1 : 0;
+                    const baseScore = playerCorrect ? 10 : -5;
+                    let bonus = 0;
+                    let starIncrement = 0;
+                    let newLevel = prev.level;
+
+                    if (playerCorrect && newConsecutiveCorrect % 4 === 0) {
+                        bonus = 100 + ((newConsecutiveCorrect / 4 - 1) * 50);
+                        starIncrement = 1;
+                        if (prev.level < MAX_LEVEL) {
+                            newLevel = prev.level + 1;
+                        }
+                    }
+
+                    const newScore = prev.score + baseScore + bonus;
+                    const newStars = prev.stars + starIncrement;
+
+                    return {
                         ...prev,
-                        score: playerCorrect ? prev.score + 10 : prev.score - 5,
-                        correctCount: playerCorrect ? prev.correctCount + 1 : prev.correctCount,
+                        score: newScore,
                         totalCount: prev.totalCount + 1,
+                        correctCount: playerCorrect ? prev.correctCount + 1 : prev.correctCount,
+                        totalErrors: !playerCorrect ? prev.totalErrors + 1 : prev.totalErrors,
                         consecutiveCorrect: newConsecutiveCorrect,
                         level: newLevel,
+                        maxLevelReached: Math.max(prev.maxLevelReached, newLevel),
                         stars: newStars,
-                        ...generateCards(newLevel),  
-                    };  
-                });  
-            }  
-        };  
+                        feedbackColor: playerCorrect ? "#4CAF50" : "#FF4C4C",
+                        ...generateCards(newLevel), // 🔹 Genera nuevas tarjetas
+                    };
+                });
+                reactionStartTime.current = Date.now();
 
-        window.addEventListener('keydown', handleKeyDown);  
+                // Quitar el color de retroalimentación después de 500ms
+                setTimeout(() => {
+                    setGameState(prev => ({
+                        ...prev,
+                        feedbackColor: null
+                    }));
+                }, 500);
+            }
+        };
 
-        return () => { window.removeEventListener('keydown', handleKeyDown); };  
+        window.addEventListener('keydown', handleKeyDown);
 
-    }, [gameState.gameStarted, gameState.leftCard, gameState.rightCard, gameState.level, generateCards]);  
+        return () => { window.removeEventListener('keydown', handleKeyDown); };
 
-    useEffect(() => {   
-        if (!gameState.gameStarted) return; 
-        
-        timerRef.current = setInterval(() => {   
+    }, [gameState.gameStarted, gameState.leftCard, gameState.rightCard, gameState.level, generateCards]);
+
+    useEffect(() => {
+        if (!gameState.gameStarted) return;
+
+        timerRef.current = setInterval(() => {
             setGameState(prev => {
                 const newTimeLeft = prev.timeLeft - 1;
-                
+
                 if (newTimeLeft <= 0) {
                     clearInterval(timerRef.current);
                     return {
@@ -153,109 +272,109 @@ const CognitiveInhibitionGame = () => {
                         timeLeft: 0,
                     };
                 }
-                
+
                 return {
                     ...prev,
                     timeLeft: newTimeLeft,
                 };
             });
-            
+
         }, 1000);
-        
+
         return () => clearInterval(timerRef.current);
-        
-    }, [gameState.gameStarted]);  
-    
-    const precision = gameState.totalCount > 0 ? ((gameState.correctCount / gameState.totalCount) * 100).toFixed(2) : '0.00';  
-    
-    return (  
-      <div class="comparacion-body">
-        <div className="comparacion-juego-contenedor">  
-            <h1 className="text-2xl font-bold mb-4">Comparación de colores</h1>  
 
-            {!gameState.gameStarted && !gameState.gameOver && (  
-                <div className="comparacion-instrucciones-contenedor">  
-                    <h2 className="text-lg font-semibold mb-2">Objetivo del Juego</h2>  
-                    <p className="mb-4"> Decide rápidamente si el significado de la palabra en la tarjeta izquierda coincide con el color de la tarjeta derecha:</p>  
+    }, [gameState.gameStarted]);
 
-                    <ul className="list-disc pl-6 mb-4">  
-                        <li>Flecha derecha si el significado corresponde.</li>  
-                        <li>Flecha izquierda si no corresponde.</li>  
-                    </ul>  
+    const calculateReactionTime = () => {
+        console.log("Calculando tiempo de reacción...");
 
-                    <h3 className="text-md font-semibold mb-2">Niveles de Dificultad</h3>  
-                    <p className="mb-2">Cada nivel aumenta la dificultad de la correspondencia:</p>  
+        if (!reactionTimes || reactionTimes.length === 0) {
+            console.log("No hay tiempos de reacción registrados.");
+            return 0;
+        }
 
-                    <ul className="list-disc pl-6 mb-4">  
-                        <li>Nivel 1: Colores sin palabras.</li>  
-                        <li>Nivel 2: Palabra en izquierda, color en derecha.</li>  
-                        <li>Nivel 3: Palabras sin coincidencia de significado y color.</li>  
-                        <li>Nivel 4: Combinación compleja de palabra y color.</li>  
-                    </ul>  
+        // Filtrar valores no numéricos o inválidos
+        const validTimes = reactionTimes.filter(time => typeof time === "number" && !isNaN(time));
+        console.log("Tiempos válidos:", validTimes);
 
-                    <h3 className="text-md font-semibold mb-2">Sistema de Puntaje</h3>  
+        if (validTimes.length === 0) {
+            console.log("No hay tiempos de reacción válidos.");
+            return 0;
+        }
 
-                    <ul className="list-disc pl-6 mb-4">  
-                        <li>Inicias con 50 puntos.</li>  
-                        <li>+10 puntos por acierto, -5 por error.</li>  
-                        <li>Bono de 100 puntos por cuatro aciertos consecutivos.</li>  
-                    </ul>  
+        const sum = validTimes.reduce((acc, time) => acc + time, 0);
+        const average = parseFloat((sum / validTimes.length).toFixed(2));
 
-                    <button onClick={startGame} className="comparacion-button w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"> Comenzar Juego </button>   
+        console.log(`Suma total: ${sum}, Cantidad: ${validTimes.length}, Promedio: ${average}`);
+
+        return average;
+    };
+
+    return (
+        <div className="comparacion-game-container">
+            {gameState.gameOver ? (
+                <div className="comparacion-fin-juego-container">
+                    <h1>Fin del juego</h1>
+                    <p>🕒 Tiempo total de juego: {GAME_TIME} segundos</p>
+                    <p>🏅 <strong>Puntaje final:</strong> {gameState.score}</p>
+                    <p>🎯 <strong>Nivel máximo:</strong> {gameState.maxLevelReached}</p>
+                    <p>✅ Correctas: {gameState.correctCount} de {gameState.totalCount}</p>
+                    <p>❌ Errores: {gameState.totalErrors}</p>
+                    <p>📊 Precisión: {precision}%</p>
+                    <p>⭐ <strong>Estrellas obtenidas:</strong> {gameState.stars}</p>
+                    <p>🕒 Tiempo de reacción: {(calculateReactionTime() / 1000).toFixed(2)} s</p>
+                    <button onClick={startCountdown}>
+                        Jugar de nuevo
+                    </button>
                 </div>
-            )}  
-
-            {gameState.gameStarted && (   
+            ) : !gameState.gameStarted ? (
+                countdown === null ? ( // Mostrar pantalla de inicio si NO hay cuenta regresiva
+                    <div className="comparacion-start-screen">
+                        <h2>¡Bienvenido a Comparación de colores!</h2>
+                        <button onClick={startCountdown}>Comenzar Juego</button>
+                    </div>
+                ) : (
+                    <div className="comparacion-countdown">{countdown}</div>
+                )
+            ) : (
                 <div>
-                    <div className="comparacion-flex comparacion-justify-between mb-4">   
-                        <div className="comparacion-canvas-contenedor w-1/2 mr-2 p-4 text-center" style={{ backgroundColor: gameState.leftCard.color }}>   
-                            {gameState.leftCard.word}   
-                        </div>   
+                    <div className="comparacion-game-app comparacion-justify-between mb-4" style={{ backgroundColor: gameState.feedbackColor || "#9ebde6" }}>
+                        <div
+                            className="comparacion-canvas-contenedor w-1/2 mr-2 p-4 text-center"
+                            style={{
+                                backgroundColor: gameState.leftCard.color,
+                                color: getTextContrastColor(gameState.leftCard.color)
+                            }}
+                        >
+                            {gameState.leftCard.word}
+                        </div>
 
-                        <div className="comparacion-canvas-contenedor w-1/2 ml-2 p-4 text-center" style={{ backgroundColor: gameState.rightCard.color }}>   
-                            {gameState.rightCard.word}   
+                        <div
+                            className="comparacion-canvas-contenedor w-1/2 ml-2 p-4 text-center"
+                            style={{
+                                backgroundColor: gameState.rightCard.color,
+                                color: getTextContrastColor(gameState.rightCard.color)
+                            }}
+                        >
+                            {gameState.rightCard.word}
                         </div>
                     </div>
 
-                    <div className="text-center text-gray-600"> Usa ← Izquierda o → Derecha </div>
-                    
+                    <div className="text-center text-gray-600"> ← Falso o Verdadero → </div>
+
                     {/* Marcadores y tiempo */}
-                    <div className="comparacion-marcadores">
-                        <div className="comparacion-marcador-item">
-                            Tiempo Restante: {gameState.timeLeft}s
-                            <Clock className="mr-2" />
-                            Estrellas:
-                            <Star className="mr-2" />
-                            Puntaje:
-                            {gameState.score}
-                        </div>
-                    </div>
-                    
-                </div>
-            )}  
-
-            {gameState.gameOver && (   
-                <div className="comparacion-fin-juego">   
-                    <h2 className="text-xl font-bold mb-4">Juego Terminado</h2>
-                    
-                    {/* Resultados finales */}
-                    <div>
-                        <p>Puntaje Final: {gameState.score}</p>
-                        <p>Nivel Alcanzado: {gameState.level}</p>
+                    <div className="comparacion-game-info">
+                        <p>Nivel: {gameState.level}</p>
+                        <p>Puntaje: {gameState.score}</p>
                         <p>Estrellas: {gameState.stars}</p>
-                        <p>Tarjetas Correctas: {gameState.correctCount} de {gameState.totalCount}</p>
-                        <p>Precisión: {precision}%</p>
-                        
-                        {/* Botón para reiniciar juego */}
-                        <button onClick={startGame} className="comparacion-button mt-4 w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"> Jugar de Nuevo </button>
-                        
+                        <p>Errores: {gameState.totalErrors}</p>
+                        <p>Tiempo: {gameState.timeLeft}s</p>
                     </div>
+
                 </div>
-            )}   
-            
+            )}
         </div>
-      </div>
-    );   
-}; 
+    );
+};
 
 export default CognitiveInhibitionGame;

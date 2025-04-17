@@ -1,34 +1,159 @@
-/* Estilos generales */
-.comparacion-body {
-    background-color: #1a1a1a;
-    color: #ffffff;
-    margin: 0;
-    padding: 20px;
-    min-height: 100vh;
-}
+/* Fuente personalizada desde Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
 
-.comparacion-juego-contenedor {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 20px;
-    font-family: 'Arial', sans-serif;
-    text-align: center;
-    background-color: #2d2d2d;
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-    animation: comparacion-aparecer 0.5s ease-out;
-}
-
-/* Título del juego */
-.comparacion-juego-contenedor h1 {
-    color: #ffffff;
-    margin-bottom: 20px;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-/* Flex para tarjetas en línea */
-.comparacion-flex {
+.comparacion-game-container {
+    font-family: 'Roboto', sans-serif;
     display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 600px;
+    width: 600px;
+    background-color: transparent;
+    text-align: center;
+    position: relative; /* Asegura que los elementos absolutos se posicionen dentro */
+    overflow: hidden; /* Previene que los elementos sobresalgan */
+}
+
+/* Estilos para títulos */
+.comparacion-game-container h1 {
+  color: #ffffff;
+  margin-bottom: 0px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.comparacion-game-container h2 {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.comparacion-game-container h3 {
+  font-size: 1.5rem;
+  font-weight: normal;
+  color: #444;
+  margin-bottom: 6px;
+}
+
+.comparacion-game-container p {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #fff;
+  margin: 2px;
+}
+
+.comparacion-score,
+.comparacion-stars,
+.comparacion-timer {
+  position: absolute;
+  color: white;
+  font-size: 0.875rem; /* Reducido a 14px */
+  font-weight: bold;
+  white-space: nowrap; /* Evita saltos de línea */
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.comparacion-score {
+  top: 0.5rem;
+  left: 0.5rem;
+}
+
+.comparacion-stars {
+  top: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.comparacion-timer {
+  top: 0.5rem;
+  right: 0.5rem;
+}
+
+/* Evitar conflictos con los estilos globales */
+.comparacion-game-container .comparacion-score,
+.comparacion-game-container .comparacion-stars,
+.comparacion-game-container .comparacion-timer {
+  font-size: 1rem; /* Asegurar tamaño menor dentro del contenedor */
+  color: #222 !important;
+}
+
+.comparacion-countdown {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 6rem;
+  font-weight: bold;
+  color: #222;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Start Screen */
+.comparacion-start-screen {
+  text-align: center;
+  padding: 2rem;
+  background-color: #9ebde6;
+  border: 2px solid #f0a500;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin: 2rem;
+}
+
+.comparacion-start-screen h1 {
+  font-size: 2.5rem;
+  color: #1565c0;
+}
+
+.comparacion-start-screen button {
+  font-size: 1.2em;
+  padding: 15px 30px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.comparacion-start-screen button:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+}
+
+.comparacion-game-info {
+    display: flex;
+    justify-content: center; /* Alinea los elementos horizontalmente */
+    align-items: center; /* Alinea los elementos verticalmente */
+    gap: 1rem; /* Espacio entre elementos */
+    text-align: center;
+    padding: 0.5rem 2rem;
+    background-color: #9ebde6;
+    border: 2px solid #f0a500;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin: 0rem;
+}
+
+.comparacion-game-stats {
+  display: flex;
+  justify-content: center; /* Centra horizontalmente */
+  align-items: center; /* Asegura alineación vertical */
+  gap: 20px; /* Espacio entre "Puntaje" y "Errores" */
+}
+
+.comparacion-game-app {
+    display: flex;
+    background-color: #9ebde6; /* Fondo oscuro del contenedor */
+    border: 2px solid #f0a500;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+.comparacion-game-app h1, /* Aplica estilo oscuro al título */
+.game-container-secuancial p { /* Aplica estilo oscuro a la etapa */
+  color: #1e1e1e;
 }
 
 .comparacion-justify-between {
@@ -126,6 +251,10 @@
     font-weight: bold;
     color: #ffffff;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    display: flex;
+    gap: 16px; /* Espaciado entre los elementos */
+    align-items: center; /* Alinea verticalmente los elementos */
+    justify-content: center; /* Centra los elementos en la fila */
 }
 
 /* Estilos para la pantalla de fin de juego */
@@ -197,3 +326,36 @@
 .comparacion-instrucciones-contenedor .comparacion-button {
     margin-top: 16px;
 }
+
+.comparacion-fin-juego-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Arial', sans-serif;
+  text-align: center;
+  background-color: #3498db;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  animation: aparecer 0.5s ease-out;
+}
+  
+.comparacion-fin-juego-container button {
+  background-color: #75e78e;
+  border: 2px solid #61bd75;
+  color: white;
+  padding: 12px 30px;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  margin-top: 15px;
+}
+
+.comparacion-fin-juego-container button:hover {
+  background-color: #61bd75;
+  transform: translateY(-2px);
+}
+

@@ -1,97 +1,192 @@
-/* Contenedor principal que abarca toda la pantalla */
-.fullscreen-container {
+/* Contenedor del juego */
+.mira-game-container {
   display: flex;
-  flex-direction: column; /* Permite organizar los hijos verticalmente */
-  justify-content: center; /* Centra el contenido verticalmente */
-  align-items: center; /* Centra el contenido horizontalmente */
-  width: 100vw; /* Abarca todo el ancho de la ventana */
-  height: 100vh; /* Abarca todo el alto de la ventana */
-  margin: 0;
-  padding: 0;
-}
-
-/* Contenido del juego */
-.mira.game-container {
-  width: 100%; /* Mantiene el ancho al 100% dentro del contenedor */
-  max-width: 1200px; /* Define un máximo para el ancho */
-  flex: 1;
-  background-color: #f4f4f9; /* Fondo predeterminado del juego */
-  display: flex; /* Centra el contenido interno */
   flex-direction: column;
-  align-items: center;
   justify-content: center;
-  border-radius: 8px; /* Opcional: redondear bordes */
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); /* Sombra para resaltar */
+  align-items: center;
+  height: 600px;
+  width: 600px;
+  background-color: transparent;
+  text-align: center;
+  position: relative; /* Asegura que los elementos absolutos se posicionen dentro */
+  overflow: hidden; /* Previene que los elementos sobresalgan */
 }
 
-/* Título del juego */
-.mira h1 {
-  font-size: 2.5rem;
-  margin: 0 0 1rem 0; /* Asegura solo margen inferior */
-  color: #4a90e2;
+/* Estilos para títulos */
+.mira-game-container h1 {
+  color: #ffffff;
+  margin-bottom: 0px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.mira.grid {
+.mira-game-container h2 {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.mira-game-container h3 {
+  font-size: 1.5rem;
+  font-weight: normal;
+  color: #444;
+  margin-bottom: 6px;
+}
+
+.mira-game-container p {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.mira-score,
+.mira-stars,
+.mira-timer {
+  position: absolute;
+  color: white;
+  font-size: 0.875rem; /* Reducido a 14px */
+  font-weight: bold;
+  white-space: nowrap; /* Evita saltos de línea */
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.mira-score {
+  top: 0.5rem;
+  left: 0.5rem;
+}
+
+.mira-stars {
+  top: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.mira-timer {
+  top: 0.5rem;
+  right: 0.5rem;
+}
+
+/* Evitar conflictos con los estilos globales */
+.mira-game-container .mira-score,
+.mira-game-container .mira-stars,
+.mira-game-container .mira-timer {
+  font-size: 1rem; /* Asegurar tamaño menor dentro del contenedor */
+  color: #222 !important;
+}
+
+/* Pantalla de inicio */
+.mira-start-screen {
+  text-align: center;
+  padding: 2rem;
+  background-color: #9ebde6;
+  border: 2px solid #f0a500;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin: 2rem;
+}
+
+.mira-start-screen button {
+  font-size: 1.2em;
+  padding: 15px 30px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.mira-start-screen button:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+}
+
+.mira-countdown {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 6rem;
+  font-weight: bold;
+  color: #222;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Cuadrícula */
+.mira-grid {
   display: grid;
   grid-template-columns: repeat(5, 80px);
   gap: 10px;
-  margin: 0 auto; /* Centra horizontalmente */
+  justify-content: center;
+  margin-top: 20px;
 }
 
-.mira.stats {
-  display: flex;
-  justify-content: space-around;
-  width: 100%;
-  max-width: 600px;
-  margin-bottom: 2rem;
-}
-
-.mira.stats p {
-  margin: 0; /* Elimina márgenes extra */
-}
-
-/* Flechas en la cuadrícula */
-.mira.arrow {
+/* Flechas */
+.mira-arrow {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
-  font-weight: bold;
+  width: 80px;
+  height: 80px;
   background-color: #e1ecf4;
   color: #4a90e2;
-  border: 2px solid #4a90e2;
+  font-size: 2rem;
+  font-weight: bold;
   border-radius: 8px;
-  height: 80px;
-  width: 80px;
+  border: 2px solid #4a90e2;
   box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease;
+}
+
+.mira-arrow.correct {
+    background-color: #a8e6a2; /* Verde suave */
+    color: #2ecc71;
+    border-color: #2ecc71;
+}
+
+.mira-arrow.incorrect {
+    background-color: #f8a5a5; /* Rojo suave */
+    color: #e74c3c;
+    border-color: #e74c3c;
+}
+
+/* Agregar flecha usando `::before` */
+.mira-arrow.up::before {
+  content: "↑";
+}
+.mira-arrow.down::before {
+  content: "↓";
+}
+.mira-arrow.left::before {
+  content: "←";
+}
+.mira-arrow.right::before {
+  content: "→";
 }
 
 /* Pantalla de resultados */
-.mira.results-screen {
+.mira-end-game {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   text-align: center;
   padding: 2rem;
   background-color: #fff;
   border: 2px solid #4a90e2;
   border-radius: 8px;
   box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
-  width: 80%;
   max-width: 500px;
   margin: 2rem auto;
 }
 
-/* Título de la pantalla de resultados */
-.mira.results-screen h1 {
+.mira-end-game h1 {
   font-size: 2rem;
   color: #4a90e2;
   margin-bottom: 1rem;
 }
 
-/* Botón de reinicio */
-.mira.results-screen button {
+.mira-end-game button {
   font-size: 1.2rem;
   padding: 0.5rem 1.5rem;
   background-color: #4a90e2;
@@ -102,64 +197,38 @@
   transition: background-color 0.3s ease;
 }
 
-.mira.results-screen button:hover {
+.mira-end-game button:hover {
   background-color: #357abd;
 }
 
-/* Responsivo */
-@media (max-width: 600px) {
-  .mira.grid {
-    display: grid;
-    grid-template-columns: repeat(5, 60px); /* Ajusta el tamaño según sea necesario */
-    gap: 10px;
-    margin: 0 auto;
-  }
-
-/* Configuración básica para triángulos */
-.mira.arrow {
-  display: block;
-  width: 0;
-  height: 0;
-  border-style: solid;
-  margin: 10px auto; /* Centra los triángulos */
-  background-color: #4a90e2;
+.mira-fin-juego-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Arial', sans-serif;
+  text-align: center;
+  background-color: #3498db;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  animation: aparecer 0.5s ease-out;
+}
+  
+.mira-fin-juego-container button {
+  background-color: #75e78e;
+  border: 2px solid #61bd75;
+  color: white;
+  padding: 12px 30px;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  margin-top: 15px;
 }
 
-/* Triángulo que apunta hacia arriba */
-.mira.arrow.up {
-  border-width: 0 50px 86.6px 50px; /* Forma triangular equilátera */
-  border-color: transparent transparent #4a90e2 transparent;
-}
-
-/* Triángulo que apunta hacia abajo */
-.mira.arrow.down {
-  border-width: 86.6px 50px 0 50px;
-  border-color: #4a90e2 transparent transparent transparent;
-}
-
-/* Triángulo que apunta hacia la izquierda */
-.mira.arrow.left {
-  border-width: 50px 86.6px 50px 0;
-  border-color: transparent #4a90e2 transparent transparent;
-}
-
-/* Triángulo que apunta hacia la derecha */
-.mira.arrow.right {
-  border-width: 50px 0 50px 86.6px;
-  border-color: transparent transparent transparent #4a90e2;
-}
-
-  .mira.stats p {
-    font-size: 1rem;
-  }
-}
-
-.correct-bg {
-  background-color: #47b461; /* Verde claro */
-  transition: background-color 0.1s ease;
-}
-
-.incorrect-bg {
-  background-color: #b44d55; /* Rojo claro */
-  transition: background-color 0.1s ease;
+.mira-fin-juego-container button:hover {
+  background-color: #61bd75;
+  transform: translateY(-2px);
 }
