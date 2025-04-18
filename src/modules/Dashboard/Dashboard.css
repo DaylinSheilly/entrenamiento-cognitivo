@@ -1,0 +1,24 @@
+.dashboard-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 2rem;
+    padding: 2rem;
+}
+
+.dashboard-wrapper {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-container {
+    position: relative;
+    height: 300px;
+}
+
+.dashboard-wrapper h3 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    text-align: center;
+}

@@ -18,6 +18,20 @@ const validateRequest = (req, res, next) => {
   next();
 };
 
+// 2. Middleware de autenticación JWT
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  
+  if (!token) return res.sendStatus(401);
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
+  });
+};
+
 router.post('/create',
   [
     body('session_id').isUUID(4).withMessage('ID de sesión inválido'),
@@ -80,6 +94,7 @@ router.post('/create',
     }
   });
 
+// Obtener todos los juegos de una sesión
 router.get('/session/:session_id', async (req, res) => {
   const { session_id } = req.params;
 
@@ -95,6 +110,7 @@ router.get('/session/:session_id', async (req, res) => {
   }
 });
 
+// Obtener el historial de juegos de un usuario
 router.get('/user/:id_usuario', async (req, res) => {
   const { id_usuario } = req.params;
 
@@ -112,6 +128,30 @@ router.get('/user/:id_usuario', async (req, res) => {
   } catch (error) {
     console.error('Error al obtener juegos del usuario:', error);
     res.status(500).json({ message: 'Error al obtener el historial de juegos.' });
+  }
+});
+
+// Obtener el progreso del usuario
+router.get('/progress', authenticateToken, async (req, res) => {
+  try {
+      const userId = req.user.userId;
+      
+      const result = await pool.query(`
+          SELECT 
+              g.game_name,
+              DATE(s.start_time AT TIME ZONE 'UTC') as session_date,
+              MAX(g.score) as max_score
+          FROM "Games" g
+          JOIN "Sessions" s ON g.session_id = s.id_session
+          WHERE s.id_usuario = $1
+          GROUP BY g.game_name, DATE(s.start_time AT TIME ZONE 'UTC')
+          ORDER BY DATE(s.start_time AT TIME ZONE 'UTC')
+      `, [userId]);
+
+      res.json(result.rows);
+  } catch (error) {
+      console.error('Error al obtener progreso:', error);
+      res.status(500).json({ message: 'Error al obtener datos de progreso' });
   }
 });
 
