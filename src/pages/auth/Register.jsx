@@ -1,19 +1,26 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Alert,
+  Paper,
+  Avatar
+} from "@mui/material";
+import PersonAddAltOutlinedIcon from "@mui/icons-material/PersonAddAltOutlined";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import "./Auth.css"; // Opcional para estilos
 
-const Register = () => {
+export default function Register() {
   const [formData, setFormData] = useState({
     nombre_usuario: "",
     correo_electronico: "",
-    contraseña: "",
+    contraseña: ""
   });
-
-  const [message, setMessage] = useState(""); // Estado para mensajes de error/éxito
+  const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState(""); // "success" o "error"
-
-  const navigate = useNavigate(); // Hook para redirigir
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -21,42 +28,85 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage(""); // Limpiar mensaje anterior
+    setMessage("");
 
     try {
       const response = await axios.post("http://localhost:5000/auth/register", formData);
-      console.log("Usuario registrado:", response.data);
-
-      setMessage("Registro exitoso"); // Mensaje de éxito
+      setMessage("Registro exitoso");
       setMessageType("success");
-
-      setTimeout(() => navigate("/login"), 2000); // Redirigir después de 2s
+      setTimeout(() => navigate("/login"), 2000);
     } catch (error) {
-      console.error("Error al registrarse:", error.response?.data || error.message);
-
       setMessage(error.response?.data?.message || "Error desconocido en el servidor");
       setMessageType("error");
     }
   };
 
   return (
-    <div className="auth-wrapper">
-      <div className="auth-container">
-        <h2>Registro</h2>
-
-        <form onSubmit={handleSubmit}>
-          <input type="text" name="nombre_usuario" placeholder="Nombre de usuario" onChange={handleChange} required />
-          <input type="email" name="correo_electronico" placeholder="Correo electrónico" onChange={handleChange} required />
-          <input type="password" name="contraseña" placeholder="Contraseña" onChange={handleChange} required />
-          {/* Mensaje de éxito o error */}
-          {message && (
-            <div className={`auth-message ${messageType}`}>{message}</div>
-          )}
-          <button type="submit">Registrarse</button>
-        </form>
-      </div>
-    </div>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center"
+      }}
+    >
+      <Paper elevation={6} sx={{ p: 4, maxWidth: 400, width: "100%" }}>
+        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <Avatar sx={{ m: 1, bgcolor: "primary.main" }}>
+            <PersonAddAltOutlinedIcon />
+          </Avatar>
+          <Typography component="h1" variant="h5" sx={{ mb: 2 }}>
+            Registro
+          </Typography>
+          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1, width: "100%" }}>
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              label="Nombre de usuario"
+              name="nombre_usuario"
+              autoFocus
+              value={formData.nombre_usuario}
+              onChange={handleChange}
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              label="Correo electrónico"
+              name="correo_electronico"
+              type="email"
+              value={formData.correo_electronico}
+              onChange={handleChange}
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              name="contraseña"
+              label="Contraseña"
+              type="password"
+              value={formData.contraseña}
+              onChange={handleChange}
+            />
+            {message && (
+              <Alert severity={messageType === "success" ? "success" : "error"} sx={{ mt: 2 }}>
+                {message}
+              </Alert>
+            )}
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              color="primary"
+              sx={{ mt: 3, mb: 2 }}
+            >
+              Registrarse
+            </Button>
+          </Box>
+        </Box>
+      </Paper>
+    </Box>
   );
-};
-
-export default Register;
+}
