@@ -1,89 +1,157 @@
-import React, { useEffect, useState, useRef } from 'react';
-import axios from 'axios';
-import { Line } from 'react-chartjs-2';
-import { Chart, registerables } from 'chart.js';
-Chart.register(...registerables);
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { LineChart } from "@mui/x-charts/LineChart";
+import {
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  CardHeader,
+  Grid,
+  Skeleton,
+  useTheme
+} from "@mui/material";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 
-const Dashboard = () => {
+const ProgressCharts = () => {
   const [chartData, setChartData] = useState(null);
-  const chartRefs = useRef({});
+  const theme = useTheme();
 
   useEffect(() => {
-      const fetchData = async () => {
-          const token = localStorage.getItem('neurogames_token');
-          try {
-              const response = await axios.get('http://localhost:5000/games/progress', {
-                  headers: { Authorization: `Bearer ${token}` }
-              });
-              
-              // Procesar datos para Chart.js
-              const gamesData = {};
-              response.data.forEach(item => {
-                  if (!gamesData[item.game_name]) {
-                      gamesData[item.game_name] = {
-                          labels: [],
-                          datasets: [{
-                              label: 'Puntaje Máximo Diario',
-                              data: [],
-                              borderColor: '#3498db',
-                              tension: 0.4
-                          }]
-                      };
-                  }
-                  gamesData[item.game_name].labels.push(item.session_date);
-                  gamesData[item.game_name].datasets[0].data.push(item.max_score);
-              });
+    const fetchData = async () => {
+      const token = localStorage.getItem("neurogames_token");
+      try {
+        const response = await axios.get("http://localhost:5000/games/progress", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-              setChartData(gamesData);
-          } catch (error) {
-              console.error('Error:', error);
+        // Procesar datos para MUI X Charts
+        const gamesData = {};
+        response.data.forEach((item) => {
+          if (!gamesData[item.game_name]) {
+            gamesData[item.game_name] = {};
           }
-      };
+          gamesData[item.game_name][item.session_date] = item.max_score;
+        });
 
-      fetchData();
+        // Convierte los datos a formato de LineChart con fechas formateadas
+        const formattedData = {};
+        Object.entries(gamesData).forEach(([game, scoresByDate]) => {
+          const dates = Object.keys(scoresByDate).sort();
+          const formattedDates = dates.map(dateISO =>
+            new Date(dateISO).toLocaleDateString('es-ES', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric'
+            })
+          );
+          formattedData[game] = {
+            x: formattedDates,
+            y: dates.map(date => scoresByDate[date]),
+          };
+        });
+
+        setChartData(formattedData);
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    };
+    fetchData();
   }, []);
 
-  // Destruir charts anteriores al desmontar
-  useEffect(() => {
-      return () => {
-          Object.values(chartRefs.current).forEach(chart => chart.destroy());
-      };
-  }, []);
-
-  if (!chartData) return <div>Cargando gráficas...</div>;
+  if (!chartData)
+    return (
+      <Box sx={{ p: 3 }}>
+        <Typography variant="h4" align="center" gutterBottom>
+          Progreso de Puntaje por Juego
+        </Typography>
+        <Grid container spacing={3}>
+          {[...Array(3)].map((_, idx) => (
+            <Grid item xs={12} sm={6} md={4} key={idx}>
+              <Card sx={{ minHeight: 300, borderRadius: 3, boxShadow: 3 }}>
+                <CardContent>
+                  <Skeleton variant="rectangular" width="100%" height={200} />
+                  <Skeleton width="60%" />
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
+    );
 
   return (
-      <div className="dashboard-container">
-          {Object.entries(chartData).map(([gameName, data], index) => (
-              <div key={gameName} className="dashboard-wrapper">
-                  <h3>{gameName}</h3>
-                  <div className="dashboard-container">
-                      <Line
-                          data={data}
-                          options={{
-                              responsive: true,
-                              plugins: {
-                                  legend: { display: false },
-                                  title: { display: false }
-                              },
-                              scales: {
-                                  y: {
-                                      title: { display: true, text: 'Puntaje Máximo' }
-                                  },
-                                  x: {
-                                      title: { display: true, text: 'Fecha' },
-                                      type: 'time',
-                                      time: { unit: 'day' }
-                                  }
-                              }
-                          }}
-                          ref={(el) => chartRefs.current[gameName] = el}
-                      />
-                  </div>
-              </div>
-          ))}
-      </div>
+    <Box sx={{ p: { xs: 1, sm: 3 } }}>
+      <Typography
+        variant="h4"
+        align="center"
+        gutterBottom
+        sx={{
+          fontWeight: 700,
+          color: theme.palette.primary.main,
+          letterSpacing: 1,
+          mb: 4,
+        }}
+      >
+        Progreso de Puntaje por Juego
+      </Typography>
+      <Grid container spacing={3}>
+        {Object.entries(chartData).map(([gameName, data]) => (
+          <Grid item xs={12} sm={6} md={4} key={gameName}>
+            <Card
+              sx={{
+                borderRadius: 3,
+                boxShadow: 4,
+                transition: "box-shadow 0.3s",
+                "&:hover": { boxShadow: 8 },
+                background: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, #fff 100%)`,
+              }}
+            >
+              <CardHeader
+                avatar={<TrendingUpIcon color="primary" />}
+                title={
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 600,
+                      color: theme.palette.primary.dark,
+                      textAlign: "left",
+                    }}
+                  >
+                    {gameName}
+                  </Typography>
+                }
+                sx={{ pb: 0 }}
+              />
+              <CardContent>
+                <LineChart
+                  xAxis={[
+                    {
+                      data: data.x,
+                      label: "Fecha",
+                      scaleType: "point",
+                      tickLabelStyle: { fontSize: 12 },
+                    },
+                  ]}
+                  series={[
+                    {
+                      data: data.y,
+                      label: "Puntaje Máximo Diario",
+                      color: theme.palette.primary.main,
+                      area: false,
+                    },
+                  ]}
+                  width={300}
+                  height={180}
+                  margin={{ top: 20, right: 20, bottom: 40, left: 50 }}
+                />
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+    </Box>
   );
 };
 
-export default Dashboard;
+export default ProgressCharts;

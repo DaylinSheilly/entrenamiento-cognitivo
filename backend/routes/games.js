@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const { Pool } = require('pg');
 const { body, validationResult } = require('express-validator');
+const jwt = require("jsonwebtoken");
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -20,9 +21,9 @@ const validateRequest = (req, res, next) => {
 
 // 2. Middleware de autenticación JWT
 const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+
   if (!token) return res.sendStatus(401);
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
@@ -31,6 +32,8 @@ const authenticateToken = (req, res, next) => {
     next();
   });
 };
+
+
 
 router.post('/create',
   [

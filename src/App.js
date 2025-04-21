@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import './App.css';
 import './styles/index.css';
 import Home from './pages/Home';
+import Header from './components/Header';
 import Register from "./pages/auth/Register";
 import Login from "./pages/auth/Login";
 import Dashboard from './modules/Dashboard/Dashboard';
@@ -27,6 +28,7 @@ import Game15 from './modules/Games/colorea-el-camino/colorea-el-camino.jsx';
 function App() {
   return (
     <Router>
+      <Header />
       <div className="App">
         <Routes>
           <Route path="/" element={<Home />} />
