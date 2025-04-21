@@ -1,115 +1,144 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
-import './Home.css';
+import { 
+  Box,
+  Typography,
+  Button,
+  Paper,
+  Avatar,
+  Alert
+} from '@mui/material';
+import { useAuth } from '../context/AuthContext';
+import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 
 function Home() {
   const navigate = useNavigate();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userData, setUserData] = useState(null);
-
-  useEffect(() => {
-    const token = localStorage.getItem("neurogames_token");
-
-    if (token) {
-      axios.get("http://localhost:5000/auth/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then(response => {
-          setIsAuthenticated(true);
-          setUserData(response.data);
-        })
-        .catch(error => {
-          console.error("Error al obtener datos del usuario:", error);
-          setIsAuthenticated(false);
-        });
-    }
-  }, []);
+  const { isAuthenticated, user, logout } = useAuth();
 
   const handleLogout = async () => {
     try {
-      const token = localStorage.getItem("neurogames_token");
-      
-      // Cerrar sesión en el backend
-      if (token) {
-        await axios.put('http://localhost:5000/sessions/end', {}, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-      }
+      await axios.put('http://localhost:5000/sessions/end', {}, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("neurogames_token")}` }
+      });
     } catch (error) {
       console.error("Error al cerrar sesión:", error);
     } finally {
-      // Limpiar frontend
-      localStorage.removeItem('neurogames_token');
-      localStorage.removeItem('userData');
-      localStorage.removeItem('currentSession'); // Si lo estás almacenando
-      setIsAuthenticated(false);
-      setUserData(null);
-      navigate('/');
+      logout();        // Limpia el estado y localStorage
+      navigate("/home"); // Redirige al Home
     }
   };
 
   const handleDeleteAccount = async () => {
     if (!window.confirm("¿Estás seguro de que quieres eliminar tu cuenta? Esta acción es irreversible.")) {
-        return;
+      return;
     }
 
     try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-            alert("No estás autenticado.");
-            return;
-        }
-
-        await axios.delete("http://localhost:5000/auth/delete", {
-            headers: { Authorization: `Bearer ${token}` },
-            data: {} // Solución para algunos servidores Express que no manejan bien el cuerpo en DELETE
-        });
-
-        alert("Cuenta eliminada correctamente.");
-        handleLogout(); // Cierra la sesión después de eliminar la cuenta
+      await axios.delete("http://localhost:5000/auth/delete", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("neurogames_token")}` }
+      });
+      logout();
+      alert("Cuenta eliminada correctamente.");
     } catch (error) {
-        console.error("Error al eliminar la cuenta:", error);
-        alert(error.response?.data?.message || "Hubo un error al eliminar tu cuenta.");
+      console.error("Error al eliminar la cuenta:", error);
+      alert(error.response?.data?.message || "Hubo un error al eliminar tu cuenta.");
     }
   };
 
   return (
-    <div className="home-body">
-      <div className="home-container">
-        <h1>Bienvenido a la Plataforma de Juegos</h1>
+    <Box sx={{ 
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)'
+    }}>
+      <Paper elevation={6} sx={{ p: 4, maxWidth: 600, width: '100%' }}>
+        <Box sx={{ textAlign: 'center' }}>
+          <Avatar sx={{ 
+            bgcolor: 'primary.main', 
+            width: 60, 
+            height: 60,
+            mb: 2,
+            mx: 'auto'
+          }}>
+            <SportsEsportsIcon fontSize="large" />
+          </Avatar>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Bienvenido a NeuroSite
+          </Typography>
 
-        {isAuthenticated && userData ? (
-          <div className="user-info">
-            <h2>Datos del Usuario</h2>
-            <p><strong>ID:</strong> {userData.id_usuario}</p>
-            <p><strong>Nombre:</strong> {userData.nombre_usuario}</p>
-            <p><strong>Correo:</strong> {userData.correo_electronico}</p>
-            <p><strong>Fecha de Registro:</strong> {userData.fecha_registro}</p>
-            <p><strong>Estado de Cuenta:</strong> {userData.estado_cuenta ? "Activo" : "Inactivo"}</p>
-          </div>
-        ) : (
-          <p>No has iniciado sesión.</p>
-        )}
-        <div className="home-buttons">
-          {isAuthenticated ? (
-            <>
-              <button onClick={() => navigate('/games')}>Games</button>
-              <button onClick={() => navigate('/dashboard')}>Dashboard</button>
-              <button onClick={handleLogout}>Cerrar Sesión</button>
-              <button onClick={handleDeleteAccount} style={{ backgroundColor: 'red', color: 'white' }}>
-                Eliminar Cuenta
-              </button>
-            </>
+          {isAuthenticated && user ? (
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="h5" gutterBottom>
+                {user.nombre_usuario}
+              </Typography>
+              <Typography variant="body1" color="textSecondary">
+                <strong>Correo:</strong> {user.correo_electronico}
+              </Typography>
+              <Typography variant="body1" color="textSecondary" sx={{ mt: 1 }}>
+                Miembro desde: {new Date(user.fecha_registro).toLocaleDateString('es-ES')}
+              </Typography>
+              
+              <Box sx={{ mt: 4, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <Button 
+                  variant="contained" 
+                  color="primary"
+                  onClick={() => navigate('/games')}
+                >
+                  Jugar ahora
+                </Button>
+                <Button 
+                  variant="outlined" 
+                  color="primary"
+                  onClick={() => navigate('/dashboard')}
+                >
+                  Ver estadísticas
+                </Button>
+                <Button 
+                  variant="outlined" 
+                  color="secondary"
+                  onClick={handleLogout}
+                >
+                  Cerrar sesión
+                </Button>
+                <Button 
+                  variant="contained" 
+                  color="error"
+                  onClick={handleDeleteAccount}
+                  sx={{ mt: 2 }}
+                >
+                  Eliminar cuenta
+                </Button>
+              </Box>
+            </Box>
           ) : (
-            <>
-              <button onClick={() => navigate('/register')}>Registrarse</button>
-              <button onClick={() => navigate('/login')}>Iniciar Sesión</button>
-            </>
+            <Box sx={{ mt: 4 }}>
+              <Typography variant="body1" paragraph>
+                Únete a nuestra plataforma para mejorar tus habilidades cognitivas
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => navigate('/register')}
+                >
+                  Crear cuenta
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={() => navigate('/login')}
+                >
+                  Iniciar sesión
+                </Button>
+              </Box>
+            </Box>
           )}
-        </div>
-      </div>
-    </div>
+        </Box>
+      </Paper>
+    </Box>
   );
 }
 

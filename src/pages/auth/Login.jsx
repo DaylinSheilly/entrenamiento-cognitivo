@@ -11,12 +11,14 @@ import {
   Avatar
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import { useAuth } from "../../context/AuthContext";
 
 const Login = () => {
   const [formData, setFormData] = useState({
     correo_electronico: "",
     contraseña: "",
   });
+  const { login } = useAuth(); // Hook de autenticación
 
   const [message, setMessage] = useState(""); // Estado para mensajes de error/éxito
   const [messageType, setMessageType] = useState(""); // "success" o "error"
@@ -34,12 +36,10 @@ const Login = () => {
     setMessage(""); // Limpiar mensaje anterior
 
     try {
-      // Llamada al backend para iniciar sesión
       const response = await axios.post("http://localhost:5000/auth/login", formData);
 
       if (response.data.token) {
-        localStorage.setItem("neurogames_token", response.data.token);
-        localStorage.setItem("userData", JSON.stringify(response.data.user));
+        login(response.data.token, response.data.user); // <-- usa el contexto
         setMessage("Inicio de sesión exitoso");
         setMessageType("success");
         setTimeout(() => navigate("/home"), 1000);

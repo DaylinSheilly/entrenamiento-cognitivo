@@ -1,66 +1,134 @@
-// games.js
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import './games.css';
+import {
+  Box,
+  Button,
+  Grid,
+  Typography,
+  Paper,
+  CircularProgress,
+  Snackbar,
+  Alert
+} from '@mui/material';
+import { useAuth } from '../../../context/AuthContext';
+import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
+
+// Lista de juegos con sus rutas
+const gamesList = [
+  { name: "Matriz de Memoria", path: "/games/matriz-de-memoria" },
+  { name: "Sigue la Secuencia", path: "/games/sigue-la-secuencia" },
+  { name: "Recuerda los Objetos", path: "/games/recuerda-los-objetos" },
+  { name: "Concentrate en el Objetivo", path: "/games/concentrarse-en-el-objetivo" },
+  { name: "No Pierdas los Objetos", path: "/games/no-pierdas-los-objetos" },
+  { name: "Mira la dirección", path: "/games/mira-la-direccion" },
+  { name: "¿Qué sentido tiene?", path: "/games/que-sentido-tiene" },
+  { name: "¡Apunta y acierta!", path: "/games/apunta-acierta" },
+  { name: "Construye la Tubería", path: "/games/construye-la-tuberia" },
+  { name: "Colorea el camino", path: "/games/colorea-el-camino" },
+  { name: "Sopa de Letras", path: "/games/sopa-de-letras" },
+  { name: "A Fin", path: "/games/a-fin" },
+  { name: "Comparación de Colores", path: "/games/comparacion-de-colores" },
+  { name: "Juego de Atención", path: "/games/juego-de-atencion" },
+];
 
 function Games() {
   const navigate = useNavigate();
-  const userData = JSON.parse(localStorage.getItem("userData"));
+  const { isAuthenticated, user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleStartGame = async (rutaJuego) => {
+  const handleStartGame = async (path) => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
     try {
-      const token = localStorage.getItem("neurogames_token");
-      if (!token) {
-        alert("Debes iniciar sesión para jugar.");
-        return;
-      }
-
-      // Crear sesión en backend
-      const response = await axios.post('http://localhost:5000/sessions/start', {
-        id_usuario: userData.id_usuario,
-        id_juego: 3
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-
-      // Guardar el id de la sesión creada en localStorage
-      const sessionId = response.data.id_sesion;
-      localStorage.setItem("id_sesion", sessionId);
-
-      // Redirigir al juego
-      navigate(rutaJuego);
+      setLoading(true);
+      const response = await axios.post(
+        'http://localhost:5000/sessions/start',
+        {},
+        { headers: { Authorization: `Bearer ${user.token}` } }
+      );
+      
+      localStorage.setItem("currentSession", response.data.id_session);
+      navigate(path);
     } catch (error) {
-      console.error("Error al iniciar sesión de juego:", error);
-      alert(error.response?.data?.message || "Error al iniciar el juego");
+      setError(error.response?.data?.message || "Error al iniciar el juego");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className='games-body'>
-      <div className="games-container">
-        <h1 className="games-container-title">Elige un Juego</h1>
-        <div className="games-buttons-container">
-          <button onClick={() => handleStartGame('/games/matriz-de-memoria')}>Matriz de Memoria</button>
-          <button onClick={() => handleStartGame('/games/sigue-la-secuencia')}>Sigue la Secuencia</button>
-          <button onClick={() => handleStartGame('/games/recuerda-los-objetos')}>Recuerda los Objetos</button>
-          <button onClick={() => handleStartGame('/games/concentrarse-en-el-objetivo')}>Concentrate en el Objetivo</button>
-          <button onClick={() => handleStartGame('/games/no-pierdas-los-objetos')}>No Pierdas los Objetos</button>
-          <button onClick={() => handleStartGame('/games/mira-la-direccion')}>Mira la dirección</button>
-          <button onClick={() => handleStartGame('/games/que-sentido-tiene')}>¿Qué sentido tiene?</button>
-          <button onClick={() => handleStartGame('/games/apunta-acierta')}>¡Apunta y acierta!</button>
-          <button onClick={() => handleStartGame('/games/construye-la-tuberia')}>Construye la Tubería</button>
-          <button onClick={() => handleStartGame('/games/colorea-el-camino')}>Colorea el camino</button>
-          <button onClick={() => handleStartGame('/games/sopa-de-letras')}>Sopa de Letras</button>
-          <button onClick={() => handleStartGame('/games/a-fin')}>A Fin</button>
-          <button onClick={() => handleStartGame('/games/comparacion-de-colores')}>Comparación de Colores</button>
-          <button onClick={() => handleStartGame('/games/juego-de-atencion')}>Juego de Atención</button>
-          <button onClick={() => handleStartGame('/games/concentrate-en-objetivo')}>No es Concentrate en el Objetivo</button>
-        </div>
-      </div>
-    </div>
+    <Box sx={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)',
+      p: 4
+    }}>
+      <Paper elevation={6} sx={{ p: 4, maxWidth: 1200, mx: 'auto' }}>
+        <Typography variant="h3" component="h1" gutterBottom sx={{
+          textAlign: 'center',
+          mb: 4,
+          color: 'primary.main',
+          fontWeight: 700,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 2
+        }}>
+          <SportsEsportsIcon fontSize="large" />
+          Catálogo de Juegos
+        </Typography>
+
+        <Grid container spacing={3}>
+          {gamesList.map((game, index) => (
+            <Grid item xs={12} sm={6} md={4} key={index}>
+              <Button
+                fullWidth
+                variant="contained"
+                color="secondary"
+                size="large"
+                onClick={() => handleStartGame(game.path)}
+                disabled={loading}
+                sx={{
+                  py: 3,
+                  borderRadius: 2,
+                  fontSize: '1.1rem',
+                  textTransform: 'none',
+                  boxShadow: 3,
+                  '&:hover': { transform: 'translateY(-2px)' }
+                }}
+              >
+                {game.name}
+              </Button>
+            </Grid>
+          ))}
+        </Grid>
+
+        {loading && (
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            mt: 4 
+          }}>
+            <CircularProgress size={60} thickness={4} />
+          </Box>
+        )}
+      </Paper>
+
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={() => setError(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="error" variant="filled">
+          {error}
+        </Alert>
+      </Snackbar>
+    </Box>
   );
 }
 
