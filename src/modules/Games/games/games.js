@@ -43,22 +43,7 @@ function Games() {
       navigate('/login');
       return;
     }
-
-    try {
-      setLoading(true);
-      const response = await axios.post(
-        'http://localhost:5000/sessions/start',
-        {},
-        { headers: { Authorization: `Bearer ${user.token}` } }
-      );
-      
-      localStorage.setItem("currentSession", response.data.id_session);
-      navigate(path);
-    } catch (error) {
-      setError(error.response?.data?.message || "Error al iniciar el juego");
-    } finally {
-      setLoading(false);
-    }
+    navigate(path);
   };
 
   return (
