@@ -23,31 +23,18 @@ const GameLayout = ({ children }) => {
 
   // Verificar sesión y autenticación
   useEffect(() => {
+    if (!isAuthenticated) return; // Solo verifica autenticación
+    
     const checkSession = async () => {
       try {
-        if (!isAuthenticated) {
-          navigate('/login');
-          return;
-        }
-
-        const response = await axios.get('http://localhost:5000/sessions/active', {
-          headers: { Authorization: `Bearer ${user.token}` }
-        });
-
-        setSessionId(response.data.id_session);
-      } catch (error) {
-        if (error.response?.status === 404) {
-          console.log("No hay sesión activa, se creará una nueva al jugar");
-        } else {
-          setError("Error al cargar la sesión de juego");
-        }
-      } finally {
         setLoading(false);
+      } catch (error) {
+        setError("Error de conexión");
       }
     };
-
+    
     checkSession();
-  }, [isAuthenticated, navigate, user]);
+  }, [isAuthenticated]); // Solo depende de isAuthenticated
 
   // Manejar final del juego
   const handleGameEnd = async (gameData) => {

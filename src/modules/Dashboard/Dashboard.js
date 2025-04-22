@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from 'react-router-dom';
 import axios from "axios";
 import { LineChart } from "@mui/x-charts/LineChart";
 import {
@@ -18,10 +19,15 @@ const ProgressCharts = () => {
   const [chartData, setChartData] = useState(null);
   const [loading, setLoading] = useState(true); // <-- NUEVO
   const theme = useTheme();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
       const token = localStorage.getItem("neurogames_token");
+      if (!token) {
+        navigate('/login');
+        return;
+      }
       try {
         const response = await axios.get("http://localhost:5000/games/progress", {
           headers: { Authorization: `Bearer ${token}` },
