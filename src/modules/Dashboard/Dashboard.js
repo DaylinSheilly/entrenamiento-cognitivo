@@ -9,12 +9,14 @@ import {
   CardHeader,
   Grid,
   Skeleton,
-  useTheme
+  useTheme,
+  LinearProgress // <-- IMPORTANTE
 } from "@mui/material";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 
 const ProgressCharts = () => {
   const [chartData, setChartData] = useState(null);
+  const [loading, setLoading] = useState(true); // <-- NUEVO
   const theme = useTheme();
 
   useEffect(() => {
@@ -54,29 +56,32 @@ const ProgressCharts = () => {
         setChartData(formattedData);
       } catch (error) {
         console.error("Error:", error);
+      } finally {
+        setLoading(false); // <-- NUEVO
       }
     };
     fetchData();
   }, []);
 
-  if (!chartData)
+  if (loading)
     return (
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ width: '100%', mt: 2 }}>
         <Typography variant="h4" align="center" gutterBottom>
           Progreso de Puntaje por Juego
         </Typography>
-        <Grid container spacing={3}>
-          {[...Array(3)].map((_, idx) => (
-            <Grid item xs={12} sm={6} md={4} key={idx}>
-              <Card sx={{ minHeight: 300, borderRadius: 3, boxShadow: 3 }}>
-                <CardContent>
-                  <Skeleton variant="rectangular" width="100%" height={200} />
-                  <Skeleton width="60%" />
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
+        <LinearProgress color="primary" sx={{ height: 6, borderRadius: 3 }} />
+      </Box>
+    );
+
+  if (!chartData)
+    return (
+      <Box sx={{ width: '100%', mt: 2 }}>
+        <Typography variant="h4" align="center" gutterBottom>
+          Progreso de Puntaje por Juego
+        </Typography>
+        <Typography align="center" color="text.secondary" sx={{ mt: 3 }}>
+          No hay datos para mostrar.
+        </Typography>
       </Box>
     );
 
