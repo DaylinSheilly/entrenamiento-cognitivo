@@ -72,8 +72,14 @@ const ProgressCharts = () => {
   if (loading)
     return (
       <Box sx={{ width: '100%', mt: 2 }}>
-        <Typography variant="h4" align="center" gutterBottom>
-          Progreso de Puntaje por Juego
+        <Typography variant="h4" align="center" gutterBottom
+          sx={{
+            fontWeight: 700,
+            color: theme.palette.primary.main,
+            letterSpacing: 1,
+            mb: 4,
+          }}>
+          Cargando progreso de Puntaje por Juego
         </Typography>
         <LinearProgress color="primary" sx={{ height: 6, borderRadius: 3 }} />
       </Box>
