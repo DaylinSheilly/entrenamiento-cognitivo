@@ -1,3 +1,4 @@
+// AuthContext.jsx
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 const AuthContext = createContext();
@@ -8,23 +9,14 @@ export function AuthProvider({ children }) {
     const data = localStorage.getItem("userData");
     return data ? JSON.parse(data) : null;
   });
+  const [token, setToken] = useState(localStorage.getItem("neurogames_token") || null); // Nuevo estado
 
-  useEffect(() => {
-    // Sync with localStorage changes (in case of manual clearing or multiple tabs)
-    const syncAuth = () => {
-      setIsAuthenticated(!!localStorage.getItem("neurogames_token"));
-      const data = localStorage.getItem("userData");
-      setUser(data ? JSON.parse(data) : null);
-    };
-    window.addEventListener("storage", syncAuth);
-    return () => window.removeEventListener("storage", syncAuth);
-  }, []);
-
-  const login = (token, userData) => {
-    localStorage.setItem("neurogames_token", token);
+  const login = (newToken, userData) => {
+    localStorage.setItem("neurogames_token", newToken);
     localStorage.setItem("userData", JSON.stringify(userData));
     setIsAuthenticated(true);
     setUser(userData);
+    setToken(newToken); // Actualizar estado del token
   };
 
   const logout = () => {
@@ -32,10 +24,11 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("userData");
     setIsAuthenticated(false);
     setUser(null);
+    setToken(null); // Limpiar estado del token
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, token, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

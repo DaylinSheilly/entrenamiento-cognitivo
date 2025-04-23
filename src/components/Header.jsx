@@ -1,5 +1,6 @@
 // src/components/Header.jsx
 import React, { useState } from "react";
+import axios from "axios";
 import {
   AppBar, Toolbar, Typography, Button, IconButton, Drawer, List, ListItem, ListItemButton,
   ListItemText, Box, useTheme, useMediaQuery
@@ -24,9 +25,17 @@ export default function Header() {
   // Simulación de autenticación (reemplaza por tu lógica real)
   const { isAuthenticated, logout } = useAuth();
 
-  const handleLogout = () => {
-    logout();        // Limpia el estado y localStorage
-    navigate("/home"); // Redirige al Home
+  const handleLogout = async () => {
+    try {
+      await axios.put('http://localhost:5000/sessions/end', {}, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("neurogames_token")}` }
+      });
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+    } finally {
+      logout();        // Limpia el estado y localStorage
+      navigate("/home"); // Redirige al Home
+    }
   };
 
   const ctaButton = isAuthenticated ? (

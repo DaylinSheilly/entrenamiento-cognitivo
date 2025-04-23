@@ -11,20 +11,21 @@ import {
   Grid,
   Skeleton,
   useTheme,
-  LinearProgress // <-- IMPORTANTE
+  LinearProgress
 } from "@mui/material";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import { useAuth } from "../../context/AuthContext";
 
 const ProgressCharts = () => {
   const [chartData, setChartData] = useState(null);
-  const [loading, setLoading] = useState(true); // <-- NUEVO
+  const [loading, setLoading] = useState(true);
   const theme = useTheme();
   const navigate = useNavigate();
+  const { isAuthenticated, token } = useAuth(); // <-- Usa el contexto
 
   useEffect(() => {
     const fetchData = async () => {
-      const token = localStorage.getItem("neurogames_token");
-      if (!token) {
+      if (!isAuthenticated || !token) {
         navigate('/login');
         return;
       }
@@ -62,12 +63,15 @@ const ProgressCharts = () => {
         setChartData(formattedData);
       } catch (error) {
         console.error("Error:", error);
+        if (error.response?.status === 403) {
+          navigate('/login');
+        }
       } finally {
-        setLoading(false); // <-- NUEVO
+        setLoading(false);
       }
     };
     fetchData();
-  }, []);
+  }, [isAuthenticated, token, navigate]);
 
   if (loading)
     return (

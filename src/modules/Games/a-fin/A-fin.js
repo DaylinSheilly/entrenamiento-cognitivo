@@ -94,7 +94,7 @@ const words = {
   ],
 };
 
-const SynonymGame = () => {
+const SynonymGame = ({ onGameEnd }) => {
   // Estados de nivel y partida
   const [level, setLevel] = useState(1);
   const [score, setScore] = useState(0);      // Puntaje en el nivel actual
@@ -107,11 +107,38 @@ const SynonymGame = () => {
   const [nextLevelTimer, setNextLevelTimer] = useState(null);
   const [gameStarted, setGameStarted] = useState(false);
   const [countdown, setCountdown] = useState(null);
+  const [streak, setStreak] = useState(0);        // Racha actual de aciertos
+  const [maxStreak, setMaxStreak] = useState(0);  // Máxima racha histórica
 
   // Ref para guardar la hora de inicio de la partida y de cada palabra
   const startTimeRef = useRef(Date.now());
   const lastWordTimestampRef = useRef(Date.now());
   const [lastErrorTimestamp, setLastErrorTimestamp] = useState(null);
+
+  const gameData = {
+    game_name: "A fin",
+    level: level,
+    difficulty: level <= 2 ? "fácil" : level <= 4 ? "medio" : "difícil",
+    actions_taken: score + errors,
+    accuracy: Math.round(
+      (score /
+        (score + errors)) * 100
+    ),
+    streaks: maxStreak,
+    errors: errors,
+    score: score,
+  };
+
+  const handleGameEnd = () => {
+    // Envía los datos al GameLayout
+    onGameEnd(gameData);
+  };
+
+  useEffect(() => {
+    if (gameOver) {
+      handleGameEnd(); // ← Función que envia los datos del juego al backend
+    }
+  }, [gameOver]);
 
   const startCountdown = () => {
     setGameOver(false);
@@ -141,13 +168,13 @@ const SynonymGame = () => {
     setGameOver(false);
     setLevelPassed(false);
     setCountdown(null); // Asegurar que el contador también se reinicie
-  
+
     // Limpiar temporizador de cambio de nivel si existía
     if (nextLevelTimer) {
       clearTimeout(nextLevelTimer);
     }
     setNextLevelTimer(null);
-  
+
     // Reiniciar referencias de tiempo
     const now = Date.now();
     startTimeRef.current = now;
@@ -168,7 +195,7 @@ const SynonymGame = () => {
   // Temporizador del nivel
   useEffect(() => {
     if (countdown !== null) return; // Si hay cuenta regresiva, no restar tiempo
-  
+
     if (time > 0 && !gameOver) {
       const timer = setTimeout(() => setTime(time - 1), 1000);
       return () => clearTimeout(timer);
@@ -211,14 +238,18 @@ const SynonymGame = () => {
   const handleChoice = (choice) => {
     const wordObj = words[level].find(w => w.target === currentWord);
     if (!wordObj) return;
-
+  
     const reactionTime = Date.now() - lastWordTimestampRef.current;
     if (reactionTime < 1000) {
       setGlobalStats(prev => ({ ...prev, fastAnswers: prev.fastAnswers + 1 }));
     }
-
+  
     if (choice === wordObj.correct) {
-      // Si hubo un error previo, calcular el tiempo de recuperación
+      // Manejo de aciertos
+      const newStreak = streak + 1;
+      setStreak(newStreak);
+      setMaxStreak(prevMax => Math.max(prevMax, newStreak));  // Actualiza máximo si es necesario
+      
       if (lastErrorTimestamp !== null) {
         const recoveryTime = Date.now() - lastErrorTimestamp;
         setGlobalStats(prev => ({
@@ -228,10 +259,12 @@ const SynonymGame = () => {
         setLastErrorTimestamp(null);
       }
       setScore(score + 1);
-      console.log('Correcto!');
+      console.log(`Correcto! Racha actual: ${newStreak}`);
     } else {
+      // Reinicio de racha en errores
+      setStreak(0);
       setErrors(errors + 1);
-      // Si es el primer error en una secuencia, registrar el tiempo de error
+      
       if (lastErrorTimestamp === null) {
         setLastErrorTimestamp(Date.now());
       }
@@ -279,16 +312,16 @@ const SynonymGame = () => {
     setGameOver(false);  // El juego ya no está en "Game Over"
     setGameStarted(false); // Se detiene el juego mientras se hace la cuenta regresiva
     setCountdown(3); // Inicia en 3 segundos
-  
+
     let timeLeft = 3;
     const interval = setInterval(() => {
       timeLeft -= 1;
       setCountdown(timeLeft);
-      
+
       if (timeLeft === 0) {
         clearInterval(interval);
         setCountdown(null);
-  
+
         // Reiniciar estados del nivel
         setScore(0);
         setErrors(0);
@@ -296,7 +329,7 @@ const SynonymGame = () => {
         setCurrentWord('');
         setOptions([]);
         setGameStarted(true); // Ahora sí, el juego comienza
-  
+
         // Reiniciar referencias de tiempo
         startTimeRef.current = Date.now();
         lastWordTimestampRef.current = Date.now();

@@ -1,6 +1,7 @@
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from 'react-router-dom';
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
 import {
   Box,
   Button,
@@ -11,19 +12,23 @@ import {
   Avatar
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import { useAuth } from "../../context/AuthContext";
 
 const Login = () => {
   const [formData, setFormData] = useState({
     correo_electronico: "",
     contraseña: "",
   });
-  const { login } = useAuth(); // Hook de autenticación
-
+  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(""); // Estado para mensajes de error/éxito
   const [messageType, setMessageType] = useState(""); // "success" o "error"
+  const { isAuthenticated, login } = useAuth();
+  const navigate = useNavigate();
 
-  const navigate = useNavigate(); // Hook de navegación
+  useEffect(() => {
+    setMessage("");
+    setMessageType("");
+    setFormData({ correo_electronico: "", contraseña: "" });
+  }, [navigate]);  
 
   // Manejar cambios en los inputs del formulario
   const handleChange = (e) => {
@@ -33,16 +38,15 @@ const Login = () => {
   // Manejar envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage(""); // Limpiar mensaje anterior
-
+    setMessage("");
+    setLoading(true);
     try {
       const response = await axios.post("http://localhost:5000/auth/login", formData);
-
       if (response.data.token) {
-        login(response.data.token, response.data.user); // <-- usa el contexto
+        login(response.data.token, response.data.user);
         setMessage("Inicio de sesión exitoso");
         setMessageType("success");
-        setTimeout(() => navigate("/home"), 1000);
+        setTimeout(() => navigate("/home"), 2000);
       } else {
         setMessage("Error: No se recibió el token");
         setMessageType("error");
@@ -50,6 +54,8 @@ const Login = () => {
     } catch (error) {
       setMessage(error.response?.data?.message || "Error desconocido en el servidor");
       setMessageType("error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -106,8 +112,9 @@ const Login = () => {
               variant="contained"
               color="primary"
               sx={{ mt: 3, mb: 2 }}
+              disabled={loading}
             >
-              Ingresar
+              {loading ? "Ingresando..." : "Ingresar"}
             </Button>
           </Box>
         </Box>

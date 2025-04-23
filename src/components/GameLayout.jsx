@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 import {
   Box,
   CircularProgress,
@@ -14,9 +13,7 @@ import { useAuth } from '../context/AuthContext';
 import InfoPanel from './InfoPanel';
 
 const GameLayout = ({ children }) => {
-  const theme = useTheme();
-  const navigate = useNavigate();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, token } = useAuth();
   const [sessionId, setSessionId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -38,32 +35,39 @@ const GameLayout = ({ children }) => {
 
   // Manejar final del juego
   const handleGameEnd = async (gameData) => {
+    if (!token) { // <--- Cambia aquí
+      setError("No hay token de autenticación");
+      return;
+    }
     try {
       setLoading(true);
       let currentSession = sessionId;
-
+  
       if (!currentSession) {
         const sessionResponse = await axios.post(
           'http://localhost:5000/sessions/start',
           {},
-          { headers: { Authorization: `Bearer ${user.token}` } }
+          { headers: { Authorization: `Bearer ${token}` } } // <--- Cambia aquí
         );
         currentSession = sessionResponse.data.id_session;
         setSessionId(currentSession);
+        console.log("Sesión iniciada:", currentSession);
       }
-
+  
       await axios.post(
         'http://localhost:5000/games/create',
         { ...gameData, session_id: currentSession },
-        { headers: { Authorization: `Bearer ${user.token}` } }
+        { headers: { Authorization: `Bearer ${token}` } } // <--- Cambia aquí
       );
-
+      console.log("Datos del juego guardados:");
+  
       await axios.patch(
         `http://localhost:5000/sessions/${currentSession}/update`,
         { games_played: 1 },
-        { headers: { Authorization: `Bearer ${user.token}` } }
+        { headers: { Authorization: `Bearer ${token}` } } // <--- Cambia aquí
       );
-
+      console.log("Sesión actualizada:", currentSession);
+  
     } catch (error) {
       setError(error.response?.data?.message || "Error al guardar los resultados");
     } finally {

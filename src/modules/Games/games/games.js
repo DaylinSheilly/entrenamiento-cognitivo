@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import {
   Box,
   Button,
@@ -34,35 +33,58 @@ const gamesList = [
 
 function Games() {
   const navigate = useNavigate();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, token } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const handleStartGame = async (path) => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !token) {
       navigate('/login');
       return;
     }
-    navigate(path);
+
+    try {
+      setLoading(true);
+      navigate(path);
+    } catch (error) {
+      setError(error.response?.data?.message || "Error de autenticación");
+      navigate('/login');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <Box sx={{
       minHeight: '100vh',
       background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)',
-      p: 4
+      p: 4,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
     }}>
-      <Paper elevation={6} sx={{ p: 4, maxWidth: 1200, mx: 'auto' }}>
-        <Typography variant="h3" component="h1" gutterBottom sx={{
-          textAlign: 'center',
-          mb: 4,
-          color: 'primary.main',
-          fontWeight: 700,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 2
-        }}>
+      <Paper elevation={6} sx={{ 
+        p: 4, 
+        width: '100%', 
+        maxWidth: 1200, 
+        borderRadius: 4,
+        boxShadow: 6
+      }}>
+        <Typography 
+          variant="h3" 
+          component="h1" 
+          gutterBottom 
+          sx={{
+            textAlign: 'center',
+            mb: 4,
+            color: 'primary.main',
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 2
+          }}
+        >
           <SportsEsportsIcon fontSize="large" />
           Catálogo de Juegos
         </Typography>
@@ -83,7 +105,15 @@ function Games() {
                   fontSize: '1.1rem',
                   textTransform: 'none',
                   boxShadow: 3,
-                  '&:hover': { transform: 'translateY(-2px)' }
+                  transition: 'transform 0.2s',
+                  '&:hover': { 
+                    transform: 'translateY(-2px)',
+                    boxShadow: 6 
+                  },
+                  '&:disabled': {
+                    bgcolor: 'action.disabledBackground',
+                    color: 'text.disabled'
+                  }
                 }}
               >
                 {game.name}
@@ -101,18 +131,18 @@ function Games() {
             <CircularProgress size={60} thickness={4} />
           </Box>
         )}
-      </Paper>
 
-      <Snackbar
-        open={!!error}
-        autoHideDuration={6000}
-        onClose={() => setError(null)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert severity="error" variant="filled">
-          {error}
-        </Alert>
-      </Snackbar>
+        <Snackbar
+          open={!!error}
+          autoHideDuration={6000}
+          onClose={() => setError(null)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert severity="error" variant="filled" sx={{ width: '100%' }}>
+            {error}
+          </Alert>
+        </Snackbar>
+      </Paper>
     </Box>
   );
 }
