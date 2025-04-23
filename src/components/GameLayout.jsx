@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { 
+import {
   Box,
   CircularProgress,
   Grid,
@@ -24,7 +24,7 @@ const GameLayout = ({ children }) => {
   // Verificar sesión y autenticación
   useEffect(() => {
     if (!isAuthenticated) return; // Solo verifica autenticación
-    
+
     const checkSession = async () => {
       try {
         setLoading(false);
@@ -32,7 +32,7 @@ const GameLayout = ({ children }) => {
         setError("Error de conexión");
       }
     };
-    
+
     checkSession();
   }, [isAuthenticated]); // Solo depende de isAuthenticated
 
@@ -73,7 +73,7 @@ const GameLayout = ({ children }) => {
 
   // Pasar props a los hijos
   const childrenWithProps = React.Children.map(children, child => {
-    return React.cloneElement(child, { 
+    return React.cloneElement(child, {
       onGameEnd: handleGameEnd,
       disabled: loading
     });
@@ -81,11 +81,11 @@ const GameLayout = ({ children }) => {
 
   if (loading) {
     return (
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh' 
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh'
       }}>
         <CircularProgress size={80} />
       </Box>
@@ -93,39 +93,53 @@ const GameLayout = ({ children }) => {
   }
 
   return (
-    <Box sx={{ 
-      minHeight: '100vh',
-      p: 4,
-      background: theme.palette.background.default
-    }}>
-      <Grid container spacing={3}>
+    <Box
+      sx={{
+        minHeight: '93.34vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)'
+      }}
+    >
+      <Grid container spacing={3} sx={{ maxWidth: 1200, mx: 'auto' }}>
         {/* Panel de juego */}
-        <Grid item xs={12} md={8}>
-          <Paper 
+        <Grid
+          item
+          xs={12}
+          md={8}
+          display="flex"
+          alignItems="center"
+          justifyContent="center">
+          <Paper
             elevation={6}
             sx={{
               p: 4,
-              minHeight: '70vh',
+              width: '100%',
+              maxWidth: 700,
+              minHeight: { xs: 300, md: 400 }, // Ajusta según tu contenido
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              position: 'relative'
+              position: 'relative',
             }}
           >
             {childrenWithProps}
-            
+
             {loading && (
-              <Box sx={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                background: 'rgba(255,255,255,0.8)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  background: 'rgba(255,255,255,0.8)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
                 <CircularProgress />
               </Box>
             )}
