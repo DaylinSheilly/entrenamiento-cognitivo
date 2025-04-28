@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import Header from './components/Header';
 import Register from "./pages/auth/Register";
 import Login from "./pages/auth/Login";
+import UserData from "./pages/UserData";
 import Dashboard from './modules/Dashboard/Dashboard';
 import GameLayout from './components/GameLayout';
 import Games from './modules/Games/games/games.js';
@@ -37,6 +38,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/games" element={<Games />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/usuario" element={<UserData />} />
 
           <Route
             path="/games/sigue-la-secuencia"

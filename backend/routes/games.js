@@ -33,8 +33,6 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-
-
 router.post('/create',
   [
     body('session_id').isUUID(4).withMessage('ID de sesión inválido'),
@@ -155,6 +153,28 @@ router.get('/progress', authenticateToken, async (req, res) => {
   } catch (error) {
       console.error('Error al obtener progreso:', error);
       res.status(500).json({ message: 'Error al obtener datos de progreso' });
+  }
+});
+
+// Obtener el progreso máximo por juego
+router.get('/max-scores', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const result = await pool.query(`
+      SELECT 
+        g.game_name,
+        MAX(g.score) as max_score
+      FROM "Games" g
+      JOIN "Sessions" s ON g.session_id = s.id_session
+      WHERE s.id_usuario = $1
+      GROUP BY g.game_name
+      ORDER BY MAX(g.score) DESC
+    `, [userId]);
+    
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener puntuaciones máximas:', error);
+    res.status(500).json({ message: 'Error al obtener datos de progreso' });
   }
 });
 

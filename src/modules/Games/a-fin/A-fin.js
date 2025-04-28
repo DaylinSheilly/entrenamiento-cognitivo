@@ -103,6 +103,7 @@ const SynonymGame = ({ onGameEnd }) => {
   const [currentWord, setCurrentWord] = useState('');
   const [options, setOptions] = useState([]);
   const [gameOver, setGameOver] = useState(false);
+  const [isGameOver, setIsGameOver] = useState(false);
   const [levelPassed, setLevelPassed] = useState(false);
   const [nextLevelTimer, setNextLevelTimer] = useState(null);
   const [gameStarted, setGameStarted] = useState(false);
@@ -135,10 +136,10 @@ const SynonymGame = ({ onGameEnd }) => {
   };
 
   useEffect(() => {
-    if (gameOver) {
+    if (isGameOver) {
       handleGameEnd(); // ← Función que envia los datos del juego al backend
     }
-  }, [gameOver]);
+  }, [isGameOver]);
 
   const startCountdown = () => {
     setGameOver(false);
@@ -162,6 +163,8 @@ const SynonymGame = ({ onGameEnd }) => {
     setLevel(1);
     setScore(0);
     setErrors(0);
+    setStreak(0);
+    setMaxStreak(0);
     setTime(LEVEL_TIME[1]);
     setCurrentWord('');
     setOptions([]);
@@ -196,7 +199,7 @@ const SynonymGame = ({ onGameEnd }) => {
   useEffect(() => {
     if (countdown !== null) return; // Si hay cuenta regresiva, no restar tiempo
 
-    if (time > 0 && !gameOver) {
+    if (time > 0 && !gameOver && gameStarted) {
       const timer = setTimeout(() => setTime(time - 1), 1000);
       return () => clearTimeout(timer);
     } else if (time === 0 && !gameOver) {
@@ -289,12 +292,18 @@ const SynonymGame = ({ onGameEnd }) => {
       totalErrors: prev.totalErrors + errors,
       totalCorrect: prev.totalCorrect + score,
     }));
+  
     // Si se pasa el nivel y no es el último, iniciar el temporizador de 10 segundos
     if (passed && level < 5) {
       setNextLevelTimer(10);
     }
     setLevelPassed(passed);
     setGameOver(true);
+  
+    // SOLO termina el juego si es el último nivel
+    if (level === 5) {
+      setIsGameOver(true);
+    }
   };
 
   // Avanza al siguiente nivel (cuando se vence el temporizador de 10 segundos)
@@ -390,7 +399,7 @@ const SynonymGame = ({ onGameEnd }) => {
       ) : !gameStarted ? (
         countdown === null ? (
           <div className="colores-start-screen">
-            <h2>¡Bienvenido a Colorea el camino!</h2>
+            <h2>¡Bienvenido a A fin!</h2>
             <button onClick={startCountdown}>Comenzar Juego</button>
           </div>
         ) : (

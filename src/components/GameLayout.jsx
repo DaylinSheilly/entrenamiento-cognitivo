@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
   Box,
@@ -15,23 +16,16 @@ import InfoPanel from './InfoPanel';
 const GameLayout = ({ children }) => {
   const { isAuthenticated, user, token } = useAuth();
   const [sessionId, setSessionId] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   // Verificar sesión y autenticación
   useEffect(() => {
-    if (!isAuthenticated) return; // Solo verifica autenticación
-
-    const checkSession = async () => {
-      try {
-        setLoading(false);
-      } catch (error) {
-        setError("Error de conexión");
-      }
-    };
-
-    checkSession();
-  }, [isAuthenticated]); // Solo depende de isAuthenticated
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+  }, [isAuthenticated, navigate]);
 
   // Manejar final del juego
   const handleGameEnd = async (gameData) => {
@@ -40,9 +34,8 @@ const GameLayout = ({ children }) => {
       return;
     }
     try {
-      setLoading(true);
       let currentSession = sessionId;
-  
+
       if (!currentSession) {
         const sessionResponse = await axios.post(
           'http://localhost:5000/sessions/start',
@@ -53,25 +46,23 @@ const GameLayout = ({ children }) => {
         setSessionId(currentSession);
         console.log("Sesión iniciada:", currentSession);
       }
-  
+
       await axios.post(
         'http://localhost:5000/games/create',
         { ...gameData, session_id: currentSession },
         { headers: { Authorization: `Bearer ${token}` } } // <--- Cambia aquí
       );
       console.log("Datos del juego guardados:");
-  
+
       await axios.patch(
         `http://localhost:5000/sessions/${currentSession}/update`,
         { games_played: 1 },
         { headers: { Authorization: `Bearer ${token}` } } // <--- Cambia aquí
       );
       console.log("Sesión actualizada:", currentSession);
-  
+
     } catch (error) {
       setError(error.response?.data?.message || "Error al guardar los resultados");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -79,22 +70,8 @@ const GameLayout = ({ children }) => {
   const childrenWithProps = React.Children.map(children, child => {
     return React.cloneElement(child, {
       onGameEnd: handleGameEnd,
-      disabled: loading
     });
   });
-
-  if (loading) {
-    return (
-      <Box sx={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh'
-      }}>
-        <CircularProgress size={80} />
-      </Box>
-    );
-  }
 
   return (
     <Box
@@ -103,25 +80,27 @@ const GameLayout = ({ children }) => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)'
+        background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)',
+        position: 'relative' // <-- Añade esto
       }}
     >
       <Grid container spacing={3} sx={{ maxWidth: 1200, mx: 'auto' }}>
-        {/* Panel de juego */}
+        {/* Panel de juego (siempre renderizado) */}
         <Grid
           item
           xs={12}
           md={8}
           display="flex"
           alignItems="center"
-          justifyContent="center">
+          justifyContent="center"
+        >
           <Paper
             elevation={6}
             sx={{
               p: 4,
               width: '100%',
               maxWidth: 700,
-              minHeight: { xs: 300, md: 400 }, // Ajusta según tu contenido
+              minHeight: { xs: 300, md: 400 },
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -129,24 +108,6 @@ const GameLayout = ({ children }) => {
             }}
           >
             {childrenWithProps}
-
-            {loading && (
-              <Box
-                sx={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  background: 'rgba(255,255,255,0.8)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <CircularProgress />
-              </Box>
-            )}
           </Paper>
         </Grid>
 

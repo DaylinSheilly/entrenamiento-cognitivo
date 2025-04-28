@@ -1,12 +1,14 @@
-// src/components/Header.jsx
 import React, { useState } from "react";
 import axios from "axios";
 import {
   AppBar, Toolbar, Typography, Button, IconButton, Drawer, List, ListItem, ListItemButton,
-  ListItemText, Box, useTheme, useMediaQuery
+  ListItemText, Box, useTheme, useMediaQuery, Avatar, Tooltip, Menu, MenuItem, ListItemIcon, Divider
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import LogoutIcon from "@mui/icons-material/Logout";
+import PersonIcon from "@mui/icons-material/Person";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
@@ -18,12 +20,15 @@ const navLinks = [
 
 export default function Header() {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const navigate = useNavigate();
+  const { isAuthenticated, logout, user } = useAuth();
 
-  // Simulación de autenticación (reemplaza por tu lógica real)
-  const { isAuthenticated, logout } = useAuth();
+  // --- User Menu Handlers ---
+  const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
 
   const handleLogout = async () => {
     try {
@@ -33,20 +38,89 @@ export default function Header() {
     } catch (error) {
       console.error("Error al cerrar sesión:", error);
     } finally {
-      logout();        // Limpia el estado y localStorage
-      navigate("/home"); // Redirige al Home
+      logout();
+      navigate("/home");
+      handleMenuClose();
     }
   };
 
+  const handleProfile = () => {
+    navigate("/usuario");
+    handleMenuClose();
+  };
+
+  // --- Avatar content ---
+  const getAvatarContent = () => {
+    if (user?.nombre_usuario) {
+      // Iniciales del usuario
+      const parts = user.nombre_usuario.trim().split(" ");
+      const initials = parts.length === 1
+        ? parts[0][0]
+        : (parts[0][0] + parts[parts.length - 1][0]);
+      return initials.toUpperCase();
+    }
+    return <AccountCircleIcon />;
+  };
+
+  const userMenu = (
+    <>
+      <Tooltip title="Opciones de usuario">
+        <IconButton
+          onClick={handleMenuOpen}
+          size="small"
+          sx={{ ml: 2 }}
+          aria-controls={Boolean(anchorEl) ? "user-menu" : undefined}
+          aria-haspopup="true"
+          aria-expanded={Boolean(anchorEl) ? "true" : undefined}
+        >
+          <Avatar sx={{ width: 36, height: 36, bgcolor: "secondary.main", color: "white" }}>
+            {getAvatarContent()}
+          </Avatar>
+        </IconButton>
+      </Tooltip>
+      <Menu
+        anchorEl={anchorEl}
+        id="user-menu"
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+        onClick={handleMenuClose}
+        PaperProps={{
+          elevation: 4,
+          sx: {
+            mt: 1.5,
+            minWidth: 180,
+            overflow: "visible",
+            filter: "drop-shadow(0px 2px 8px rgba(0,0,0,0.18))",
+            '& .MuiAvatar-root': {
+              width: 28,
+              height: 28,
+              ml: -0.5,
+              mr: 1,
+            },
+          }
+        }}
+        transformOrigin={{ horizontal: "right", vertical: "top" }}
+        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+      >
+        <MenuItem onClick={handleProfile}>
+          <ListItemIcon>
+            <PersonIcon fontSize="small" />
+          </ListItemIcon>
+          Usuario
+        </MenuItem>
+        <Divider />
+        <MenuItem onClick={handleLogout}>
+          <ListItemIcon>
+            <LogoutIcon fontSize="small" />
+          </ListItemIcon>
+          Cerrar sesión
+        </MenuItem>
+      </Menu>
+    </>
+  );
+
   const ctaButton = isAuthenticated ? (
-    <Button
-      color="secondary"
-      variant="contained"
-      onClick={handleLogout}
-      sx={{ ml: 2 }}
-    >
-      Cerrar sesión
-    </Button>
+    userMenu
   ) : (
     <>
       <Button color="secondary" variant="outlined" component={Link} to="/login" sx={{ ml: 2 }}>
