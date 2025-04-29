@@ -6,46 +6,37 @@ import {
   Typography,
   Button,
   Paper,
-  Avatar,
-  Alert
+  Avatar
 } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 
 function Home() {
   const navigate = useNavigate();
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, token, logout } = useAuth();
 
   const handleLogout = async () => {
     try {
-      await axios.put('http://localhost:5000/sessions/end', {}, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("neurogames_token")}` }
-      });
-    } catch (error) {
-      console.error("Error al cerrar sesión:", error);
+      if (isAuthenticated && user && token) {
+        try {
+          await axios.put('http://localhost:5000/sessions/end', {}, {
+            headers: { Authorization: `Bearer ${token}` },
+            timeout: 3000 // Timeout de 3 segundos para evitar bloqueos
+          });
+        } catch (error) {
+          // No generar error si no hay sesión activa (404)
+          if (error.response?.status !== 404) {
+            console.error("Error en cierre de sesión:", error);
+          }
+        }
+      }
     } finally {
-      logout();        // Limpia el estado y localStorage
-      navigate("/home"); // Redirige al Home
-    }
-  };
-
-  const handleDeleteAccount = async () => {
-    if (!window.confirm("¿Estás seguro de que quieres eliminar tu cuenta? Esta acción es irreversible.")) {
-      return;
-    }
-
-    try {
-      await axios.delete("http://localhost:5000/auth/delete", {
-        headers: { Authorization: `Bearer ${localStorage.getItem("neurogames_token")}` }
-      });
+      // Siempre ejecutar limpieza
       logout();
-      alert("Cuenta eliminada correctamente.");
-    } catch (error) {
-      console.error("Error al eliminar la cuenta:", error);
-      alert(error.response?.data?.message || "Hubo un error al eliminar tu cuenta.");
+      navigate("/home");
     }
   };
-
+  
   return (
     <Box sx={{ 
       minHeight: '100vh',
@@ -102,14 +93,6 @@ function Home() {
                   onClick={handleLogout}
                 >
                   Cerrar sesión
-                </Button>
-                <Button 
-                  variant="contained" 
-                  color="error"
-                  onClick={handleDeleteAccount}
-                  sx={{ mt: 2 }}
-                >
-                  Eliminar cuenta
                 </Button>
               </Box>
             </Box>

@@ -1,5 +1,5 @@
 // AuthContext.jsx
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState } from "react";
 
 const AuthContext = createContext();
 
@@ -20,13 +20,15 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
+    // Limpiar todo rastro de la sesión
     localStorage.removeItem("neurogames_token");
     localStorage.removeItem("userData");
+    sessionStorage.clear(); // Limpiar sessionStorage también
     setIsAuthenticated(false);
     setUser(null);
-    setToken(null); // Limpiar estado del token
+    setToken(null);
   };
-
+  
   return (
     <AuthContext.Provider value={{ isAuthenticated, user, token, login, logout }}>
       {children}
