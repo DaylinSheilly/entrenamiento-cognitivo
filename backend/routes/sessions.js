@@ -131,6 +131,23 @@ router.post('/start', authenticateToken, async (req, res) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+
+    // Verificar sesión activa existente
+    const activeSession = await client.query(
+      `SELECT id_session 
+       FROM "Sessions" 
+       WHERE id_usuario = $1 AND end_time IS NULL
+       ORDER BY start_time DESC 
+       LIMIT 1`,
+      [req.user.userId]
+    );
+
+    if (activeSession.rows.length > 0) {
+      return res.status(409).json({ 
+        message: "Ya tienes una sesión activa",
+        sessionId: activeSession.rows[0].id_session
+      });
+    }
     
     // Crear nueva sesión
     const newSession = await client.query(
