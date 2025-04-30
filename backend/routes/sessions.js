@@ -127,45 +127,47 @@ router.patch(
 );
 
 // Endpoint POST /start
-router.post(
-  '/start',
-  authenticateToken,
-  async (req, res, next) => {
-    try {
-      const userId = req.user.userId;
+router.post('/start', authenticateToken, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    
+    // Crear nueva sesión
+    const newSession = await client.query(
+      `INSERT INTO "Sessions" (id_usuario, start_time) 
+       VALUES ($1, NOW()) 
+       RETURNING id_session`,
+      [req.user.userId]
+    );
 
-      const activeSession = await pool.query(
-        `SELECT id_session 
-         FROM "Sessions" 
-         WHERE id_usuario = $1 AND end_time IS NULL
-         ORDER BY start_time DESC
-         LIMIT 1`,
-        [userId]
-      );
+    // Actualizar estadísticas del usuario
+    await client.query(
+      `UPDATE "Users" 
+       SET 
+         total_sessions = total_sessions + 1,
+         ultima_sesion = NOW()  // <- Actualizar última sesión de juego
+       WHERE id_usuario = $1`,
+      [req.user.userId]
+    );
 
-      if (activeSession.rows.length > 0) {
-        return res.json({ 
-          id_session: activeSession.rows[0].id_session,
-          is_new: false
-        });
-      }
-
-      const newSession = await pool.query(
-        `INSERT INTO "Sessions" (id_usuario, total_games) 
-         VALUES ($1, 0) 
-         RETURNING id_session, start_time`,
-        [userId]
-      );
-
-      res.status(201).json({
-        id_session: newSession.rows[0].id_session,
-        is_new: true
-      });
-    } catch (error) {
-      next(error);
-    }
+    await client.query('COMMIT');
+    
+    res.json({
+      id_session: newSession.rows[0].id_session,
+      start_time: newSession.rows[0].start_time
+    });
+    
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error("Error al iniciar sesión de juego:", error);
+    res.status(500).json({ 
+      message: "Error al iniciar sesión de juego",
+      error: error.message  // Solo para ambiente de desarrollo
+    });
+  } finally {
+    client.release();
   }
-);
+});
 
 // Endpoint PUT /end/:id_session
 router.put(

@@ -274,7 +274,7 @@ const PerfilUsuario = () => {
                                     Total de sesiones
                                 </Typography>
                                 <Typography variant="h5" color="secondary">
-                                    {user?.total_sessions || 0}
+                                    {formData?.total_sessions ?? 0}
                                 </Typography>
                             </Grid>
                             <Grid item xs={12} sm={4}>
@@ -290,7 +290,7 @@ const PerfilUsuario = () => {
                                     Última sesión
                                 </Typography>
                                 <Typography variant="h5" color="secondary">
-                                    {user?.ultima_sesion ? new Date(user.ultima_sesion).toLocaleDateString() : 'N/A'}
+                                    {formData?.ultima_sesion ? new Date(formData.ultima_sesion).toLocaleDateString() : 'N/A'}
                                 </Typography>
                             </Grid>
                         </Grid>

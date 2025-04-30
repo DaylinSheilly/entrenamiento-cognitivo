@@ -9,6 +9,19 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false },
 });
 
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    
+    if (!token) return res.status(401).json({ message: "No autorizado" });
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+        if (err) return res.status(403).json({ message: "Token inválido" });
+        req.user = { userId: decoded.userId };
+        next();
+    });
+};
+
 // 📌 Registro de usuario
 router.post('/register', async (req, res) => {
     const { 
@@ -57,8 +70,9 @@ router.post('/register', async (req, res) => {
                 pais, 
                 fecha_registro, 
                 estado_cuenta, 
-                edad
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8, $9) 
+                edad,
+                total_sessions
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8, $9, 0) 
             RETURNING id_usuario`,
             [
                 nombre_usuario, 
@@ -114,7 +128,7 @@ router.post('/login', async (req, res) => {
 
         // Actualizar última sesión y recalcular edad
         await pool.query(
-            'UPDATE "Users" SET ultima_sesion = NOW(), edad = EXTRACT(YEAR FROM AGE(NOW(), fecha_nacimiento))::integer WHERE id_usuario = $1',
+            'UPDATE "Users" SET edad = EXTRACT(YEAR FROM AGE(NOW(), fecha_nacimiento))::integer WHERE id_usuario = $1',
             [user.rows[0].id_usuario]
         );
 
@@ -139,36 +153,49 @@ router.post('/login', async (req, res) => {
 });
 
 // 📌 Obtener datos del usuario autenticado
-router.get('/me', async (req, res) => {
+router.get('/me', authenticateToken, async (req, res) => {
     try {
-        const token = req.headers.authorization?.split(" ")[1]; // Extraer token del header
-        if (!token) {
+        if (!req.user || !req.user.userId) {
             return res.status(401).json({ message: "No autorizado" });
         }
+        // Consulta optimizada para obtener solo los datos necesarios
+        const result = await pool.query(`
+            SELECT 
+                id_usuario,
+                nombre_usuario,
+                correo_electronico,
+                fecha_registro,
+                estado_cuenta,
+                EXTRACT(YEAR FROM AGE(NOW(), fecha_nacimiento))::integer AS edad,
+                fecha_nacimiento,
+                genero,
+                nivel_educativo,
+                pais,
+                ultima_sesion,
+                total_sessions
+            FROM "Users"
+            WHERE id_usuario = $1
+        `, [req.user.userId]);  // Usar el ID del usuario del token verificado
 
-        // Verificar el token
-        let decoded;
-        try {
-            decoded = jwt.verify(token, process.env.JWT_SECRET);
-        } catch (err) {
-            return res.status(401).json({ message: "Token inválido o expirado" });
-        }
-
-        // Actualizar edad y obtener todos los datos relevantes
-        const user = await pool.query(
-            'UPDATE "Users" SET edad = EXTRACT(YEAR FROM AGE(NOW(), fecha_nacimiento))::integer WHERE id_usuario = $1 RETURNING id_usuario, nombre_usuario, correo_electronico, fecha_registro, estado_cuenta, edad, fecha_nacimiento, genero, nivel_educativo, pais, ultima_sesion',
-            [decoded.userId]
-        );
-
-        if (user.rows.length === 0) {
+        if (result.rows.length === 0) {
             return res.status(404).json({ message: "Usuario no encontrado" });
         }
 
-        res.json(user.rows[0]);
+        // Devuelve solo los datos necesarios para la vista
+        res.json({
+            ...result.rows[0],
+            // Si necesitas formatear alguna fecha u otro campo
+            fecha_registro: new Date(result.rows[0].fecha_registro).toISOString(),
+            ultima_sesion: result.rows[0].ultima_sesion ? 
+                new Date(result.rows[0].ultima_sesion).toISOString() : null
+        });
 
     } catch (error) {
         console.error("Error en /me:", error);
-        res.status(500).json({ message: "Error en el servidor: " + error.message });
+        res.status(500).json({ 
+            message: "Error en el servidor",
+            error: error.message // Opcional: solo en desarrollo
+        });
     }
 });
 
