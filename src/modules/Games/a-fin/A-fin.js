@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import words from './afinWords';
 import './AFin.css';
 
 // Constantes globales (deben declararse antes de usarlas en useState)
@@ -26,74 +27,6 @@ const MIN_SCORE_REQUIRED = {
   5: 15,
 };
 
-const words = {
-  1: [
-    // Nivel 1: 1 sinónimo y 1 antónimo → 2 opciones
-    { target: 'rápido', correct: 'veloz', incorrect: ['lento'] },
-    { target: 'feliz', correct: 'contento', incorrect: ['triste'] },
-    { target: 'grande', correct: 'enorme', incorrect: ['pequeño'] },
-    { target: 'alto', correct: 'elevado', incorrect: ['bajo'] },
-    { target: 'fácil', correct: 'sencillo', incorrect: ['difícil'] },
-    { target: 'caliente', correct: 'ardiente', incorrect: ['frío'] },
-    { target: 'nuevo', correct: 'reciente', incorrect: ['viejo'] },
-    { target: 'fuerte', correct: 'robusto', incorrect: ['débil'] },
-    { target: 'brillante', correct: 'resplandeciente', incorrect: ['opaco'] },
-    { target: 'honesto', correct: 'íntegro', incorrect: ['mentiroso'] },
-  ],
-  2: [
-    // Nivel 2: 1 sinónimo y 1 palabra relacionada → 2 opciones
-    { target: 'música', correct: 'melodía', incorrect: ['canción'] },
-    { target: 'amistad', correct: 'compañerismo', incorrect: ['conocido'] },
-    { target: 'inteligente', correct: 'listo', incorrect: ['estudioso'] },
-    { target: 'oscuro', correct: 'sombrío', incorrect: ['nocturno'] },
-    { target: 'sencillo', correct: 'simple', incorrect: ['elemental'] },
-    { target: 'alegre', correct: 'jovial', incorrect: ['entusiasta'] },
-    { target: 'fuerte', correct: 'robusto', incorrect: ['potente'] },
-    { target: 'tranquilo', correct: 'calmo', incorrect: ['silencioso'] },
-    { target: 'sabroso', correct: 'delicioso', incorrect: ['picante'] },
-    { target: 'amable', correct: 'afable', incorrect: ['arrogante'] },
-  ],
-  3: [
-    // Nivel 3: 1 sinónimo y 2 antónimos → 3 opciones
-    { target: 'trabajo', correct: 'ocupación', incorrect: ['ocio', 'descanso'] },
-    { target: 'honesto', correct: 'íntegro', incorrect: ['mentiroso', 'falso'] },
-    { target: 'limpio', correct: 'aseado', incorrect: ['sucio', 'inmundo'] },
-    { target: 'fácil', correct: 'sencillo', incorrect: ['difícil', 'complicado'] },
-    { target: 'rápido', correct: 'veloz', incorrect: ['lento', 'pausado'] },
-    { target: 'alegre', correct: 'jovial', incorrect: ['triste', 'melancólico'] },
-    { target: 'fuerte', correct: 'robusto', incorrect: ['débil', 'frágil'] },
-    { target: 'claro', correct: 'nítido', incorrect: ['oscuro', 'confuso'] },
-    { target: 'amable', correct: 'afable', incorrect: ['grosero', 'rudo'] },
-    { target: 'lógico', correct: 'razonable', incorrect: ['ilógico', 'absurdo'] },
-  ],
-  4: [
-    // Nivel 4: 1 sinónimo y 2 distractores (palabras relacionadas)
-    { target: 'valiente', correct: 'intrépido', incorrect: ['decidido', 'apasionado'] },
-    { target: 'curioso', correct: 'inquisitivo', incorrect: ['observador', 'explorador'] },
-    { target: 'moderno', correct: 'contemporáneo', incorrect: ['actual', 'progresista'] },
-    { target: 'elegante', correct: 'distinguido', incorrect: ['formal', 'clásico'] },
-    { target: 'limpio', correct: 'aseado', incorrect: ['claro', 'luminoso'] },
-    { target: 'brillante', correct: 'resplandeciente', incorrect: ['claro', 'vivo'] },
-    { target: 'suave', correct: 'sedoso', incorrect: ['apacible', 'ligero'] },
-    { target: 'fresco', correct: 'refrescante', incorrect: ['templado', 'agradable'] },
-    { target: 'rico', correct: 'sabroso', incorrect: ['comestible', 'nutritivo'] },
-    { target: 'ágil', correct: 'diestro', incorrect: ['rápido', 'liviano'] },
-  ],
-  5: [
-    // Nivel 5: 1 sinónimo, 1 antónimo y 2 palabras relacionadas → 4 opciones
-    { target: 'sabio', correct: 'erudito', incorrect: ['ignorante', 'experto', 'necio'] },
-    { target: 'ágil', correct: 'rápido', incorrect: ['lento', 'flexible', 'torpe'] },
-    { target: 'firme', correct: 'resuelto', incorrect: ['inconstante', 'vacilante', 'dudoso'] },
-    { target: 'elegante', correct: 'distinguido', incorrect: ['tosco', 'ordinario', 'grosero'] },
-    { target: 'valioso', correct: 'preciado', incorrect: ['insignificante', 'común', 'barato'] },
-    { target: 'audaz', correct: 'osado', incorrect: ['cauteloso', 'precavido', 'temeroso'] },
-    { target: 'sutil', correct: 'tenue', incorrect: ['obvio', 'claro', 'manifiesto'] },
-    { target: 'sereno', correct: 'calmo', incorrect: ['nervioso', 'agitado', 'inquieto'] },
-    { target: 'rápido', correct: 'veloz', incorrect: ['lento', 'pausado', 'despacio'] },
-    { target: 'fértil', correct: 'productivo', incorrect: ['estéril', 'árido', 'vacío'] },
-  ],
-};
-
 const SynonymGame = ({ onGameEnd }) => {
   // Estados de nivel y partida
   const [level, setLevel] = useState(1);
@@ -113,11 +46,13 @@ const SynonymGame = ({ onGameEnd }) => {
   const [streak, setStreak] = useState(0);        // Racha actual de aciertos
   const [maxStreak, setMaxStreak] = useState(0);  // Máxima racha histórica
   const [levelFails, setLevelFails] = useState(0);
+  const [currentWordObj, setCurrentWordObj] = useState(null);
 
   // Ref para guardar la hora de inicio de la partida y de cada palabra
   const startTimeRef = useRef(Date.now());
   const lastWordTimestampRef = useRef(Date.now());
   const [lastErrorTimestamp, setLastErrorTimestamp] = useState(null);
+  const prevWordRef = useRef(null); // Ref para guardar la palabra anterior
 
   const gameData = {
     game_name: "A fin",
@@ -235,25 +170,43 @@ const SynonymGame = ({ onGameEnd }) => {
   const newWord = () => {
     const levelWords = words[level];
     if (!levelWords) return;
-    const randomIndex = Math.floor(Math.random() * levelWords.length);
-    const wordObj = levelWords[randomIndex];
-    const choices = [wordObj.correct, ...wordObj.incorrect].sort(() => Math.random() - 0.5);
-    setCurrentWord(wordObj.target);
-    setOptions(choices);
+  
+    let candidate, swap, asTarget, attempts = 0;
+  
+    do {
+      const randomIndex = Math.floor(Math.random() * levelWords.length);
+      candidate = levelWords[randomIndex];
+      swap = Math.random() < 0.5;
+      asTarget = swap ? candidate.correct : candidate.target;
+  
+      attempts++;
+      if (attempts > 10) break;
+  
+    } while (prevWordRef.current && asTarget === prevWordRef.current);
+  
+    const finalWordObj = swap ? {
+      target: candidate.correct,
+      correct: candidate.target,
+      incorrect: candidate.incorrect
+    } : candidate;
+  
+    setCurrentWord(finalWordObj.target);
+    setCurrentWordObj(finalWordObj); // ← Guardar el objeto completo
+    setOptions([finalWordObj.correct, ...finalWordObj.incorrect].sort(() => Math.random() - 0.5));
+    prevWordRef.current = finalWordObj.target;
     lastWordTimestampRef.current = Date.now();
   };
 
   // Maneja la respuesta del usuario y registra estadísticas de reacción y recuperación de errores
   const handleChoice = (choice) => {
-    const wordObj = words[level].find(w => w.target === currentWord);
-    if (!wordObj) return;
+    if (!currentWordObj) return; // ← Usar el objeto guardado
 
     const reactionTime = Date.now() - lastWordTimestampRef.current;
     if (reactionTime < 1000) {
       setGlobalStats(prev => ({ ...prev, fastAnswers: prev.fastAnswers + 1 }));
     }
 
-    if (choice === wordObj.correct) {
+    if (choice === currentWordObj.correct) {
       // Manejo de aciertos
       const newStreak = streak + 1;
       setStreak(newStreak);
