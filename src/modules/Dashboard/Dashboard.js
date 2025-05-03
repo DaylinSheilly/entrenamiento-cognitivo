@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import axios from "axios";
 import { LineChart } from "@mui/x-charts/LineChart";
+import { useTheme } from '@mui/material/styles';
 import {
   Box,
   Typography,
@@ -9,44 +10,62 @@ import {
   CardContent,
   CardHeader,
   Grid,
-  Skeleton,
-  useTheme,
-  LinearProgress
+  LinearProgress,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel
 } from "@mui/material";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth0 } from "@auth0/auth0-react"; // <-- Nuevo import
+
+const STAT_OPTIONS = [
+  { value: "max_score", label: "Puntaje Máximo" },
+  { value: "min_score", label: "Puntaje Mínimo" },
+  { value: "avg_score", label: "Puntaje Promedio" },
+  { value: "games_count", label: "Partidas por Día" },
+];
 
 const ProgressCharts = () => {
   const [chartData, setChartData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [stat, setStat] = useState("max_score");
   const theme = useTheme();
   const navigate = useNavigate();
-  const { isAuthenticated, token } = useAuth(); // <-- Usa el contexto
+  const { isAuthenticated, isLoading, getAccessTokenSilently, loginWithRedirect } = useAuth0(); // <-- Nuevo hook
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!isAuthenticated || !token) {
-        navigate('/login');
+      if (!isAuthenticated) {
+        loginWithRedirect();
         return;
       }
       try {
+        const token = await getAccessTokenSilently();
         const response = await axios.get("http://localhost:5000/games/progress", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        // Procesar datos para MUI X Charts
+        // Procesar datos para MUI X Charts (igual que antes)
         const gamesData = {};
         response.data.forEach((item) => {
           if (!gamesData[item.game_name]) {
             gamesData[item.game_name] = {};
           }
-          gamesData[item.game_name][item.session_date] = item.max_score;
+          // Si ya existe la fecha, conserva los datos previos
+          if (!gamesData[item.game_name][item.session_date]) {
+            gamesData[item.game_name][item.session_date] = {
+              max_score: item.max_score,
+              min_score: item.min_score,
+              avg_score: item.avg_score,
+              games_count: item.games_count,
+            };
+          }
         });
 
-        // Convierte los datos a formato de LineChart con fechas formateadas
         const formattedData = {};
-        Object.entries(gamesData).forEach(([game, scoresByDate]) => {
-          const dates = Object.keys(scoresByDate).sort();
+        Object.entries(gamesData).forEach(([game, statsByDate]) => {
+          const dates = Object.keys(statsByDate).sort();
           const formattedDates = dates.map(dateISO =>
             new Date(dateISO).toLocaleDateString('es-ES', {
               year: 'numeric',
@@ -56,24 +75,29 @@ const ProgressCharts = () => {
           );
           formattedData[game] = {
             x: formattedDates,
-            y: dates.map(date => scoresByDate[date]),
+            y: {
+              max_score: dates.map(date => statsByDate[date].max_score),
+              min_score: dates.map(date => statsByDate[date].min_score),
+              avg_score: dates.map(date => statsByDate[date].avg_score),
+              games_count: dates.map(date => statsByDate[date].games_count),
+            }
           };
         });
 
         setChartData(formattedData);
       } catch (error) {
         console.error("Error:", error);
-        if (error.response?.status === 403) {
-          navigate('/login');
+        if (error.response?.status === 403 || error.response?.status === 401) {
+          loginWithRedirect();
         }
       } finally {
         setLoading(false);
       }
     };
     fetchData();
-  }, [isAuthenticated, token, navigate]);
+  }, [isAuthenticated, isLoading, getAccessTokenSilently, loginWithRedirect]);
 
-  if (loading)
+  if (loading || isLoading)
     return (
       <Box sx={{ width: '100%', mt: 2 }}>
         <Typography variant="h4" align="center" gutterBottom
@@ -116,6 +140,24 @@ const ProgressCharts = () => {
       >
         Progreso de Puntaje por Juego
       </Typography>
+      <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+        <FormControl>
+          <InputLabel id="stat-select-label">Estadística</InputLabel>
+          <Select
+            labelId="stat-select-label"
+            value={stat}
+            label="Estadística"
+            onChange={e => setStat(e.target.value)}
+            size="small"
+          >
+            {STAT_OPTIONS.map(option => (
+              <MenuItem value={option.value} key={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Box>
       <Grid container spacing={3}>
         {Object.entries(chartData).map(([gameName, data]) => (
           <Grid item xs={12} sm={6} md={4} key={gameName}>
@@ -156,8 +198,8 @@ const ProgressCharts = () => {
                   ]}
                   series={[
                     {
-                      data: data.y,
-                      label: "Puntaje Máximo Diario",
+                      data: data.y[stat],
+                      label: STAT_OPTIONS.find(opt => opt.value === stat).label,
                       color: theme.palette.primary.main,
                       area: false,
                     },

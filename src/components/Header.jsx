@@ -10,7 +10,8 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth0 } from "@auth0/auth0-react";
+import AuthenticationButton from "./AuthenticationButton";
 
 const navLinks = [
   { label: "Inicio", path: "/home" },
@@ -24,23 +25,29 @@ export default function Header() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const navigate = useNavigate();
-  const { isAuthenticated, logout, user } = useAuth();
+  const { isAuthenticated, logout, user, getAccessTokenSilently } = useAuth0();
 
   // --- User Menu Handlers ---
   const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
 
+
   const handleLogout = async () => {
     try {
-      await axios.put('http://localhost:5000/sessions/end', {}, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("neurogames_token")}` }
-      });
+      const token = await getAccessTokenSilently();
+      await axios.put(
+        'http://localhost:5000/sessions/end',
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
     } catch (error) {
       console.error("Error al cerrar sesión:", error);
     } finally {
-      logout();
-      navigate("/home");
+      logout({
+        logoutParams: { returnTo: window.location.origin }
+      });
       handleMenuClose();
+      navigate("/home");
     }
   };
 
@@ -51,13 +58,9 @@ export default function Header() {
 
   // --- Avatar content ---
   const getAvatarContent = () => {
-    if (user?.nombre_usuario) {
-      // Iniciales del usuario
-      const parts = user.nombre_usuario.trim().split(" ");
-      const initials = parts.length === 1
-        ? parts[0][0]
-        : (parts[0][0] + parts[parts.length - 1][0]);
-      return initials.toUpperCase();
+    if (user?.name) {
+      const parts = user.name.split(" ");
+      return parts.map(p => p[0]).join('').toUpperCase();
     }
     return <AccountCircleIcon />;
   };
@@ -122,14 +125,7 @@ export default function Header() {
   const ctaButton = isAuthenticated ? (
     userMenu
   ) : (
-    <>
-      <Button color="secondary" variant="outlined" component={Link} to="/login" sx={{ ml: 2 }}>
-        Iniciar sesión
-      </Button>
-      <Button color="secondary" variant="contained" component={Link} to="/register" sx={{ ml: 2 }}>
-        Registrarse
-      </Button>
-    </>
+    <AuthenticationButton />
   );
 
   return (

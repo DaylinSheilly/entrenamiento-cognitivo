@@ -1,309 +1,193 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
+const { auth } = require('express-oauth2-jwt-bearer');
 
 const router = express.Router();
+
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false },
 });
 
-const authenticateToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    
-    if (!token) return res.status(401).json({ message: "No autorizado" });
+// Middleware Auth0
+const checkJwt = auth({
+    audience: 'https://api.neurosite.com',
+    issuerBaseURL: 'https://dev-fynybihn682z8p6r.us.auth0.com/',
+    tokenSigningAlg: 'RS256'
+});
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-        if (err) return res.status(403).json({ message: "Token inválido" });
-        req.user = { userId: decoded.userId };
+// Middleware para obtener el usuario interno desde Auth0
+const getInternalUser = async (req, res, next) => {
+    const auth0Id = req.auth.payload.sub;
+    if (!auth0Id) return res.status(401).json({ error: "No autorizado" });
+
+    try {
+        const result = await pool.query(
+            'SELECT * FROM "Users" WHERE auth0_id = $1',
+            [auth0Id]
+        );
+        if (!result.rows.length) {
+            // Si el usuario no existe, puedes crear el registro aquí o pedir al frontend que complete el perfil
+            return res.status(404).json({ error: "Usuario no encontrado" });
+        }
+        req.userDB = result.rows[0];
         next();
-    });
+    } catch (error) {
+        console.error("Error en getInternalUser:", error.message);
+        next(error);
+    }
 };
 
-// 📌 Registro de usuario
-router.post('/register', async (req, res) => {
-    const { 
-        nombre_usuario, 
-        correo_electronico, 
-        contraseña,
+// 📌 Obtener datos del usuario autenticado
+router.get('/me', checkJwt, getInternalUser, (req, res, next) => {
+    try {
+        if (!req.userDB) {
+            return res.status(404).json({
+                error: 'Usuario no encontrado',
+                profile_complete: false
+            });
+        }
+
+        const {
+            id_usuario, nombre_usuario, correo_electronico, fecha_registro, estado_cuenta,
+            fecha_nacimiento, genero, nivel_educativo, pais, ultima_sesion, total_sessions
+        } = req.userDB;
+
+        // Calcular edad dinámicamente
+        let edad = null;
+        if (fecha_nacimiento) {
+            const hoy = new Date();
+            const nacimiento = new Date(fecha_nacimiento);
+            edad = hoy.getFullYear() - nacimiento.getFullYear();
+            const m = hoy.getMonth() - nacimiento.getMonth();
+            if (m < 0 || (m === 0 && hoy.getDate() < nacimiento.getDate())) {
+                edad--;
+            }
+        }
+
+        const profile_complete = !!(req.userDB.nombre_usuario &&
+            req.userDB.fecha_nacimiento &&
+            req.userDB.genero &&
+            req.userDB.nivel_educativo &&
+            req.userDB.pais);
+
+        res.json({
+            id_usuario, nombre_usuario, correo_electronico, fecha_registro, estado_cuenta,
+            edad, fecha_nacimiento, genero, nivel_educativo, pais, ultima_sesion, total_sessions,
+            profile_complete
+        });
+    }
+    catch (error) {
+        console.error("Error en /me:", error.message);
+        next(error); // Pasar el error al middleware de manejo de errores
+    }
+});
+
+router.post('/profile', checkJwt, async (req, res) => {
+    const auth0UserId = req.auth.payload.sub;
+    const email = req.body.correo_electronico;
+
+    const {
+        nombre_usuario,
+        correo_electronico,
         fecha_nacimiento,
         genero,
         nivel_educativo,
         pais
     } = req.body;
-    
-    console.log("Datos recibidos en /register:", nombre_usuario, correo_electronico);
 
-    try {
-        // Verificar todos los campos obligatorios
-        if (!nombre_usuario || !correo_electronico || !contraseña || !fecha_nacimiento || 
-            !genero || !nivel_educativo || !pais) {
-            return res.status(400).json({ message: 'Todos los campos son obligatorios' });
-        }
-
-        // Validar formato de fecha
-        const fechaNacimiento = new Date(fecha_nacimiento);
-        if (isNaN(fechaNacimiento.getTime())) {
-            return res.status(400).json({ message: 'Formato de fecha inválido' });
-        }
-
-        // Verificar si el usuario ya existe
-        const userExists = await pool.query('SELECT * FROM "Users" WHERE correo_electronico = $1', [correo_electronico]);
-        if (userExists.rows.length > 0) {
-            return res.status(400).json({ message: 'El usuario ya existe' });
-        }
-
-        // Encriptar contraseña
-        const hashedPassword = await bcrypt.hash(contraseña, 10);
-
-        // Insertar usuario (la edad se calcula en la BD)
-        const result = await pool.query(
-            `INSERT INTO "Users" (
-                nombre_usuario, 
-                correo_electronico, 
-                contraseña, 
-                fecha_nacimiento, 
-                genero, 
-                nivel_educativo, 
-                pais, 
-                fecha_registro, 
-                estado_cuenta, 
-                edad,
-                total_sessions
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8, $9, 0) 
-            RETURNING id_usuario`,
-            [
-                nombre_usuario, 
-                correo_electronico, 
-                hashedPassword,
-                fechaNacimiento, // $4 - tipo DATE
-                genero,
-                nivel_educativo,
-                pais,
-                'Activa', // $8
-                calcularEdad(fechaNacimiento) // $9 - tipo INTEGER
-            ]
-        );
-        
-        // Función para calcular la edad
-        function calcularEdad(fechaNacimiento) {
-            const hoy = new Date();
-            const nacimiento = new Date(fechaNacimiento);
-            let edad = hoy.getFullYear() - nacimiento.getFullYear();
-            const mes = hoy.getMonth() - nacimiento.getMonth();
-            
-            if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
-                edad--;
-            }
-            return edad;
-        }
-
-        console.log("Usuario registrado con ID:", result.rows[0].id_usuario);
-        res.json({ message: 'Usuario registrado correctamente' });
-
-    } catch (error) {
-        console.error("Error en el servidor:", error);
-        res.status(500).json({ message: 'Error en el servidor: ' + error.message });
+    if (
+        !nombre_usuario ||
+        !correo_electronico ||
+        !fecha_nacimiento ||
+        !genero ||
+        !nivel_educativo ||
+        !pais
+    ) {
+        return res.status(400).json({ error: 'Todos los campos son obligatorios.' });
     }
-});
-
-// 📌 Inicio de sesión
-router.post('/login', async (req, res) => {
-    const { correo_electronico, contraseña } = req.body;
 
     try {
-        // Verificar usuario
-        const user = await pool.query('SELECT * FROM "Users" WHERE correo_electronico = $1', [correo_electronico]);
-        if (user.rows.length === 0) {
-            return res.status(400).json({ message: 'Usuario no encontrado' });
+        // Verificar si ya existe el usuario
+        const existingUser = await pool.query(
+            'SELECT * FROM "Users" WHERE auth0_id = $1',
+            [auth0UserId]
+        );
+
+        if (existingUser.rows.length > 0) {
+            // Si ya existe, puedes actualizar los datos (opcional)
+            await pool.query(
+                `INSERT INTO "Users" (
+                  auth0_id, nombre_usuario, correo_electronico,
+                  fecha_nacimiento, genero, nivel_educativo, pais, fecha_registro,
+                  contraseña, estado_cuenta, total_sessions
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), '', 'activo', 0)`,
+                [auth0UserId, nombre_usuario, correo_electronico,
+                    fecha_nacimiento, genero, nivel_educativo, pais]
+            );
+            return res.status(200).json({ message: "Perfil actualizado" });
         }
 
-        // Verificar contraseña
-        const isMatch = await bcrypt.compare(contraseña, user.rows[0].contraseña);
-        if (!isMatch) {
-            return res.status(400).json({ message: 'Contraseña incorrecta' });
-        }
-
-        // Actualizar última sesión y recalcular edad
+        // Si NO existe, crear el usuario con todos los campos requeridos
         await pool.query(
-            'UPDATE "Users" SET edad = EXTRACT(YEAR FROM AGE(NOW(), fecha_nacimiento))::integer WHERE id_usuario = $1',
-            [user.rows[0].id_usuario]
+            `INSERT INTO "Users" (
+          auth0_id, nombre_usuario, correo_electronico,
+          fecha_nacimiento, genero, nivel_educativo, pais, fecha_registro,
+          contraseña, estado_cuenta, total_sessions
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), '', 'activo', 0)`,
+            [auth0UserId, req.body.nombre_usuario, req.body.correo_electronico,
+                req.body.fecha_nacimiento, req.body.genero,
+                req.body.nivel_educativo, req.body.pais]
         );
 
-        // Crear token JWT
-        const token = jwt.sign({ userId: user.rows[0].id_usuario }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
-        // Obtener datos actualizados del usuario
-        const updatedUser = await pool.query(
-            'SELECT id_usuario, nombre_usuario, correo_electronico, fecha_registro, estado_cuenta, edad, fecha_nacimiento, genero, nivel_educativo, pais, ultima_sesion FROM "Users" WHERE id_usuario = $1',
-            [user.rows[0].id_usuario]
-        );
-
-        // Enviar el token y los datos del usuario
-        res.json({
-            token,
-            user: updatedUser.rows[0]
-        });
-
+        res.status(201).json({ message: "Usuario creado correctamente" });
     } catch (error) {
-        res.status(500).json({ message: 'Error en el servidor: ' + error.message });
-    }
-});
-
-// 📌 Obtener datos del usuario autenticado
-router.get('/me', authenticateToken, async (req, res) => {
-    try {
-        if (!req.user || !req.user.userId) {
-            return res.status(401).json({ message: "No autorizado" });
-        }
-        // Consulta optimizada para obtener solo los datos necesarios
-        const result = await pool.query(`
-            SELECT 
-                id_usuario,
-                nombre_usuario,
-                correo_electronico,
-                fecha_registro,
-                estado_cuenta,
-                EXTRACT(YEAR FROM AGE(NOW(), fecha_nacimiento))::integer AS edad,
-                fecha_nacimiento,
-                genero,
-                nivel_educativo,
-                pais,
-                ultima_sesion,
-                total_sessions
-            FROM "Users"
-            WHERE id_usuario = $1
-        `, [req.user.userId]);  // Usar el ID del usuario del token verificado
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ message: "Usuario no encontrado" });
-        }
-
-        // Devuelve solo los datos necesarios para la vista
-        res.json({
-            ...result.rows[0],
-            // Si necesitas formatear alguna fecha u otro campo
-            fecha_registro: new Date(result.rows[0].fecha_registro).toISOString(),
-            ultima_sesion: result.rows[0].ultima_sesion ? 
-                new Date(result.rows[0].ultima_sesion).toISOString() : null
-        });
-
-    } catch (error) {
-        console.error("Error en /me:", error);
-        res.status(500).json({ 
-            message: "Error en el servidor",
-            error: error.message // Opcional: solo en desarrollo
-        });
+        console.error('Error al crear usuario:', error);
+        res.status(500).json({ error: 'Error al guardar perfil' });
     }
 });
 
 // 📌 Actualizar perfil de usuario
-router.put('/update-profile', async (req, res) => {
+router.put('/me', checkJwt, getInternalUser, async (req, res) => {
+    const { nombre_usuario, fecha_nacimiento, genero, nivel_educativo, pais } = req.body;
+    if (!nombre_usuario || !fecha_nacimiento || !genero || !nivel_educativo || !pais) {
+        return res.status(400).json({ message: "Todos los campos son obligatorios" });
+    }
+
+    // Calcular edad
+    const fechaNac = new Date(fecha_nacimiento);
+    const hoy = new Date();
+    let edad = hoy.getFullYear() - fechaNac.getFullYear();
+    if (hoy.getMonth() < fechaNac.getMonth() ||
+        (hoy.getMonth() === fechaNac.getMonth() && hoy.getDate() < fechaNac.getDate())) {
+        edad--;
+    }
+
     try {
-        const token = req.headers.authorization?.split(" ")[1];
-        if (!token) {
-            return res.status(401).json({ message: "No autorizado" });
-        }
-
-        // Verificar el token
-        let decoded;
-        try {
-            decoded = jwt.verify(token, process.env.JWT_SECRET);
-        } catch (err) {
-            return res.status(401).json({ message: "Token inválido o expirado" });
-        }
-
-        const { 
-            nombre_usuario, 
-            fecha_nacimiento, 
-            genero, 
-            nivel_educativo, 
-            pais 
-        } = req.body;
-
-        // Verificar que todos los campos estén presentes
-        if (!nombre_usuario || !fecha_nacimiento || !genero || !nivel_educativo || !pais) {
-            return res.status(400).json({ message: "Todos los campos son obligatorios" });
-        }
-
-        // Validar fecha
-        const fechaNacimiento = new Date(fecha_nacimiento);
-        if (isNaN(fechaNacimiento.getTime())) {
-            return res.status(400).json({ message: 'Formato de fecha inválido' });
-        }
-        
-        const fechaNac = new Date(fechaNacimiento);
-        const hoy = new Date();
-        let edad = hoy.getFullYear() - fechaNac.getFullYear();
-        if (hoy.getMonth() < fechaNac.getMonth() || 
-            (hoy.getMonth() === fechaNac.getMonth() && hoy.getDate() < fechaNac.getDate())) {
-            edad--;
-        }
-        
-        // Luego usar esa edad en la consulta
         const result = await pool.query(
-            'UPDATE "Users" SET nombre_usuario = $1, fecha_nacimiento = $2, genero = $3, nivel_educativo = $4, pais = $5, edad = $7 WHERE id_usuario = $6 RETURNING *',
-            [nombre_usuario, fechaNacimiento, genero, nivel_educativo, pais, decoded.userId, edad]
+            `UPDATE "Users"
+         SET nombre_usuario = $1, fecha_nacimiento = $2, genero = $3, nivel_educativo = $4, pais = $5
+         WHERE id_usuario = $6
+         RETURNING *`,
+            [nombre_usuario, fechaNac, genero, nivel_educativo, pais, req.userDB.id_usuario]
         );
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ message: "Usuario no encontrado" });
-        }
-
-        res.json({
-            message: "Perfil actualizado correctamente",
-            user: {
-                id_usuario: result.rows[0].id_usuario,
-                nombre_usuario: result.rows[0].nombre_usuario,
-                correo_electronico: result.rows[0].correo_electronico,
-                fecha_registro: result.rows[0].fecha_registro,
-                estado_cuenta: result.rows[0].estado_cuenta,
-                edad: result.rows[0].edad,
-                fecha_nacimiento: result.rows[0].fecha_nacimiento,
-                genero: result.rows[0].genero,
-                nivel_educativo: result.rows[0].nivel_educativo,
-                pais: result.rows[0].pais,
-                ultima_sesion: result.rows[0].ultima_sesion
-            }
-        });
-
+        res.json({ message: "Perfil actualizado correctamente", user: result.rows[0] });
     } catch (error) {
-        console.error("Error al actualizar perfil:", error);
-        res.status(500).json({ message: "Error en el servidor: " + error.message });
+        res.status(500).json({ message: "Error al actualizar perfil" });
     }
 });
 
 // 📌 Eliminar cuenta del usuario autenticado
-router.delete('/delete', async (req, res) => {
+router.delete('/me', checkJwt, getInternalUser, async (req, res) => {
     try {
-        const token = req.headers.authorization?.split(" ")[1];
-        if (!token) {
-            return res.status(401).json({ message: "No autorizado" });
-        }
-
-        let decoded;
-        try {
-            decoded = jwt.verify(token, process.env.JWT_SECRET);
-        } catch (err) {
-            return res.status(401).json({ message: "Token inválido o expirado" });
-        }
-
-        const result = await pool.query(
-            'DELETE FROM "Users" WHERE id_usuario = $1 RETURNING *',
-            [decoded.userId]
-        );
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ message: "Usuario no encontrado" });
-        }
-
+        await pool.query('BEGIN');
+        await pool.query('DELETE FROM "Sessions" WHERE id_usuario = $1', [req.userDB.id_usuario]);
+        await pool.query('DELETE FROM "Users" WHERE id_usuario = $1', [req.userDB.id_usuario]);
+        await pool.query('COMMIT');
         res.json({ message: "Cuenta eliminada exitosamente" });
-
     } catch (error) {
-        console.error("Error al eliminar usuario:", error);
-        res.status(500).json({ message: "Error en el servidor: " + error.message });
+        await pool.query('ROLLBACK');
+        res.status(500).json({ message: "Error al eliminar cuenta" });
     }
 });
 

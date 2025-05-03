@@ -10,59 +10,90 @@ import {
   Snackbar,
   Alert
 } from '@mui/material';
-import { useAuth } from '../context/AuthContext';
+import { useAuth0 } from '@auth0/auth0-react';
 import InfoPanel from './InfoPanel';
 
 const GameLayout = ({ children }) => {
-  const { isAuthenticated, user, token } = useAuth();
+  const { isAuthenticated, getAccessTokenSilently, isLoading } = useAuth0();
   const [sessionId, setSessionId] = useState(null);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // Verificar sesión y autenticación
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
-    }
-  }, [isAuthenticated, navigate]);
+    if (isLoading) return; // Espera a que termine la verificación
+    if (!isAuthenticated) navigate('/login');
+  }, [isAuthenticated, isLoading, navigate]);
 
   // Manejar final del juego
   const handleGameEnd = async (gameData) => {
-    if (!token) { // <--- Cambia aquí
-      setError("No hay token de autenticación");
+    console.log("[handleGameEnd] Iniciando proceso de fin de juego");
+    
+    if (!isAuthenticated) {
+      console.error("[handleGameEnd] Usuario no autenticado, abortando");
+      setError("No autenticado");
       return;
     }
+  
     try {
+      const token = await getAccessTokenSilently();
+  
       let currentSession = sessionId;
-
+  
       if (!currentSession) {
-        const sessionResponse = await axios.post(
-          'http://localhost:5000/sessions/start',
-          {},
-          { headers: { Authorization: `Bearer ${token}` } } // <--- Cambia aquí
-        );
-        currentSession = sessionResponse.data.id_session;
-        setSessionId(currentSession);
-        console.log("Sesión iniciada:", currentSession);
+        console.log("[handleGameEnd] No hay sesión activa, creando nueva...");
+        try {
+          const sessionResponse = await axios.post(
+            'http://localhost:5000/sessions/start',
+            {},
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          currentSession = sessionResponse.data.id_session;
+          setSessionId(currentSession);
+        } catch (error) {
+          if (error.response?.status === 409 && error.response.data.sessionId) {
+            console.log("[handleGameEnd] Sesión existente recuperada (409 Conflict)");
+            currentSession = error.response.data.sessionId;
+            setSessionId(currentSession);
+          } else {
+            console.error("[handleGameEnd] Error creando sesión:", error);
+            throw error;
+          }
+        }
       }
-
-      await axios.post(
+  
+      console.log("[handleGameEnd] Guardando datos del juego...");
+      const gameResponse = await axios.post(
         'http://localhost:5000/games/create',
         { ...gameData, session_id: currentSession },
-        { headers: { Authorization: `Bearer ${token}` } } // <--- Cambia aquí
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      console.log("Datos del juego guardados:");
-
+  
+      console.log("[handleGameEnd] Actualizando sesión...");
       await axios.patch(
         `http://localhost:5000/sessions/${currentSession}/update`,
         { games_played: 1 },
-        { headers: { Authorization: `Bearer ${token}` } } // <--- Cambia aquí
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      console.log("Sesión actualizada:", currentSession);
-
+      console.log("[handleGameEnd] Sesión actualizada correctamente");
+  
     } catch (error) {
-      setError(error.response?.data?.message || "Error al guardar los resultados");
+      console.error("[handleGameEnd] Error general:", error);
+      
+      if (error.response) {
+        console.error("[handleGameEnd] Detalles error:", {
+          status: error.response.status,
+          data: error.response.data
+        });
+      }
+  
+      if (error.response?.status === 403) {
+        console.log("[handleGameEnd] Redirigiendo a login...");
+        navigate('/login');
+      } else {
+        const errorMsg = error.response?.data?.message || "Error al guardar los resultados";
+        console.error(`[handleGameEnd] Error manejado: ${errorMsg}`);
+        setError(errorMsg);
+      }
     }
   };
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth0 } from "@auth0/auth0-react";
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import {
     Box,
     Typography,
@@ -28,9 +29,16 @@ import { useTheme } from '@mui/material/styles';
 import { es } from 'date-fns/locale';
 
 const PerfilUsuario = () => {
-    const { user, token, logout } = useAuth();
+    const {
+        user: auth0User,
+        isAuthenticated,
+        isLoading: auth0Loading,
+        getAccessTokenSilently,
+        logout: auth0Logout,
+        loginWithRedirect
+    } = useAuth0();
+    const navigate = useNavigate();
     const [editMode, setEditMode] = useState(false);
-    const [formData, setFormData] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [progressData, setProgressData] = useState([]);
@@ -38,6 +46,15 @@ const PerfilUsuario = () => {
     const theme = useTheme();
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [deleting, setDeleting] = useState(false);
+
+    const [formData, setFormData] = useState({
+        nombre_usuario: '',
+        correo_electronico: '',
+        fecha_nacimiento: '',
+        genero: '',
+        nivel_educativo: '',
+        pais: ''
+    });
 
     // Campos editables
     const camposEditables = {
@@ -66,8 +83,17 @@ const PerfilUsuario = () => {
     ];
 
     useEffect(() => {
+        if (!auth0Loading && !isAuthenticated) {
+            console.log("[PerfilUsuario] Usuario no autenticado, redirigiendo a login...");
+            loginWithRedirect();
+        }
+    }, [isAuthenticated, auth0Loading, loginWithRedirect]);
+
+    useEffect(() => {
         const cargarDatos = async () => {
+            console.log("[PerfilUsuario] Iniciando carga de datos...");
             try {
+                const token = await getAccessTokenSilently();
                 const [perfilRes, progresoRes] = await Promise.all([
                     axios.get('http://localhost:5000/auth/me', {
                         headers: { Authorization: `Bearer ${token}` }
@@ -76,17 +102,31 @@ const PerfilUsuario = () => {
                         headers: { Authorization: `Bearer ${token}` }
                     })
                 ]);
+                console.log("[PerfilUsuario] Datos recibidos");
                 setFormData(perfilRes.data);
                 setProgressData(progresoRes.data);
             } catch (error) {
-                setError('Error al cargar los datos del usuario');
+                console.error("[PerfilUsuario] Error al cargar datos:", error);
+                if (error.response?.status === 404) {
+                    console.log("[PerfilUsuario] Usuario no encontrado, redirigiendo a /complete-profile");
+                    navigate('/complete-profile');
+                } else if (error.error === 'login_required') {
+                    console.log("[PerfilUsuario] Sesión expirada, redirigiendo a login...");
+                    loginWithRedirect();
+                } else {
+                    setError('Error al cargar los datos del usuario');
+                }
             } finally {
                 setLoading(false);
                 setStatsLoading(false);
             }
         };
-        if (user) cargarDatos();
-    }, [token, user]);
+
+        if (isAuthenticated && !auth0Loading) {
+            console.log("[PerfilUsuario] Usuario autenticado, cargando datos...");
+            cargarDatos();
+        }
+    }, [isAuthenticated, auth0Loading, getAccessTokenSilently, loginWithRedirect, navigate]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -95,8 +135,9 @@ const PerfilUsuario = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            const token = await getAccessTokenSilently();
             const response = await axios.put(
-                'http://localhost:5000/auth/update-profile',
+                'http://localhost:5000/auth/me',
                 formData,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -110,13 +151,18 @@ const PerfilUsuario = () => {
     const handleDeleteAccount = async () => {
         setDeleting(true);
         try {
-            await axios.delete("http://localhost:5000/auth/delete", {
+            const token = await getAccessTokenSilently();
+            await axios.delete("http://localhost:5000/auth/me", {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setConfirmOpen(false);
-            logout();
-            // Opcional: Redirige a landing page o login
-            window.location.href = "/";
+
+            // Logout de Auth0 después de eliminar cuenta
+            auth0Logout({
+                logoutParams: {
+                    returnTo: window.location.origin
+                }
+            });
         } catch (error) {
             setConfirmOpen(false);
             alert(error.response?.data?.message || "Hubo un error al eliminar tu cuenta.");
@@ -125,7 +171,40 @@ const PerfilUsuario = () => {
         }
     };
 
-    if (loading) return <LinearProgress />;
+    if (auth0Loading || loading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <CircularProgress />
+                <Typography variant="h6" color="textSecondary">
+                    Cargando...
+                </Typography>
+            </Box>
+        );
+    }
+
+    if (!isAuthenticated) {
+        console.log("[PerfilUsuario] No autenticado, return null");
+        return null;
+    }
+
+    // Si no hay datos después de cargar
+    if (!formData?.nombre_usuario && !loading) {
+        console.log("[PerfilUsuario] No se encontraron datos del usuario, mostrando mensaje.");
+        return (
+            <Box sx={{ p: 3, textAlign: 'center' }}>
+                <Typography variant="h6" color="textSecondary">
+                    No se encontraron datos del usuario.
+                </Typography>
+                <Button
+                    variant="contained"
+                    sx={{ mt: 2 }}
+                    onClick={() => navigate('/complete-profile')}
+                >
+                    Completar perfil
+                </Button>
+            </Box>
+        );
+    }
 
     return (
         <Box sx={{ p: 3, maxWidth: 1400, mx: 'auto' }}>
@@ -282,7 +361,7 @@ const PerfilUsuario = () => {
                                     Mejor puntuación global
                                 </Typography>
                                 <Typography variant="h5" color="secondary">
-                                    {Math.max(...progressData.map(p => p.max_score)) || 0}
+                                    {Math.max(...progressData.map(p => p.max_score), 0)}
                                 </Typography>
                             </Grid>
                             <Grid item xs={12} sm={4}>

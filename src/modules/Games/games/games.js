@@ -10,7 +10,7 @@ import {
   Snackbar,
   Alert
 } from '@mui/material';
-import { useAuth } from '../../../context/AuthContext';
+import { useAuth0 } from "@auth0/auth0-react";
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 
 // Lista de juegos con sus rutas
@@ -33,13 +33,17 @@ const gamesList = [
 
 function Games() {
   const navigate = useNavigate();
-  const { isAuthenticated, token } = useAuth();
+  const {
+    isAuthenticated,
+    isLoading,
+    loginWithRedirect
+  } = useAuth0(); // Nuevo hook de Auth0
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const handleStartGame = async (path) => {
-    if (!isAuthenticated || !token) {
-      navigate('/login');
+    if (!isAuthenticated) {
+      loginWithRedirect(); // Redirección con Auth0
       return;
     }
 
@@ -47,12 +51,25 @@ function Games() {
       setLoading(true);
       navigate(path);
     } catch (error) {
-      setError(error.response?.data?.message || "Error de autenticación");
-      navigate('/login');
+      setError("Error al iniciar el juego");
+      console.error(error);
     } finally {
       setLoading(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        height: '100vh',
+        alignItems: 'center'
+      }}>
+        <CircularProgress size={60} thickness={4} />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{
@@ -63,17 +80,17 @@ function Games() {
       alignItems: 'center',
       justifyContent: 'center'
     }}>
-      <Paper elevation={6} sx={{ 
-        p: 4, 
-        width: '100%', 
-        maxWidth: 1200, 
+      <Paper elevation={6} sx={{
+        p: 4,
+        width: '100%',
+        maxWidth: 1200,
         borderRadius: 4,
         boxShadow: 6
       }}>
-        <Typography 
-          variant="h3" 
-          component="h1" 
-          gutterBottom 
+        <Typography
+          variant="h3"
+          component="h1"
+          gutterBottom
           sx={{
             textAlign: 'center',
             mb: 4,
@@ -106,9 +123,9 @@ function Games() {
                   textTransform: 'none',
                   boxShadow: 3,
                   transition: 'transform 0.2s',
-                  '&:hover': { 
+                  '&:hover': {
                     transform: 'translateY(-2px)',
-                    boxShadow: 6 
+                    boxShadow: 6
                   },
                   '&:disabled': {
                     bgcolor: 'action.disabledBackground',
@@ -123,10 +140,10 @@ function Games() {
         </Grid>
 
         {loading && (
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
-            mt: 4 
+          <Box sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            mt: 4
           }}>
             <CircularProgress size={60} thickness={4} />
           </Box>

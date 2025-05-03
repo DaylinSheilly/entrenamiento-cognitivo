@@ -4,8 +4,7 @@ import './App.css';
 import './styles/index.css';
 import Home from './pages/Home';
 import Header from './components/Header';
-import Register from "./pages/auth/Register";
-import Login from "./pages/auth/Login";
+import CompleteProfile from "./pages/auth/CompleteProfile.jsx";
 import UserData from "./pages/UserData";
 import Dashboard from './modules/Dashboard/Dashboard';
 import GameLayout from './components/GameLayout';
@@ -25,146 +24,158 @@ import Game12 from './modules/Games/que-sentido-tiene/que-sentido-tiene.jsx';
 import Game13 from './modules/Games/apunta-acierta/apunta-acierta.jsx';
 import Game14 from './modules/Games/construye-la-pipe/construye-la-pipe.jsx';
 import Game15 from './modules/Games/colorea-el-camino/colorea-el-camino.jsx';
+import ProtectedRoute from "./components/ProtectedRoute";
+import LoginButton from "./components/LoginButton";
+import RequireProfileComplete from "./components/RequireProfileComplete";
 
 function App() {
   return (
-    <Router>
+    <>
       <Header />
       <div className="App">
         <Routes>
-          <Route path="/" element={<Home />} />
           <Route path="/home" element={<Home />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/games" element={<Games />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/usuario" element={<UserData />} />
+          <Route path="/login" element={<LoginButton />} />
+          <Route path="/register" element={<LoginButton />} />
 
-          <Route
-            path="/games/sigue-la-secuencia"
-            element={
-              <GameLayout>
-                <Game1 />
-              </GameLayout>
-            }
-          />
-          <Route
-            path="/games/sopa-de-letras"
-            element={
-              <GameLayout>
-                <Game2 />
-              </GameLayout>
-            }
-          />
-          <Route
-            path="/games/a-fin"
-            element={
-              <GameLayout>
-                <Game3 />
-              </GameLayout>
-            }
-          />
-          <Route
-            path="/games/matriz-de-memoria"
-            element={
-              <GameLayout>
-                <Game4 />
-              </GameLayout>
-            }
-          />
-          <Route
-            path="/games/juego-de-atencion"
-            element={
-              <GameLayout>
-                <Game5 />
-              </GameLayout>
-            }
-          />
-          <Route
-            path="/games/comparacion-de-colores"
-            element={
-              <GameLayout>
-                <Game6 />
-              </GameLayout>
-            }
-          />
-          <Route
-            path="/games/recuerda-los-objetos"
-            element={
-              <GameLayout>
-                <Game7 />
-              </GameLayout>
-            }
-          />
-          <Route
-            path="/games/concentrate-en-objetivo"
-            element={
-              <GameLayout>
-                <Game8 />
-              </GameLayout>
-            }
-          />
-          <Route
-            path="/games/no-pierdas-los-objetos"
-            element={
-              <GameLayout>
-                <Game9 />
-              </GameLayout>
-            }
-          />
-          <Route
-            path="/games/concentrarse-en-el-objetivo"
-            element={
-              <GameLayout>
-                <Game10 />
-              </GameLayout>
-            }
-          />
-          <Route
-            path="/games/mira-la-direccion"
-            element={
-              <GameLayout>
-                <Game11 />
-              </GameLayout>
-            }
-          />
-          <Route
-            path="/games/que-sentido-tiene"
-            element={
-              <GameLayout>
-                <Game12 />
-              </GameLayout>
-            }
-          />
-          <Route
-            path="/games/apunta-acierta"
-            element={
-              <GameLayout>
-                <Game13 />
-              </GameLayout>
-            }
-          />
-          <Route
-            path="/games/construye-la-tuberia"
-            element={
-              <GameLayout>
-                <Game14 />
-              </GameLayout>
-            }
-          />
-          <Route
-            path="/games/colorea-el-camino"
-            element={
-              <GameLayout>
-                <Game15 />
-              </GameLayout>
-            }
-          />
+          <Route path="/complete-profile" element={<CompleteProfile />} />
 
-          {/* Agrega más rutas aquí en caso de que se añadan nuevos juegos */}
+
+          <Route element={<ProtectedRoute />}>
+            <Route element={<RequireProfileComplete />}>
+              <Route path="/" element={<Home />} />
+
+              <Route path="/games" element={<Games />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/usuario" element={<UserData />} />
+
+              <Route
+                path="/games/sigue-la-secuencia"
+                element={
+                  <GameLayout>
+                    <Game1 />
+                  </GameLayout>
+                }
+              />
+              <Route
+                path="/games/sopa-de-letras"
+                element={
+                  <GameLayout>
+                    <Game2 />
+                  </GameLayout>
+                }
+              />
+              <Route
+                path="/games/a-fin"
+                element={
+                  <GameLayout>
+                    <Game3 />
+                  </GameLayout>
+                }
+              />
+              <Route
+                path="/games/matriz-de-memoria"
+                element={
+                  <GameLayout>
+                    <Game4 />
+                  </GameLayout>
+                }
+              />
+              <Route
+                path="/games/juego-de-atencion"
+                element={
+                  <GameLayout>
+                    <Game5 />
+                  </GameLayout>
+                }
+              />
+              <Route
+                path="/games/comparacion-de-colores"
+                element={
+                  <GameLayout>
+                    <Game6 />
+                  </GameLayout>
+                }
+              />
+              <Route
+                path="/games/recuerda-los-objetos"
+                element={
+                  <GameLayout>
+                    <Game7 />
+                  </GameLayout>
+                }
+              />
+              <Route
+                path="/games/concentrate-en-objetivo"
+                element={
+                  <GameLayout>
+                    <Game8 />
+                  </GameLayout>
+                }
+              />
+              <Route
+                path="/games/no-pierdas-los-objetos"
+                element={
+                  <GameLayout>
+                    <Game9 />
+                  </GameLayout>
+                }
+              />
+              <Route
+                path="/games/concentrarse-en-el-objetivo"
+                element={
+                  <GameLayout>
+                    <Game10 />
+                  </GameLayout>
+                }
+              />
+              <Route
+                path="/games/mira-la-direccion"
+                element={
+                  <GameLayout>
+                    <Game11 />
+                  </GameLayout>
+                }
+              />
+              <Route
+                path="/games/que-sentido-tiene"
+                element={
+                  <GameLayout>
+                    <Game12 />
+                  </GameLayout>
+                }
+              />
+              <Route
+                path="/games/apunta-acierta"
+                element={
+                  <GameLayout>
+                    <Game13 />
+                  </GameLayout>
+                }
+              />
+              <Route
+                path="/games/construye-la-tuberia"
+                element={
+                  <GameLayout>
+                    <Game14 />
+                  </GameLayout>
+                }
+              />
+              <Route
+                path="/games/colorea-el-camino"
+                element={
+                  <GameLayout>
+                    <Game15 />
+                  </GameLayout>
+                }
+              />
+
+              {/* Agrega más rutas aquí en caso de que se añadan nuevos juegos */}
+            </Route>
+          </Route>
         </Routes>
       </div>
-    </Router>
+    </>
   );
 }
 

@@ -12,7 +12,7 @@ const ERROR_THRESHOLD = {
 };
 
 const LEVEL_TIME = {
-  1: 60,
+  1: 6,
   2: 60,
   3: 45,
   4: 45,
@@ -32,8 +32,6 @@ const SynonymGame = ({ onGameEnd }) => {
   const [level, setLevel] = useState(1);
   const [score, setScore] = useState(0);      // Puntaje en el nivel actual
   const [errors, setErrors] = useState(0);      // Errores en el nivel actual
-  const [totalScore, setTotalScore] = useState(0);      // Puntaje en la partida
-  const [totalErrors, setTotalErrors] = useState(0);      // Errores en la partida
   const [time, setTime] = useState(LEVEL_TIME[1]);
   const [currentWord, setCurrentWord] = useState('');
   const [options, setOptions] = useState([]);
@@ -47,35 +45,47 @@ const SynonymGame = ({ onGameEnd }) => {
   const [maxStreak, setMaxStreak] = useState(0);  // Máxima racha histórica
   const [levelFails, setLevelFails] = useState(0);
   const [currentWordObj, setCurrentWordObj] = useState(null);
+  // Estados para estadísticas globales (se acumulan entre niveles)
+  const [globalStats, setGlobalStats] = useState({
+    totalScore: 0,
+    totalErrors: 0,
+    totalCorrect: 0,
+    fastAnswers: 0,         // Respuestas hechas en menos de 1 segundo
+    recoveryTimes: [],      // Array de tiempos de recuperación tras un error
+  });
 
   // Ref para guardar la hora de inicio de la partida y de cada palabra
   const startTimeRef = useRef(Date.now());
   const lastWordTimestampRef = useRef(Date.now());
   const [lastErrorTimestamp, setLastErrorTimestamp] = useState(null);
   const prevWordRef = useRef(null); // Ref para guardar la palabra anterior
+  const isHandlingGameEnd = useRef(false); // Ref para evitar múltiples envíos de datos al finalizar el juego
 
   const gameData = {
     game_name: "A fin",
     level: level,
     difficulty: level <= 2 ? "fácil" : level <= 4 ? "medio" : "difícil",
-    actions_taken: totalScore + totalErrors,
+    actions_taken: globalStats.totalCorrect + globalStats.totalErrors,
     accuracy: Math.round(
-      (totalScore /
-        (totalScore + totalErrors)) * 100
+      (globalStats.totalCorrect /
+        (globalStats.totalCorrect + globalStats.totalErrors)) * 100
     ),
     streaks: maxStreak,
-    errors: totalErrors,
-    score: totalScore,
+    errors: globalStats.totalErrors,
+    score: globalStats.totalScore,
   };
 
   const handleGameEnd = () => {
     // Envía los datos al GameLayout
+    console.log("Datos del juego:", gameData);
     onGameEnd(gameData);
   };
 
   useEffect(() => {
-    if (isGameOver) {
-      handleGameEnd(); // ← Función que envia los datos del juego al backend
+    if (isGameOver && !isHandlingGameEnd.current) {
+      isHandlingGameEnd.current = true;
+      handleGameEnd();
+      isHandlingGameEnd.current = false;
     }
   }, [isGameOver]);
 
@@ -101,14 +111,20 @@ const SynonymGame = ({ onGameEnd }) => {
     setLevel(1);
     setScore(0);
     setErrors(0);
-    setTotalScore(0);
-    setTotalErrors(0);
+    setGlobalStats({
+      totalScore: 0,
+      totalErrors: 0,
+      totalCorrect: 0,
+      fastAnswers: 0,
+      recoveryTimes: [],
+    });
     setStreak(0);
     setMaxStreak(0);
     setTime(LEVEL_TIME[1]);
     setCurrentWord('');
     setOptions([]);
     setGameOver(false);
+    setIsGameOver(false);
     setLevelPassed(false);
     setCountdown(null); // Asegurar que el contador también se reinicie
     setLevelFails(0); // Reiniciar el contador de fallos por nivel
@@ -125,15 +141,6 @@ const SynonymGame = ({ onGameEnd }) => {
     lastWordTimestampRef.current = now;
     setLastErrorTimestamp(null);
   };
-
-  // Estados para estadísticas globales (se acumulan entre niveles)
-  const [globalStats, setGlobalStats] = useState({
-    totalScore: 0,
-    totalErrors: 0,
-    totalCorrect: 0,
-    fastAnswers: 0,         // Respuestas hechas en menos de 1 segundo
-    recoveryTimes: [],      // Array de tiempos de recuperación tras un error
-  });
 
 
   // Temporizador del nivel
@@ -170,26 +177,26 @@ const SynonymGame = ({ onGameEnd }) => {
   const newWord = () => {
     const levelWords = words[level];
     if (!levelWords) return;
-  
+
     let candidate, swap, asTarget, attempts = 0;
-  
+
     do {
       const randomIndex = Math.floor(Math.random() * levelWords.length);
       candidate = levelWords[randomIndex];
       swap = Math.random() < 0.5;
       asTarget = swap ? candidate.correct : candidate.target;
-  
+
       attempts++;
       if (attempts > 10) break;
-  
+
     } while (prevWordRef.current && asTarget === prevWordRef.current);
-  
+
     const finalWordObj = swap ? {
       target: candidate.correct,
       correct: candidate.target,
       incorrect: candidate.incorrect
     } : candidate;
-  
+
     setCurrentWord(finalWordObj.target);
     setCurrentWordObj(finalWordObj); // ← Guardar el objeto completo
     setOptions([finalWordObj.correct, ...finalWordObj.incorrect].sort(() => Math.random() - 0.5));
@@ -221,13 +228,11 @@ const SynonymGame = ({ onGameEnd }) => {
         setLastErrorTimestamp(null);
       }
       setScore(score + 1);
-      setTotalScore(totalScore + 1);
       console.log(`Correcto! Racha actual: ${newStreak}`);
     } else {
       // Reinicio de racha en errores
       setStreak(0);
       setErrors(errors + 1);
-      setTotalErrors(totalErrors + 1);
 
       if (lastErrorTimestamp === null) {
         setLastErrorTimestamp(Date.now());
@@ -241,27 +246,28 @@ const SynonymGame = ({ onGameEnd }) => {
     const errorPercentage = score + errors > 0 ? ((errors / (score + errors)) * 100) : 0;
     let passed = false;
     if (level === 5) {
-      // Para el nivel 5: se requiere alcanzar el mínimo y tener máximo 1 error.
       passed = score >= MIN_SCORE_REQUIRED[level] && errors <= 1;
     } else {
       passed = score >= MIN_SCORE_REQUIRED[level] && errorPercentage < ERROR_THRESHOLD[level];
     }
-    // Acumular estadísticas globales del nivel actual
+
     setGlobalStats(prev => ({
       ...prev,
       totalScore: prev.totalScore + score,
-      totalErrors: prev.totalErrors + errors,
       totalCorrect: prev.totalCorrect + score,
+      totalErrors: prev.totalErrors + errors,
     }));
+    setStreak(0); // Actualizar la máxima racha
 
     // Si se pasa el nivel y no es el último, iniciar el temporizador de 10 segundos
     if (passed && level < 5) {
       setNextLevelTimer(10);
-      setLevelFails(0); // Reiniciar contador al pasar nivel
     }
     else if (!passed) {
+      console.log(levelFails);
       if (levelFails >= 1) { // Segundo fallo consecutivo
         setIsGameOver(true);
+        setGameOver(true);
         return;
       }
       setLevelFails(c => c + 1);
@@ -308,6 +314,7 @@ const SynonymGame = ({ onGameEnd }) => {
         setCurrentWord('');
         setOptions([]);
         setGameStarted(true); // Ahora sí, el juego comienza
+        setLevelPassed(false); // Reiniciar el estado de nivel superado
 
         // Reiniciar referencias de tiempo
         startTimeRef.current = Date.now();
@@ -327,6 +334,8 @@ const SynonymGame = ({ onGameEnd }) => {
     <div className="afin-game-container">
       {gameOver ? (
         <>
+        {console.log(gameOver)}
+        {console.log(isGameOver)}
           {(levelPassed || isGameOver) ? (
             (level === 5 || isGameOver) ? (
               <div className="colores-fin-juego-container">
