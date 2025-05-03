@@ -177,4 +177,28 @@ router.get('/max-scores', checkJwt, async (req, res) => {
   }
 });
 
+router.get('/plays-by-game', checkJwt, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT g.game_name, COUNT(*) as plays
+      FROM "Games" g
+      JOIN "Sessions" s ON g.session_id = s.id_session
+      JOIN "Users" u ON s.id_usuario = u.id_usuario
+      WHERE u.auth0_id = $1
+      GROUP BY g.game_name
+    `, [req.auth.payload.sub]);
+    
+    // Convertir a objeto para fácil acceso en el frontend
+    const playsByGame = {};
+    result.rows.forEach(row => {
+      playsByGame[row.game_name] = parseInt(row.plays, 10);
+    });
+    
+    res.json(playsByGame);
+  } catch (error) {
+    console.error('Error al obtener conteo de juegos:', error);
+    res.status(500).json({ message: 'Error al obtener datos de juegos' });
+  }
+});
+
 module.exports = router;

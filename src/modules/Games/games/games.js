@@ -1,52 +1,117 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import {
-  Box,
-  Button,
-  Grid,
-  Typography,
-  Paper,
-  CircularProgress,
-  Snackbar,
-  Alert
+  Box, Button, Grid, Typography, Paper, CircularProgress, Snackbar, Alert
 } from '@mui/material';
 import { useAuth0 } from "@auth0/auth0-react";
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 
-// Lista de juegos con sus rutas
-const gamesList = [
-  { name: "Matriz de Memoria", path: "/games/matriz-de-memoria" },
-  { name: "Sigue la Secuencia", path: "/games/sigue-la-secuencia" },
-  { name: "Recuerda los Objetos", path: "/games/recuerda-los-objetos" },
-  { name: "Concentrate en el Objetivo", path: "/games/concentrarse-en-el-objetivo" },
-  { name: "No Pierdas los Objetos", path: "/games/no-pierdas-los-objetos" },
-  { name: "Mira la dirección", path: "/games/mira-la-direccion" },
-  { name: "¿Qué sentido tiene?", path: "/games/que-sentido-tiene" },
-  { name: "¡Apunta y acierta!", path: "/games/apunta-acierta" },
-  { name: "Construye la Tubería", path: "/games/construye-la-tuberia" },
-  { name: "Colorea el camino", path: "/games/colorea-el-camino" },
-  { name: "Sopa de Letras", path: "/games/sopa-de-letras" },
-  { name: "A Fin", path: "/games/a-fin" },
-  { name: "Comparación de Colores", path: "/games/comparacion-de-colores" },
-  { name: "Juego de Atención", path: "/games/juego-de-atencion" },
+// Juegos agrupados por dominio cognitivo según la imagen
+const gamesByDomain = [
+  {
+    domain: "Memoria",
+    games: [
+      { name: "Matriz de memoria", path: "/games/matriz-de-memoria" },
+      { name: "Sigue la secuencia", path: "/games/sigue-la-secuencia" },
+      { name: "Recuerda los objetos", path: "/games/recuerda-los-objetos" },
+    ]
+  },
+  {
+    domain: "Atención",
+    games: [
+      { name: "Concéntrate en el objetivo", path: "/games/concentrate-en-objetivo" },
+      { name: "No pierdas los objetos", path: "/games/no-pierdas-los-objetos" },
+      { name: "Atención", path: "/games/juego-de-atencion" },
+    ]
+  },
+  {
+    domain: "Funciones ejecutivas",
+    games: [
+      { name: "Comparación de colores", path: "/games/comparacion-de-colores" },
+      { name: "Color y acción", path: "/games/color-y-accion" },
+      { name: "Mira la dirección", path: "/games/mira-la-direccion" },
+    ]
+  },
+  {
+    domain: "Lenguaje",
+    games: [
+      { name: "Sopa de letras", path: "/games/sopa-de-letras" },
+      { name: "A fin", path: "/games/a-fin" },
+      { name: "¿Qué sentido tiene?", path: "/games/que-sentido-tiene" },
+    ]
+  },
+  {
+    domain: "Habilidades visoconstructivas",
+    games: [
+      { name: "Apunta y Acierta", path: "/games/apunta-acierta" },
+      { name: "Construye la cañería", path: "/games/construye-la-tuberia" },
+      { name: "Colorea el camino", path: "/games/colorea-el-camino" },
+    ]
+  },
 ];
 
 function Games() {
   const navigate = useNavigate();
-  const {
-    isAuthenticated,
-    isLoading,
-    loginWithRedirect
-  } = useAuth0(); // Nuevo hook de Auth0
+  const { isAuthenticated, isLoading, loginWithRedirect, getAccessTokenSilently } = useAuth0();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [playsByGame, setPlaysByGame] = useState(null);
+  const [sortedDomains, setSortedDomains] = useState([]);
+
+  // Cargar conteo de juegos al iniciar
+  useEffect(() => {
+    const fetchPlayCounts = async () => {
+      if (!isAuthenticated) return;
+      
+      try {
+        setLoading(true);
+        const token = await getAccessTokenSilently({
+          authorizationParams: {
+            audience: "https://api.neurosite.com"
+          }
+        });
+        
+        const response = await axios.get('http://localhost:5000/games/plays-by-game', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        setPlaysByGame(response.data);
+        
+        // Ordenar dominios y juegos basado en conteos
+        const orderedDomains = [...gamesByDomain].map(domain => {
+          // Ordenar juegos dentro del dominio
+          const sortedGames = [...domain.games].sort((a, b) => 
+            (response.data[b.name] || 0) - (response.data[a.name] || 0)
+          );
+          
+          // Calcular total de juegos por dominio
+          const totalPlays = sortedGames.reduce((sum, game) => 
+            sum + (response.data[game.name] || 0), 0
+          );
+          
+          return { ...domain, games: sortedGames, totalPlays };
+        });
+        
+        // Ordenar dominios por total de juegos
+        orderedDomains.sort((a, b) => b.totalPlays - a.totalPlays);
+        setSortedDomains(orderedDomains);
+      } catch (err) {
+        console.error("Error al obtener conteo de juegos:", err);
+        setSortedDomains(gamesByDomain);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchPlayCounts();
+  }, [isAuthenticated, getAccessTokenSilently]);
 
   const handleStartGame = async (path) => {
     if (!isAuthenticated) {
-      loginWithRedirect(); // Redirección con Auth0
+      loginWithRedirect();
       return;
     }
-
     try {
       setLoading(true);
       navigate(path);
@@ -58,7 +123,7 @@ function Games() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || !sortedDomains.length) {
     return (
       <Box sx={{
         display: 'flex',
@@ -106,38 +171,65 @@ function Games() {
           Catálogo de Juegos
         </Typography>
 
-        <Grid container spacing={3}>
-          {gamesList.map((game, index) => (
-            <Grid item xs={12} sm={6} md={4} key={index}>
-              <Button
-                fullWidth
-                variant="contained"
-                color="secondary"
-                size="large"
-                onClick={() => handleStartGame(game.path)}
-                disabled={loading}
-                sx={{
-                  py: 3,
-                  borderRadius: 2,
-                  fontSize: '1.1rem',
-                  textTransform: 'none',
-                  boxShadow: 3,
-                  transition: 'transform 0.2s',
-                  '&:hover': {
-                    transform: 'translateY(-2px)',
-                    boxShadow: 6
-                  },
-                  '&:disabled': {
-                    bgcolor: 'action.disabledBackground',
-                    color: 'text.disabled'
-                  }
-                }}
-              >
-                {game.name}
-              </Button>
+        {sortedDomains.map((group, idx) => (
+          <Box key={group.domain} sx={{ mb: 5 }}>
+            <Typography
+              variant="h5"
+              sx={{
+                color: 'primary.dark',
+                fontWeight: 600,
+                mb: 2,
+                mt: idx === 0 ? 0 : 4,
+                textTransform: 'uppercase',
+                letterSpacing: 1,
+                display: 'flex',
+                alignItems: 'center'
+              }}
+            >
+              {group.domain}
+            </Typography>
+            <Grid container spacing={3}>
+              {group.games.map((game) => (
+                <Grid item xs={12} sm={6} md={4} key={game.name}>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    color="secondary"
+                    size="large"
+                    onClick={() => handleStartGame(game.path)}
+                    disabled={loading}
+                    sx={{
+                      py: 3,
+                      borderRadius: 2,
+                      fontSize: '1.1rem',
+                      textTransform: 'none',
+                      boxShadow: 3,
+                      transition: 'transform 0.2s',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: 6
+                      },
+                      '&:disabled': {
+                        bgcolor: 'action.disabledBackground',
+                        color: 'text.disabled'
+                      }
+                    }}
+                  >
+                    {game.name}
+                    {playsByGame && playsByGame[game.name] > 0 && (
+                      <Typography 
+                        component="span" 
+                        sx={{ ml: 1, fontSize: '0.8rem', opacity: 0.8 }}
+                      >
+                        ({playsByGame[game.name]})
+                      </Typography>
+                    )}
+                  </Button>
+                </Grid>
+              ))}
             </Grid>
-          ))}
-        </Grid>
+          </Box>
+        ))}
 
         {loading && (
           <Box sx={{
