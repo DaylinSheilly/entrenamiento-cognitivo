@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import { useNavigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import axios from "axios";
 import CircularProgress from "@mui/material/CircularProgress";
 
 const RequireProfileComplete = () => {
   const { isAuthenticated, isLoading, getAccessTokenSilently } = useAuth0();
   const [checking, setChecking] = useState(true);
-  const navigate = useNavigate();
+  const [isProfileComplete, setIsProfileComplete] = useState(false);
 
   useEffect(() => {
     const checkProfile = async () => {
@@ -21,22 +21,21 @@ const RequireProfileComplete = () => {
         const res = await axios.get('http://localhost:5000/auth/me', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        if (!res.data.profile_complete) {
-          navigate('/complete-profile');
-        }
+        setIsProfileComplete(!!res.data.profile_complete);
       } catch (error) {
         if (error.response?.status === 404) {
-          navigate('/complete-profile');
+          setIsProfileComplete(false);
         }
       } finally {
         setChecking(false);
       }
     };
     checkProfile();
-  }, [isAuthenticated, isLoading, getAccessTokenSilently, navigate]);
+  }, [isAuthenticated, isLoading, getAccessTokenSilently]);
 
   if (isLoading || checking) return <CircularProgress />;
-  return <Outlet />;
+  
+  return isProfileComplete ? <Outlet /> : <Navigate to="/complete-profile" replace />;
 };
 
 export default RequireProfileComplete;
