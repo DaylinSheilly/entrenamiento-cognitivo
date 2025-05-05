@@ -134,18 +134,24 @@ router.get('/progress', checkJwt, async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT
-  g.game_name,
-  DATE(s.start_time AT TIME ZONE 'UTC') as session_date,
-  MAX(g.score) as max_score,
-  MIN(g.score) as min_score,
-  AVG(g.score) as avg_score,
-  COUNT(g.score) as games_count
-FROM "Games" g
-JOIN "Sessions" s ON g.session_id = s.id_session
-JOIN "Users" u ON s.id_usuario = u.id_usuario
-WHERE u.auth0_id = $1
-GROUP BY g.game_name, DATE(s.start_time AT TIME ZONE 'UTC')
-ORDER BY g.game_name, session_date DESC
+        g.game_name,
+        DATE(s.start_time AT TIME ZONE 'UTC') as session_date,
+        MAX(g.score) as max_score,
+        MIN(g.score) as min_score,
+        AVG(g.score) as avg_score,
+        MAX(g.errors) as max_errors,
+        MIN(g.errors) as min_errors,
+        AVG(g.errors) as avg_errors,
+        MAX(g.streaks) as max_streaks,
+        MIN(g.streaks) as min_streaks,
+        AVG(g.streaks) as avg_streaks,
+        COUNT(g.score) as games_count
+      FROM "Games" g
+      JOIN "Sessions" s ON g.session_id = s.id_session
+      JOIN "Users" u ON s.id_usuario = u.id_usuario
+      WHERE u.auth0_id = $1
+      GROUP BY g.game_name, DATE(s.start_time AT TIME ZONE 'UTC')
+      ORDER BY g.game_name, session_date DESC
     `, [req.auth.payload.sub]);
 
     res.json(result.rows);
