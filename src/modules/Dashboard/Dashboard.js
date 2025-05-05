@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from 'react-router-dom';
 import axios from "axios";
 import { LineChart } from "@mui/x-charts/LineChart";
 import { useTheme } from '@mui/material/styles';
@@ -17,21 +16,20 @@ import {
   InputLabel
 } from "@mui/material";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import { useAuth0 } from "@auth0/auth0-react"; // <-- Nuevo import
+import { useAuth0 } from "@auth0/auth0-react";
 
 const STAT_OPTIONS = [
+  { value: "avg_score", label: "Puntaje Promedio" },
   { value: "max_score", label: "Puntaje Máximo" },
   { value: "min_score", label: "Puntaje Mínimo" },
-  { value: "avg_score", label: "Puntaje Promedio" },
   { value: "games_count", label: "Partidas por Día" },
 ];
 
 const ProgressCharts = () => {
   const [chartData, setChartData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [stat, setStat] = useState("max_score");
+  const [stat, setStat] = useState(STAT_OPTIONS[0].value);
   const theme = useTheme();
-  const navigate = useNavigate();
   const { isAuthenticated, isLoading, getAccessTokenSilently, loginWithRedirect } = useAuth0(); // <-- Nuevo hook
 
   useEffect(() => {
@@ -107,7 +105,7 @@ const ProgressCharts = () => {
             letterSpacing: 1,
             mb: 4,
           }}>
-          Cargando progreso de Puntaje por Juego
+          Cargando estadísticas
         </Typography>
         <LinearProgress color="primary" sx={{ height: 6, borderRadius: 3 }} />
       </Box>
@@ -117,7 +115,7 @@ const ProgressCharts = () => {
     return (
       <Box sx={{ width: '100%', mt: 2 }}>
         <Typography variant="h4" align="center" gutterBottom>
-          Progreso de Puntaje por Juego
+          Estadísticas de Juegos
         </Typography>
         <Typography align="center" color="text.secondary" sx={{ mt: 3 }}>
           No hay datos para mostrar.
@@ -138,7 +136,7 @@ const ProgressCharts = () => {
           mb: 4,
         }}
       >
-        Progreso de Puntaje por Juego
+        Estadísticas de Juegos
       </Typography>
       <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
         <FormControl>
@@ -167,7 +165,7 @@ const ProgressCharts = () => {
                 boxShadow: 4,
                 transition: "box-shadow 0.3s",
                 "&:hover": { boxShadow: 8 },
-                background: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, #fff 100%)`,
+                backgroundColor: theme.palette.background.paper, // Fondo blanco del theme
               }}
             >
               <CardHeader
@@ -176,8 +174,8 @@ const ProgressCharts = () => {
                   <Typography
                     variant="h6"
                     sx={{
-                      fontWeight: 600,
-                      color: theme.palette.primary.dark,
+                      fontWeight: 'bold', // o 700
+                      color: "#000",       // negro puro
                       textAlign: "left",
                     }}
                   >
@@ -204,9 +202,9 @@ const ProgressCharts = () => {
                       area: false,
                     },
                   ]}
-                  width={300}
-                  height={180}
-                  margin={{ top: 20, right: 20, bottom: 40, left: 50 }}
+                  width={420}    // Más ancho
+                  height={260}   // Más alto
+                  margin={{ top: 30, right: 30, bottom: 50, left: 30 }} // Más espacio para ejes
                 />
               </CardContent>
             </Card>
