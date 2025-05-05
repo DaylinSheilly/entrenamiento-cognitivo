@@ -37,15 +37,14 @@ function App() {
           <Route path="/home" element={<Home />} />
           <Route path="/login" element={<LoginButton />} />
           <Route path="/register" element={<LoginButton />} />
-
           <Route path="/complete-profile" element={<CompleteProfile />} />
 
+          <Route path="/games" element={<Games />} />
 
           <Route element={<ProtectedRoute />}>
             <Route element={<RequireProfileComplete />}>
               <Route path="/" element={<Home />} />
 
-              <Route path="/games" element={<Games />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/usuario" element={<UserData />} />
 

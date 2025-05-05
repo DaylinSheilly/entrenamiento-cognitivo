@@ -1,14 +1,20 @@
-// src/components/ProtectedRoute.jsx
 import { useAuth0 } from "@auth0/auth0-react";
-import { Navigate, Outlet } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import CircularProgress from "@mui/material/CircularProgress";
+import { useEffect } from "react";
 
 const ProtectedRoute = () => {
-  const { isAuthenticated, isLoading } = useAuth0();
+  const { isAuthenticated, isLoading, loginWithRedirect } = useAuth0();
 
-  if (isLoading) return <CircularProgress />;
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      loginWithRedirect();
+    }
+  }, [isLoading, isAuthenticated, loginWithRedirect]);
 
-  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
+  if (isLoading || !isAuthenticated) return <CircularProgress />;
+
+  return <Outlet />;
 };
 
 export default ProtectedRoute;

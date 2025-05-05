@@ -7,7 +7,7 @@ import {
 import { useAuth0 } from "@auth0/auth0-react";
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 
-// Juegos agrupados por dominio cognitivo según la imagen
+// Listado base de juegos por dominio
 const gamesByDomain = [
   {
     domain: "Memoria",
@@ -59,11 +59,13 @@ function Games() {
   const [playsByGame, setPlaysByGame] = useState(null);
   const [sortedDomains, setSortedDomains] = useState([]);
 
-  // Cargar conteo de juegos al iniciar
+  // Cargar conteo de juegos solo si está autenticado
   useEffect(() => {
     const fetchPlayCounts = async () => {
-      if (!isAuthenticated) return;
-      
+      if (!isAuthenticated) {
+        setSortedDomains(gamesByDomain); // Muestra listado por defecto
+        return;
+      }
       try {
         setLoading(true);
         const token = await getAccessTokenSilently({
@@ -71,59 +73,47 @@ function Games() {
             audience: "https://api.neurosite.com"
           }
         });
-        
         const response = await axios.get('http://localhost:5000/games/plays-by-game', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        
         setPlaysByGame(response.data);
-        
+
         // Ordenar dominios y juegos basado en conteos
         const orderedDomains = [...gamesByDomain].map(domain => {
           // Ordenar juegos dentro del dominio
-          const sortedGames = [...domain.games].sort((a, b) => 
+          const sortedGames = [...domain.games].sort((a, b) =>
             (response.data[b.name] || 0) - (response.data[a.name] || 0)
           );
-          
           // Calcular total de juegos por dominio
-          const totalPlays = sortedGames.reduce((sum, game) => 
+          const totalPlays = sortedGames.reduce((sum, game) =>
             sum + (response.data[game.name] || 0), 0
           );
-          
           return { ...domain, games: sortedGames, totalPlays };
         });
-        
         // Ordenar dominios por total de juegos
         orderedDomains.sort((a, b) => b.totalPlays - a.totalPlays);
         setSortedDomains(orderedDomains);
       } catch (err) {
-        console.error("Error al obtener conteo de juegos:", err);
         setSortedDomains(gamesByDomain);
       } finally {
         setLoading(false);
       }
     };
-    
     fetchPlayCounts();
   }, [isAuthenticated, getAccessTokenSilently]);
 
-  const handleStartGame = async (path) => {
+  // Botón de jugar: si no autenticado, redirige a login
+  const handleStartGame = (path) => {
     if (!isAuthenticated) {
-      loginWithRedirect();
+      loginWithRedirect({ appState: { returnTo: "/games" } });
       return;
     }
-    try {
-      setLoading(true);
-      navigate(path);
-    } catch (error) {
-      setError("Error al iniciar el juego");
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
+    setLoading(true);
+    navigate(path);
+    setLoading(false);
   };
 
-  if (isLoading || !sortedDomains.length) {
+  if (isLoading || loading || !sortedDomains.length) {
     return (
       <Box sx={{
         display: 'flex',
@@ -216,9 +206,9 @@ function Games() {
                     }}
                   >
                     {game.name}
-                    {playsByGame && playsByGame[game.name] > 0 && (
-                      <Typography 
-                        component="span" 
+                    {isAuthenticated && playsByGame && playsByGame[game.name] > 0 && (
+                      <Typography
+                        component="span"
                         sx={{ ml: 1, fontSize: '0.8rem', opacity: 0.8 }}
                       >
                         ({playsByGame[game.name]})
@@ -230,16 +220,6 @@ function Games() {
             </Grid>
           </Box>
         ))}
-
-        {loading && (
-          <Box sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            mt: 4
-          }}>
-            <CircularProgress size={60} thickness={4} />
-          </Box>
-        )}
 
         <Snackbar
           open={!!error}
