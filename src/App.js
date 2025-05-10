@@ -34,6 +34,7 @@ function App() {
       <Header />
       <div className="App">
         <Routes>
+          <Route path="/" element={<Home />} />
           <Route path="/home" element={<Home />} />
           <Route path="/login" element={<LoginButton />} />
           <Route path="/register" element={<LoginButton />} />
@@ -43,7 +44,6 @@ function App() {
 
           <Route element={<ProtectedRoute />}>
             <Route element={<RequireProfileComplete />}>
-              <Route path="/" element={<Home />} />
 
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/usuario" element={<UserData />} />

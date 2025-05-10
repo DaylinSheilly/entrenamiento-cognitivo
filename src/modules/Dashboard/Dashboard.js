@@ -60,7 +60,6 @@ const ProgressCharts = () => {
           if (!gamesData[item.game_name]) {
             gamesData[item.game_name] = {};
           }
-          console.log(gamesData);
           // Si ya existe la fecha, conserva los datos previos
           if (!gamesData[item.game_name][item.session_date]) {
             gamesData[item.game_name][item.session_date] = {
