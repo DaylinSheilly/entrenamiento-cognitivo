@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "./concentrarse.css";
+import "./color-accion.css";
 
 const directions = ["up", "down", "left", "right"];
 const CIRCLE_SIZE = 100; // Tamaño de la caja de colisión de cada círculo

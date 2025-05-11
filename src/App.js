@@ -22,7 +22,7 @@ import Game6 from './modules/Games/comparacion-de-colores/comparacion.js';
 import Game7 from './modules/Games/recuerda-los-objetos/recuerda-los-objetos.jsx';
 import Game8 from './modules/Games/concentrate-en-objetivo/concentrate.jsx';
 import Game9 from './modules/Games/no-pierdas-objetos/no-pierdas-objetos.jsx';
-import Game10 from './modules/Games/concentrarse-en-objetivo/concentrarse.jsx';
+import Game10 from './modules/Games/color-accion/color-accion.jsx';
 import Game11 from './modules/Games/mira-la-direccion/mira-la-direccion.jsx';
 import Game12 from './modules/Games/que-sentido-tiene/que-sentido-tiene.jsx';
 import Game13 from './modules/Games/apunta-acierta/apunta-acierta.jsx';
@@ -149,7 +149,7 @@ function App() {
                 }
               />
               <Route
-                path="/games/concentrarse-en-el-objetivo"
+                path="/games/color-y-accion"
                 element={
                   <GameLayout>
                     <Game10 />

@@ -207,7 +207,7 @@ const NoPierdasLosObjetos = () => {
                         setPuntaje(prev => prev + 50);
                         setTimeout(() => {
                             avanzarNivel(); // Pasar al siguiente nivel
-                            setFondoEstado(""); // Restaurar fondo normal
+                            //setFondoEstado(""); // Restaurar fondo normal
                         }, 500);
                         // ✅ Acierto: sumar 50 puntos y aumentar la racha
                         setRachaAciertos(prev => {
