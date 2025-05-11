@@ -79,6 +79,7 @@ const NoPierdasLosObjetos = () => {
         setEstrellas(0); // Reiniciar contador de estrellas
         setTotalAnswers(0);
         setCorrectAnswers(0);
+        setErrorAnswers(0);
         setTiempoRestante(120); // Restaurar tiempo a 120 segundos
         setObjetivosSeleccionados([]);
         setGameStarted(true);

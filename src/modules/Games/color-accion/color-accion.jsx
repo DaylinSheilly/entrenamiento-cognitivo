@@ -279,7 +279,7 @@ const ConcentrarseEnElObjetivo = () => {
         {!gameStarted ? (
           countdown === null ? ( // Mostrar pantalla de inicio si NO hay cuenta regresiva
             <div className="concentrarse-start-screen">
-              <h2>¡Bienvenido a Concentrate en el objetivo!</h2>
+              <h2>¡Bienvenido a Color y acción!</h2>
               <button onClick={startCountdown}>
                 Comenzar Juego
               </button>
