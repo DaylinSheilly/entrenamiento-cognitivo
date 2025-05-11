@@ -17,7 +17,7 @@ import Game1 from './modules/Games/sigue-la-secuencia/Sigue-la-secuencia';
 import Game2 from './modules/Games/sopa-de-letras/Sopa-de-letras';
 import Game3 from './modules/Games/a-fin/A-fin';
 import Game4 from './modules/Games/Matriz-de-memoria/Memoria.js';
-import Game5 from './modules/Games/juego-de-atencion/atencion.jsx';
+import Game5 from './modules/Games/observa-compara/observa-compara.jsx';
 import Game6 from './modules/Games/comparacion-de-colores/comparacion.js';
 import Game7 from './modules/Games/recuerda-los-objetos/recuerda-los-objetos.jsx';
 import Game8 from './modules/Games/concentrate-en-objetivo/concentrate.jsx';
@@ -109,7 +109,7 @@ function App() {
                 }
               />
               <Route
-                path="/games/juego-de-atencion"
+                path="/games/observa-y-compara"
                 element={
                   <GameLayout>
                     <Game5 />

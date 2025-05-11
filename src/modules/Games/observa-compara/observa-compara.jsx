@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import './atencion.css'
+import './observa-compara.css'
 
 const GAME_TIME = 181; // Duración del juego en segundos
 
-const JuegoAtencion = () => {
+const ObservaCompara = () => {
   const canvasRef = useRef(null);
   const [puntaje, setPuntaje] = useState(0);
   const [tarjetaActual, setTarjetaActual] = useState(null);
@@ -359,4 +359,4 @@ const JuegoAtencion = () => {
 
 };
 
-export default JuegoAtencion;
+export default ObservaCompara;

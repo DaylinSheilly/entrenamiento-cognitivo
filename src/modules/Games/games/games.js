@@ -22,7 +22,7 @@ const gamesByDomain = [
     games: [
       { name: "Concéntrate en el objetivo", path: "/games/concentrate-en-objetivo" },
       { name: "No pierdas los objetos", path: "/games/no-pierdas-los-objetos" },
-      { name: "Atención", path: "/games/juego-de-atencion" },
+      { name: "Observa y compara", path: "/games/observa-y-compara" },
     ]
   },
   {
