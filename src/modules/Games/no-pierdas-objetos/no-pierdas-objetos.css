@@ -285,21 +285,6 @@
   transform: translateY(-2px) scale(1.04);
 }
 
-.no-pierdas-fin-juego-container button {
-  background-color: #75e78e;
-  border: 2px solid #61bd75;
-  color: #222;
-  padding: 12px 30px;
-  border-radius: 25px;
-  cursor: pointer;
-  font-size: 1.1rem;
-  font-weight: bold;
-  text-transform: uppercase;
-  transition: all 0.3s ease;
-  margin-top: 18px;
-  box-shadow: 0 2px 8px #0002;
-}
-
 @media (max-width: 600px) {
   .no-pierdas-fin-juego-container {
     max-width: 98vw;

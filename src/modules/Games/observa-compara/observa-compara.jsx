@@ -63,31 +63,30 @@ const ObservaCompara = () => {
 
   const manejarClic = (esIgual) => {
     if (!tarjetaAnterior || !tarjetaActual || !turnoJugador || !gameStarted) return;
-  
+
     let nuevoColor;
     let esCorrecto = (esIgual && tarjetaAnterior.tipo === tarjetaActual.tipo) ||
-                     (!esIgual && tarjetaAnterior.tipo !== tarjetaActual.tipo);
-  
+      (!esIgual && tarjetaAnterior.tipo !== tarjetaActual.tipo);
+
     setTotalAnswers(prev => prev + 1); // Siempre aumenta el total de intentos
-  
+
     if (esCorrecto) {
       setPuntaje(prev => prev + 1);
       setCorrectAnswers(prev => prev + 1); // Aumenta el contador de correctas
       nuevoColor = "#4caf50"; // Verde si acierta
     } else {
-      setPuntaje(prev => (prev > 0 ? prev - 1 : 0));
       setTotalErrors(prev => prev + 1); // Aumenta el contador de errores
       nuevoColor = "#ff4c4c"; // Rojo si falla
     }
     // Calcular tiempo de respuesta
-    const reactionTime = Date.now() - startTime;
-    setReactionTimes(prev => [...prev, reactionTime]); // Guardar el tiempo de reacción
-    setStartTime(Date.now()); // Reiniciar el tiempo de inicio para la siguiente ronda
-  
+    const reactionTime = performance.now() - startTime;
+    setReactionTimes(prev => [...prev, reactionTime]);
+    setStartTime(performance.now());
+
     // Cambiar el color de fondo temporalmente
     setColorFondo(nuevoColor);
     setTimeout(() => setColorFondo("#abd9f5"), 500);
-  
+
     // Cambiar tarjeta
     setTarjetaAnterior(tarjetaActual);
     setTarjetaActual(elegirTarjetaAleatoria());
@@ -142,10 +141,10 @@ const ObservaCompara = () => {
   const startGame = () => {
     setGameOver(false);
     setGameStarted(true);
-  
+
     setTimeout(() => {
       setPuntaje(0);
-      setTiempoRestante(GAME_TIME); 
+      setTiempoRestante(GAME_TIME);
       setTarjetaAnterior(elegirTarjetaAleatoria());
       setTarjetaActual(null); // Se inicializa en null antes de la primera elección
       setMostrandoPrimeraTarjeta(true);
@@ -266,35 +265,25 @@ const ObservaCompara = () => {
         }, 1000);
       }
     }
-  
+
     return () => {
       if (timer) clearInterval(timer);
     };
   }, [gameStarted, tiempoRestante]);
 
   const calculateReactionTime = () => {
-    console.log("Calculando tiempo de reacción...");
+    if (!reactionTimes || reactionTimes.length === 0) return 0;
 
-    if (!reactionTimes || reactionTimes.length === 0) {
-      console.log("No hay tiempos de reacción registrados.");
-      return 0;
-    }
+    // Filtra y convierte a segundos
+    const validTimes = reactionTimes
+      .filter(time => typeof time === "number" && time > 0)
+      .map(time => time / 1000);
 
-    // Filtrar valores no numéricos o inválidos
-    const validTimes = reactionTimes.filter(time => typeof time === "number" && !isNaN(time));
-    console.log("Tiempos válidos:", validTimes);
-
-    if (validTimes.length === 0) {
-      console.log("No hay tiempos de reacción válidos.");
-      return 0;
-    }
+    if (validTimes.length === 0) return 0;
 
     const sum = validTimes.reduce((acc, time) => acc + time, 0);
-    const average = parseFloat((sum / validTimes.length).toFixed(2));
-
-    console.log(`Suma total: ${sum}, Cantidad: ${validTimes.length}, Promedio: ${average}`);
-
-    return average;
+    const average = sum / validTimes.length;
+    return average.toFixed(2); // Devuelve string con 2 decimales
   };
 
   return (
@@ -302,20 +291,42 @@ const ObservaCompara = () => {
       {gameOver ? (
         <div className="attention-fin-juego-container">
           <h1>Fin del juego</h1>
-          <p>🕒 Tiempo total de juego: {GAME_TIME-1} segundos</p>
-          <p>🏅 <strong>Puntaje final:</strong> {puntaje}</p>
-          <p>✅ Correctas: {correctAnswers} de {totalAnswers}</p>
-          <p>❌ Errores: {totalErrors}</p>
-          <p>📊 Precisión: {totalAnswers > 0 ? ((correctAnswers / totalAnswers) * 100).toFixed(2) : "0"}%</p>
-          <p>🕒 Tiempo de reacción: {(calculateReactionTime() / 1000).toFixed(2)} s</p>
-          <button onClick={startCountdown}>
-            Jugar de nuevo
-          </button>
+          <div className="attention-stats-table-wrapper">
+            <table className="attention-stats-table">
+              <thead>
+                <tr>
+                  <th>⏱️ Tiempo total</th>
+                  <th>🎯 Puntaje final</th>
+                  <th>🏆 Rondas totales</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>{GAME_TIME - 1} s</td>
+                  <td>{puntaje}</td>
+                  <td>{totalAnswers || '-'}</td>
+                </tr>
+                <tr>
+                  <td>✅ {correctAnswers} aciertos</td>
+                  <td>❌ {totalErrors} errores</td>
+                  <td>
+                    📊 Precisión: {totalAnswers > 0 ? ((correctAnswers / totalAnswers) * 100).toFixed(2) : "0"}%
+                  </td>
+                </tr>
+                <tr>
+                  <td colSpan={3}>
+                    🕒 Tiempo de reacción promedio: {calculateReactionTime()} s
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <button onClick={startCountdown}>Jugar de nuevo</button>
         </div>
       ) : !gameStarted ? (
         countdown === null ? ( // Mostrar pantalla de inicio si NO hay cuenta regresiva
           <div className="attention-start-screen">
-            <h2>¡Bienvenido a Juego de atención!</h2>
+            <h2>¡Bienvenido a Observa y compara!</h2>
             <button onClick={startCountdown}>Comenzar Juego</button>
           </div>
         ) : (
@@ -323,6 +334,17 @@ const ObservaCompara = () => {
         )
       ) : (
         <>
+          <section className="attention-info-row">
+            <div className="stat-item">
+              <strong>Puntaje:</strong> <span>{puntaje}</span>
+            </div>
+            <div className="stat-item">
+              <strong>Errores:</strong> <span>{totalErrors}</span>
+            </div>
+            <div className="stat-item">
+              <strong>Tiempo:</strong> <span>{formatearTiempo(tiempoRestante)}</span>
+            </div>
+          </section>
           <div className="attention-game-app">
             <canvas
               ref={canvasRef}
@@ -343,20 +365,11 @@ const ObservaCompara = () => {
                 Diferente
               </button>
             </div>
-            <div className="attention-marcadores">
-              <div className="attention-marcador-item">
-                Puntaje: {puntaje}
-              </div>
-              <div className="attention-marcador-item">
-                Tiempo: {formatearTiempo(tiempoRestante)}
-              </div>
-            </div>
           </div>
         </>
       )}
     </div>
   );
-
 };
 
 export default ObservaCompara;

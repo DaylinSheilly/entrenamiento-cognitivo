@@ -33,8 +33,8 @@ const gameInfo = {
     description: "Recuerda los patrones.",
     instructions: "Haz clic solo en los cuadrados que se iluminaron."
   },
-  "/games/juego-de-atencion": {
-    title: "Juego de Atención",
+  "/games/observa-y-compara": {
+    title: "Observa y Compara",
     description: "Pon a prueba tu capacidad de concentración.",
     instructions: "Pon atención a la figura que se presenta. Debes identificar si es igual o diferente a la mostrada anteriormente."
   },
