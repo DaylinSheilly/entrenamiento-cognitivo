@@ -45,6 +45,8 @@ function Home() {
     fetchUserData();
   }, [isAuthenticated, getAccessTokenSilently]);
 
+  console.log(window.location.origin)
+
   const handleLogout = async () => {
     try {
       if (isAuthenticated) {

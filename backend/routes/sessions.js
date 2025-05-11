@@ -4,6 +4,7 @@ const router = express.Router();
 const { Pool } = require('pg');
 const { body, param, validationResult } = require('express-validator');
 const { auth } = require('express-oauth2-jwt-bearer');
+const axios = require('axios');
 
 // 1. Configuración mejorada del Pool de PostgreSQL
 const pool = new Pool({
@@ -326,12 +327,12 @@ router.get('/user-history/:id_usuario',
 // Cerrar sesión activa
 router.put('/end', checkJwt, async (req, res) => {
   const auth0UserId = req.auth.payload.sub;
-
   const client = await pool.connect();
+  
   try {
     await client.query('BEGIN');
     
-    // Obtener usuario interno usando auth0_id
+    // 1. Cerrar sesión en tu base de datos
     const userResult = await client.query(
       'SELECT id_usuario FROM "Users" WHERE auth0_id = $1',
       [auth0UserId]
@@ -350,26 +351,39 @@ router.put('/end', checkJwt, async (req, res) => {
       [userId]
     );
 
-    if (!activeSession.rows.length) {
-      return res.status(200).json({ message: 'No había sesión activa' });
+    if (activeSession.rows.length) {
+      const sessionId = activeSession.rows[0].id_session;
+      await client.query(
+        `UPDATE "Sessions"
+         SET end_time = NOW(),
+             total_time = EXTRACT(EPOCH FROM (NOW() - start_time))
+         WHERE id_session = $1`,
+        [sessionId]
+      );
     }
 
-    const sessionId = activeSession.rows[0].id_session;
-    const result = await client.query(
-      `UPDATE "Sessions"
-       SET 
-         end_time = NOW(),
-         total_time = EXTRACT(EPOCH FROM (NOW() - start_time))
-       WHERE id_session = $1
-       RETURNING *`,
-      [sessionId]
+    // 2. Invalidar token de Auth0
+    const auth0Response = await axios.post(
+      `https://${process.env.AUTH0_DOMAIN}/oauth/revoke`,
+      new URLSearchParams({
+        client_id: process.env.AUTH0_CLIENT_ID,
+        client_secret: process.env.AUTH0_CLIENT_SECRET,
+        token: req.auth.token
+      }),
+      {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      }
     );
 
     await client.query('COMMIT');
-    res.json(result.rows[0]);
+    res.json({ success: true, auth0Revocation: auth0Response.data });
   } catch (error) {
     await client.query('ROLLBACK');
-    res.status(500).json({ error: 'Error al cerrar sesión' });
+    console.error('Error en cierre de sesión:', error);
+    res.status(500).json({ 
+      error: 'Error al cerrar sesión',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   } finally {
     client.release();
   }

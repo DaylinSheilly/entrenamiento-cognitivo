@@ -2,6 +2,10 @@
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import './App.css';
 import './styles/index.css';
+import { useEffect } from 'react';
+import { useAuth0 } from '@auth0/auth0-react';
+import axios from 'axios';
+
 import Home from './pages/Home';
 import Header from './components/Header';
 import CompleteProfile from "./pages/auth/CompleteProfile.jsx";
@@ -29,6 +33,30 @@ import LoginButton from "./components/LoginButton";
 import RequireProfileComplete from "./components/RequireProfileComplete";
 
 function App() {
+  const { isAuthenticated, getAccessTokenSilently } = useAuth0();
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const handleUnload = async (e) => {
+      try {
+        const token = await getAccessTokenSilently();
+        fetch(`${process.env.REACT_APP_API_URL}/sessions/end`, {
+          method: "PUT",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({}),
+          keepalive: true
+        });
+      } catch (error) {
+        console.error("Error en cierre automático:", error);
+      }
+    };
+    window.addEventListener('beforeunload', handleUnload);
+    return () => window.removeEventListener('beforeunload', handleUnload);
+  }, [isAuthenticated, getAccessTokenSilently]);
+
   return (
     <>
       <Header />
