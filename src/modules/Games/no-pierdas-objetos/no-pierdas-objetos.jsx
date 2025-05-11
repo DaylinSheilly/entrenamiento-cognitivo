@@ -18,6 +18,7 @@ const niveles = [
 
 const NoPierdasLosObjetos = () => {
     const [nivel, setNivel] = useState(1);
+    const [tiempoTotal, setTiempoTotal] = useState(120); // Tiempo total del juego
     const [objetos, setObjetos] = useState([]);
     const [fondoEstado, setFondoEstado] = useState(""); // Controla el color del fondo
     const [juegoTerminado, setJuegoTerminado] = useState(false);
@@ -27,8 +28,9 @@ const NoPierdasLosObjetos = () => {
     const [estrellas, setEstrellas] = useState(0); // Contador de estrellas ganadas
     const [totalAnswers, setTotalAnswers] = useState(0);
     const [correctAnswers, setCorrectAnswers] = useState(0);
+    const [errorAnswers, setErrorAnswers] = useState(0);
     const [tiempoRestante, setTiempoRestante] = useState(120); // segundos
-    const timeoutRef = useRef(null); 
+    const timeoutRef = useRef(null);
     const [objetivosSeleccionados, setObjetivosSeleccionados] = useState([]);
     const [gameStarted, setGameStarted] = useState(false);
     const [countdown, setCountdown] = useState(null);
@@ -39,7 +41,7 @@ const NoPierdasLosObjetos = () => {
             const timer = setTimeout(() => {
                 setTiempoRestante(prevTiempo => prevTiempo - 1);
             }, 1000);
-    
+
             return () => clearTimeout(timer);
         }
         if (tiempoRestante === 0 && gameStarted) {
@@ -128,7 +130,7 @@ const NoPierdasLosObjetos = () => {
 
     const moverObjetos = (config) => {
         const espacioMinimo = 45; // Distancia mínima entre objetos
-    
+
         // Agregar clase de animación a todos los objetos antes de iniciar el movimiento
         setObjetos(prevObjetos =>
             prevObjetos.map(obj => ({
@@ -136,46 +138,46 @@ const NoPierdasLosObjetos = () => {
                 animado: true
             }))
         );
-    
+
         const intervalo = setInterval(() => {
             setObjetos(prevObjetos => {
-                let nuevasPosiciones = prevObjetos.map(obj => ({ 
-                    top: parseFloat(obj.posicion.top), 
-                    left: parseFloat(obj.posicion.left) 
+                let nuevasPosiciones = prevObjetos.map(obj => ({
+                    top: parseFloat(obj.posicion.top),
+                    left: parseFloat(obj.posicion.left)
                 }));
-    
+
                 return prevObjetos.map((obj, index) => {
                     let nuevaPos;
                     let intentos = 0;
                     do {
                         const nuevoTop = Math.max(
                             0,
-                            Math.min(config.dimension - 50, 
+                            Math.min(config.dimension - 50,
                                 parseFloat(obj.posicion.top) + (Math.random() * config.movimiento - config.movimiento / 2)
                             )
                         );
                         const nuevoLeft = Math.max(
                             0,
-                            Math.min(config.dimension - 50, 
+                            Math.min(config.dimension - 50,
                                 parseFloat(obj.posicion.left) + (Math.random() * config.movimiento - config.movimiento / 2)
                             )
                         );
-    
+
                         nuevaPos = { top: nuevoTop, left: nuevoLeft };
-    
+
                         // Validar si la nueva posición colisiona con otra
-                        const colisiona = nuevasPosiciones.some((pos, i) => 
+                        const colisiona = nuevasPosiciones.some((pos, i) =>
                             i !== index && Math.abs(pos.top - nuevoTop) < espacioMinimo && Math.abs(pos.left - nuevoLeft) < espacioMinimo
                         );
-    
+
                         if (!colisiona) {
                             nuevasPosiciones[index] = nuevaPos;
                             break;
                         }
-    
+
                         intentos++;
                     } while (intentos < 10); // Evita bucles infinitos en espacios reducidos
-    
+
                     return {
                         ...obj,
                         posicion: {
@@ -186,7 +188,7 @@ const NoPierdasLosObjetos = () => {
                 });
             });
         }, 500);
-    
+
         setTimeout(() => {
             clearInterval(intervalo);
             setMovimientoActivo(false); // Permitir clics nuevamente
@@ -246,6 +248,7 @@ const NoPierdasLosObjetos = () => {
     };
 
     const reiniciarNivel = () => {
+        setErrorAnswers(errorAnswers + 1);
         setTotalAnswers(totalAnswers + 1);
         setObjetivosSeleccionados([]); // Resetear objetivos seleccionados
         iniciarNivel(nivel); // Volver a iniciar el nivel actual
@@ -260,7 +263,7 @@ const NoPierdasLosObjetos = () => {
         } else {
             finalizarJuego();
         }
-        iniciarNivel(nivel +1);
+        iniciarNivel(nivel + 1);
     };
 
     const finalizarJuego = () => {
@@ -273,72 +276,129 @@ const NoPierdasLosObjetos = () => {
             {juegoTerminado ? (
                 <div className="no-pierdas-fin-juego-container">
                     <h1>Fin del juego</h1>
-                    <p>🎯 Puntaje final: {puntaje}</p>
-                    <p>✅ Correctas: {correctAnswers} de {totalAnswers}</p>
-                    <p>📊 Precisión: {totalAnswers > 0 ? ((correctAnswers / totalAnswers) * 100).toFixed(2) : "0"}%</p>
-                    <p>⭐ Estrellas: {estrellas}</p>
-                    <p>Nivel alcanzado: {nivel} de 8</p>
-                    <button onClick={startCountdown}>
-                        Jugar de nuevo
-                    </button>
+                    <div className="no-pierdas-stats-table-wrapper">
+                        <table className="no-pierdas-stats-table">
+                            <thead>
+                                <tr>
+                                    <th>⏱️ Tiempo total</th>
+                                    <th>🎯 Puntaje final</th>
+                                    <th>🏆 Nivel máximo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <span>{tiempoTotal}</span>
+                                    </td>
+                                    <td>
+                                        <span>{puntaje}</span>
+                                    </td>
+                                    <td>
+                                        <span>{nivel}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <span>✅ {correctAnswers} aciertos</span>
+                                    </td>
+                                    <td>
+                                        <span>❌ {errorAnswers} errores</span>
+                                    </td>
+                                    <td>
+                                        <span>
+                                            📊 Precisión:{" "}
+                                            {totalAnswers > 0
+                                                ? `${((correctAnswers / totalAnswers) * 100).toFixed(2)}%`
+                                                : "0%"}
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <span>⭐ Estrellas: {estrellas}</span>
+                                    </td>
+                                    <td colSpan={2}></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <button onClick={startCountdown}>Jugar de nuevo</button>
                 </div>
             ) : !gameStarted ? (
-                countdown === null ? ( // Mostrar pantalla de inicio si NO hay cuenta regresiva
+                countdown === null ? (
                     <div className="no-pierdas-start-screen">
                         <h2>¡Bienvenido a No pierdas los objetos!</h2>
                         <button onClick={startCountdown}>Comenzar Juego</button>
                     </div>
                 ) : (
-                    <div className="no-pierdas-objetos">
-                        <div className="no-pierdas-info">
-                            <h1>No pierdas los objetos</h1>
-                            <p>Puntaje: {puntaje}</p>
-                            <p>Nivel: {nivel}</p>
-                            <p>Tiempo restante: {tiempoRestante}s</p>
+                    <>
+                        <section className="no-pierdas-info-row">
+                            <div className="stat-item">
+                                <strong>Puntaje:</strong> <span>{puntaje}</span>
+                            </div>
+                            <div className="stat-item">
+                                <strong>Errores:</strong> <span>{errorAnswers}</span>
+                            </div>
+                            <div className="stat-item">
+                                <strong>Tiempo restante:</strong> <span aria-live="polite">{tiempoRestante}s</span>
+                            </div>
+                        </section>
+                        <div className="no-pierdas-objetos">
+                            <div
+                                className={`no-pierdas-tablero ${fondoEstado ? `no-pierdas-tablero-fondo-${fondoEstado}` : ""}`}
+                                style={{
+                                    width: `${niveles[nivel - 1].dimension}px`,
+                                    height: `${niveles[nivel - 1].dimension}px`,
+                                }}
+                            >
+                                <div className="no-pierdas-countdown">{countdown}</div>
+                            </div>
                         </div>
+                    </>
+                )
+            ) : (
+                <>
+                    <section className="no-pierdas-info-row">
+                        <div className="stat-item">
+                            <strong>Puntaje:</strong> <span>{puntaje}</span>
+                        </div>
+                        <div className="stat-item">
+                            <strong>Errores:</strong> <span>{errorAnswers}</span>
+                        </div>
+                        <div className="stat-item">
+                            <strong>Tiempo restante:</strong> <span aria-live="polite">{tiempoRestante}s</span>
+                        </div>
+                    </section>
+                    <div className="no-pierdas-objetos">
                         <div
                             className={`no-pierdas-tablero ${fondoEstado ? `no-pierdas-tablero-fondo-${fondoEstado}` : ""}`}
                             style={{
                                 width: `${niveles[nivel - 1].dimension}px`,
-                                height: `${niveles[nivel - 1].dimension}px`,
+                                height: `${niveles[nivel - 1].dimension}px`
                             }}
                         >
-                            <div className="no-pierdas-countdown">{countdown}</div>
+                            {objetos.map((obj, index) => (
+                                <div
+                                    key={`${obj.id}-${index}`}
+                                    className={`no-pierdas-objeto 
+                        ${obj.esObjetivo ? 'no-pierdas-objetivo' : 'no-pierdas-distractor'} 
+                        ${objetivosSeleccionados.includes(obj.id) ? 'seleccionado' : ''} 
+                        ${nivel >= 4 && obj.animado ? 'no-pierdas-animado' : ''}`}
+                                    style={{
+                                        position: 'absolute',
+                                        top: obj.posicion.top,
+                                        left: obj.posicion.left
+                                    }}
+                                    onClick={() => manejarClick(obj.id, obj.esObjetivo)}
+                                >
+                                    {obj.emoji}
+                                </div>
+                            ))}
                         </div>
                     </div>
-                )
-            ) : (
-                <div className="no-pierdas-objetos">
-                    <div className="no-pierdas-info">
-                        <h1>No pierdas los objetos</h1>
-                        <p>Puntaje: {puntaje}</p>
-                        <p>Nivel: {nivel}</p>
-                        <p>Tiempo restante: {tiempoRestante}s</p>
-                    </div>
-                    <div className={`no-pierdas-tablero ${fondoEstado ? `no-pierdas-tablero-fondo-${fondoEstado}` : ""}`}
-                        style={{ width: `${niveles[nivel - 1].dimension}px`, height: `${niveles[nivel - 1].dimension}px` }}
-                    >
-                        {objetos.map((obj, index) => (
-                            <div
-                                key={`${obj.id}-${index}`}
-                                className={`no-pierdas-objeto 
-                                ${obj.esObjetivo ? 'no-pierdas-objetivo' : 'no-pierdas-distractor'} 
-                                ${objetivosSeleccionados.includes(obj.id) ? 'seleccionado' : ''} 
-                                ${nivel >= 4 && obj.animado ? 'no-pierdas-animado' : ''}`}
-                                style={{
-                                    position: 'absolute',
-                                    top: obj.posicion.top,
-                                    left: obj.posicion.left
-                                }}
-                                onClick={() => manejarClick(obj.id, obj.esObjetivo)}
-                            >
-                                {obj.emoji}
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                </>
             )}
-        </div >
+        </div>
     );
 };
 
