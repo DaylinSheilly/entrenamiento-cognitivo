@@ -33,26 +33,69 @@ import LoginButton from "./components/LoginButton";
 import RequireProfileComplete from "./components/RequireProfileComplete";
 
 function App() {
-  const { isAuthenticated, getAccessTokenSilently } = useAuth0();
+  const { isAuthenticated, getAccessTokenSilently, logout } = useAuth0();
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    const handleUnload = async (e) => {
+
+    let inactivityTimer;
+
+    const endSession = async () => {
       try {
         const token = await getAccessTokenSilently();
+        await axios.put(
+          "http://localhost:5000/sessions/end",
+          {},
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            timeout: 3000
+          }
+        );
+
+        logout({
+          logoutParams: {
+            returnTo: window.location.origin + "/home"
+          }
+        });
+
+      } catch (error) {
+        console.error("Error al cerrar sesión:", error);
+      }
+    };
+
+    const resetTimer = () => {
+      clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(endSession, 15 * 60 * 1000);
+    };
+
+    const events = ["mousemove", "keydown", "click", "scroll"];
+    events.forEach((event) => window.addEventListener(event, resetTimer));
+
+    resetTimer();
+
+    return () => {
+      events.forEach((event) => window.removeEventListener(event, resetTimer));
+      clearTimeout(inactivityTimer);
+    };
+  }, [isAuthenticated, getAccessTokenSilently, logout]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const handleUnload = async () => {
+      try {
+        const token = await getAccessTokenSilently();
+        // Usar fetch con keepalive para máxima confiabilidad
         fetch(`${process.env.REACT_APP_API_URL}/sessions/end`, {
           method: "PUT",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({}),
+          headers: { Authorization: `Bearer ${token}` },
           keepalive: true
         });
       } catch (error) {
-        console.error("Error en cierre automático:", error);
+        console.error("Error al cerrar sesión:", error);
       }
     };
+
     window.addEventListener('beforeunload', handleUnload);
     return () => window.removeEventListener('beforeunload', handleUnload);
   }, [isAuthenticated, getAccessTokenSilently]);

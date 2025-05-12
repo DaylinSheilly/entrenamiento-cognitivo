@@ -9,8 +9,8 @@ const axios = require('axios');
 // 1. Configuración mejorada del Pool de PostgreSQL
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' 
-    ? { rejectUnauthorized: true } 
+  ssl: process.env.NODE_ENV === 'production'
+    ? { rejectUnauthorized: true }
     : false,
   max: 20,
   idleTimeoutMillis: 30000,
@@ -35,7 +35,7 @@ const validateRequest = (req, res, next) => {
 // 4. Middleware de manejo de errores global
 const errorHandler = (err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ 
+  res.status(500).json({
     error: 'Error interno del servidor',
     details: process.env.NODE_ENV === 'development' ? err.message : null
   });
@@ -49,27 +49,27 @@ const checkSessionOwnership = async (req, res, next) => {
     // Necesitarás mapear el Auth0 userId (sub) a tu ID de usuario interno
     // Opción 1: Guarda el sub de Auth0 en tu tabla Users
     // Opción 2: Crea una tabla de mapeo Auth0ID -> UserID
-    
+
     const userMapping = await pool.query(
       `SELECT id_usuario FROM "Users" WHERE auth0_id = $1`,
       [req.auth.payload.sub]
     );
-    
+
     if (!userMapping.rows.length) {
       return res.status(403).json({ error: 'Usuario no encontrado' });
     }
-    
+
     const internalUserId = userMapping.rows[0].id_usuario;
-    
+
     const session = await pool.query(
       `SELECT 1 FROM "Sessions" WHERE id_session = $1 AND id_usuario = $2`,
       [id, internalUserId]
     );
-    
+
     if (!session.rows.length) {
       return res.status(403).json({ error: 'No tienes acceso a esta sesión' });
     }
-    
+
     next();
   } catch (error) {
     next(error);
@@ -83,11 +83,11 @@ const getInternalUserId = async (req, res, next) => {
       'SELECT id_usuario FROM "Users" WHERE auth0_id = $1',
       [auth0UserId]
     );
-    
+
     if (!userResult.rows.length) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
-    
+
     req.internalUserId = userResult.rows[0].id_usuario;
     next();
   } catch (error) {
@@ -187,12 +187,12 @@ router.post('/start', checkJwt, getInternalUserId, async (req, res) => {
     );
 
     if (activeSession.rows.length > 0) {
-      return res.status(409).json({ 
+      return res.status(409).json({
         message: "Ya tienes una sesión activa",
         sessionId: activeSession.rows[0].id_session
       });
     }
-    
+
     // Crear nueva sesión
     const newSession = await client.query(
       `INSERT INTO "Sessions" (id_usuario, start_time) 
@@ -200,7 +200,7 @@ router.post('/start', checkJwt, getInternalUserId, async (req, res) => {
        RETURNING id_session`,
       [internalUserId]
     );
-    
+
     await client.query(
       `UPDATE "Users" 
        SET 
@@ -211,16 +211,16 @@ router.post('/start', checkJwt, getInternalUserId, async (req, res) => {
     );
 
     await client.query('COMMIT');
-    
+
     res.json({
       id_session: newSession.rows[0].id_session,
       start_time: newSession.rows[0].start_time
     });
-    
+
   } catch (error) {
     await client.query('ROLLBACK');
     console.error("Error al iniciar sesión de juego:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Error al iniciar sesión de juego",
       error: error.message  // Solo para ambiente de desarrollo
     });
@@ -291,7 +291,7 @@ router.get('/user-history/:id_usuario',
       }
 
       const offset = (page - 1) * limit;
-      
+
       const result = await pool.query(
         `SELECT 
           id_session, 
@@ -328,59 +328,48 @@ router.get('/user-history/:id_usuario',
 router.put('/end', checkJwt, async (req, res) => {
   const auth0UserId = req.auth.payload.sub;
   const client = await pool.connect();
-  
+
   try {
     await client.query('BEGIN');
-    
-    // 1. Cerrar sesión en tu base de datos
+
+    // 1. Cerrar sesión en la base de datos
     const userResult = await client.query(
       'SELECT id_usuario FROM "Users" WHERE auth0_id = $1',
       [auth0UserId]
     );
-    
+
     if (userResult.rows.length === 0) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
-    
+
     const userId = userResult.rows[0].id_usuario;
 
-    const activeSession = await client.query(
-      `SELECT id_session FROM "Sessions" 
-       WHERE id_usuario = $1 AND end_time IS NULL
-       ORDER BY start_time DESC LIMIT 1`,
+    // Cerrar TODAS las sesiones activas del usuario
+    await client.query(
+      `UPDATE "Sessions"
+       SET end_time = NOW(),
+           total_time = EXTRACT(EPOCH FROM (NOW() - start_time))
+       WHERE id_usuario = $1 AND end_time IS NULL`,
       [userId]
     );
 
-    if (activeSession.rows.length) {
-      const sessionId = activeSession.rows[0].id_session;
-      await client.query(
-        `UPDATE "Sessions"
-         SET end_time = NOW(),
-             total_time = EXTRACT(EPOCH FROM (NOW() - start_time))
-         WHERE id_session = $1`,
-        [sessionId]
-      );
-    }
-
     // 2. Invalidar token de Auth0
-    const auth0Response = await axios.post(
+    await axios.post(
       `https://${process.env.AUTH0_DOMAIN}/oauth/revoke`,
       new URLSearchParams({
         client_id: process.env.AUTH0_CLIENT_ID,
         client_secret: process.env.AUTH0_CLIENT_SECRET,
         token: req.auth.token
       }),
-      {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-      }
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
     );
 
     await client.query('COMMIT');
-    res.json({ success: true, auth0Revocation: auth0Response.data });
+    res.json({ success: true });
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('Error en cierre de sesión:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Error al cerrar sesión',
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
