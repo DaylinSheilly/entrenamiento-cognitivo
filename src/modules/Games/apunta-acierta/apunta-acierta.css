@@ -11,237 +11,325 @@
   width: 600px;
   background-color: transparent;
   text-align: center;
-  position: relative; /* Asegura que los elementos absolutos se posicionen dentro */
-  overflow: hidden; /* Previene que los elementos sobresalgan */
+  position: relative;
+  /* Asegura que los elementos absolutos se posicionen dentro */
+  overflow: hidden;
+  /* Previene que los elementos sobresalgan */
+}
+
+/* Estilos para títulos */
+.acierta-game-container h1 {
+  color: #ffffff;
+  margin-bottom: 0px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.acierta-game-container h2 {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.acierta-game-container h3 {
+  font-size: 1.5rem;
+  font-weight: normal;
+  color: #444;
+  margin-bottom: 6px;
+}
+
+.acierta-game-container p {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.acierta-score,
+.acierta-stars,
+.acierta-timer {
+  position: absolute;
+  color: white;
+  font-size: 0.875rem;
+  /* Reducido a 14px */
+  font-weight: bold;
+  white-space: nowrap;
+  /* Evita saltos de línea */
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.acierta-score {
+  top: 0.5rem;
+  left: 0.5rem;
+}
+
+.acierta-stars {
+  top: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.acierta-timer {
+  top: 0.5rem;
+  right: 0.5rem;
+}
+
+/* Evitar conflictos con los estilos globales */
+.acierta-game-container .acierta-score,
+.acierta-game-container .acierta-stars,
+.acierta-game-container .acierta-timer {
+  font-size: 1rem;
+  /* Asegurar tamaño menor dentro del contenedor */
+  color: #222 !important;
+}
+
+.acierta-countdown {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 6rem;
+  font-weight: bold;
+  color: #222;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Start Screen */
+.acierta-start-screen {
+  text-align: center;
+  padding: 2rem;
+  background-color: #9ebde6;
+  border: 2px solid #8e44ad;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin: 2rem;
+}
+
+.acierta-start-screen h1 {
+  font-size: 2.5rem;
+  color: #1565c0;
+}
+
+.acierta-start-screen button {
+  font-size: 1.2em;
+  padding: 15px 30px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.acierta-start-screen button:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+}
+
+/* Game Header */
+.acierta-info-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f8f6fb;
+  border: 2px solid #8e44ad;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px #8e44ad22;
+  width: fit-content;
+  max-width: 98vw;
+  margin: 1rem auto 1.2rem auto;
+  padding: 0.1rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.1;
+  gap: 1.5rem;
+}
+
+.stat-item {
+  flex: none;
+  text-align: center;
+  white-space: nowrap;
+  padding: 0 0.4rem;
+}
+
+.acierta-stats-table-wrapper {
+  margin: 0 auto 2rem auto;
+  overflow-x: auto;
+}
+
+.acierta-stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #f8f6fb;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px #8e44ad22;
+  margin-top: 1.5rem;
+  font-family: inherit;
+  font-size: 1.08rem;
+  min-width: 260px;
+}
+
+.acierta-stats-table th {
+  background: #8e44ad;
+  color: #fff;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #6c3483;
+}
+
+.acierta-stats-table td {
+  background: #f3eafc;
+  color: #333;
+  font-weight: 500;
+}
+
+.acierta-stats-table tr:nth-child(even) td {
+  background: #ede1f8;
+}
+
+.acierta-stats-table td,
+.acierta-stats-table th {
+  padding: 0.7rem 0.4rem;
+  text-align: center;
+  border-bottom: 1px solid #8e44ad22;
+}
+
+.acierta-stats-table tr:last-child td {
+  border-bottom: none;
+}
+
+@media (max-width: 600px) {
+  .acierta-info-row {
+    font-size: 0.95rem;
+    padding: 0.15rem 0.2rem;
+    gap: 0.7rem;
   }
 
-  /* Estilos para títulos */
-  .acierta-game-container h1 {
-    color: #ffffff;
-    margin-bottom: 0px;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  .acierta-stats-table th,
+  .acierta-stats-table td {
+    font-size: 0.97rem;
+    padding: 0.5rem 0.1rem;
   }
-  
-  .acierta-game-container h2 {
-    font-size: 2rem;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 8px;
-  }
-  
-  .acierta-game-container h3 {
-    font-size: 1.5rem;
-    font-weight: normal;
-    color: #444;
-    margin-bottom: 6px;
-  }
-  
-  .acierta-game-container p {
-    font-size: 1rem;
-    font-weight: bold;
-    color: #fff;
-    margin-bottom: 6px;
-  }
-  
-  .acierta-score,
-  .acierta-stars,
-  .acierta-timer {
-    position: absolute;
-    color: white;
-    font-size: 0.875rem; /* Reducido a 14px */
-    font-weight: bold;
-    white-space: nowrap; /* Evita saltos de línea */
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-  }
-  
-  .acierta-score {
-    top: 0.5rem;
-    left: 0.5rem;
-  }
-  
-  .acierta-stars {
-    top: 0.5rem;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-  
-  .acierta-timer {
-    top: 0.5rem;
-    right: 0.5rem;
-  }
-  
-  /* Evitar conflictos con los estilos globales */
-  .acierta-game-container .acierta-score,
-  .acierta-game-container .acierta-stars,
-  .acierta-game-container .acierta-timer {
-    font-size: 1rem; /* Asegurar tamaño menor dentro del contenedor */
-    color: #222 !important;
-  }
+}
 
-  .acierta-countdown {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 6rem;
-    font-weight: bold;
-    color: #222;
-    animation: fadeIn 0.5s ease-in-out;
-  }
-  
-  /* Start Screen */
-  .acierta-start-screen {
-    text-align: center;
-    padding: 2rem;
-    background-color: #9ebde6;
-    border: 2px solid #f0a500;
-    border-radius: 15px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    margin: 2rem;
-  }
-  
-  .acierta-start-screen h1 {
-    font-size: 2.5rem;
-    color: #1565c0;
-  }
-
-  .acierta-start-screen button {
-    font-size: 1.2em;
-    padding: 15px 30px;
-    background-color: #3498db;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-  
-  .acierta-start-screen button:hover {
-    background-color: #2980b9;
-    transform: translateY(-2px);
-  }
-  
-  /* Game Header */
-  .acierta-game-info {
-    text-align: center;
-    padding: 0.5rem 2rem;
-    background-color: #9ebde6;
-    border: 2px solid #f0a500;
-    border-radius: 15px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    margin: 0.3rem;
-  }
-  
-  /* Game Area */
-  .acierta-game-area {
-    position: relative;
-    margin: 0 auto;
-    width: 375px;
-    height: 375px;
-    border: 2px solid black; /* Mantiene el borde negro */
-    overflow: hidden; /* Oculta cualquier cosa fuera del área de juego */
-    transition: background-color 0.3s ease-in-out !important;
+/* Game Area */
+.acierta-game-area {
+  position: relative;
+  margin: 0 auto;
+  width: 375px;
+  height: 375px;
+  border: 2px solid black;
+  /* Mantiene el borde negro */
+  overflow: hidden;
+  /* Oculta cualquier cosa fuera del área de juego */
+  transition: background-color 0.3s ease-in-out !important;
 }
 
 /* Bola */
 .acierta-ball {
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    background-color: red;
-    border-radius: 50%;
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: red;
+  border-radius: 50%;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
 }
-  
-  .acierta-target {
-    position: absolute;
-    background-color: blue;
-    border-radius: 50%;
-    transition: width 0.3s, height 0.3s;
-  }
-  
-  /* Hit Button */
-  .acierta-hit-button {
-    background-color: #43a047;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    font-size: 1.2rem;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    font-family: 'Poppins', sans-serif;
-    margin: 0.3rem;
-  }
-  
-  .acierta-hit-button:hover {
-    background-color: #1b5e20;
-  }
-  
-  /* End Screen */
-  .acierta-end-screen {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    background-color: #3b3637;
-    font-family: 'Poppins', sans-serif;
-  }
-  
-  .acierta-end-screen h1 {
-    font-size: 2.5rem;
-    color: #c62828;
-  }
-  
-  .acierta-end-screen p {
-    font-size: 1.2rem;
-    color: #d32f2f;
-  }
-  
-  .acierta-end-screen button {
-    background-color: #b71c1c;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    font-size: 1rem;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    font-family: 'Poppins', sans-serif;
-  }
-  
-  .acierta-end-screen button:hover {
-    background-color: #7f0000;
-  }
 
-  .acierta-fin-juego-container {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 20px;
-    font-family: 'Arial', sans-serif;
-    text-align: center;
-    background-color: #3498db;
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-    animation: aparecer 0.5s ease-out;
-  }
-    
-  .acierta-fin-juego-container button {
-    background-color: #75e78e;
-    border: 2px solid #61bd75;
-    color: white;
-    padding: 12px 30px;
-    border: none;
-    border-radius: 25px;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: bold;
-    text-transform: uppercase;
-    transition: all 0.3s ease;
-    margin-top: 15px;
-  }
-  
-  .acierta-fin-juego-container button:hover {
-    background-color: #61bd75;
-    transform: translateY(-2px);
-  }
+.acierta-target {
+  position: absolute;
+  background-color: blue;
+  border-radius: 50%;
+  transition: width 0.3s, height 0.3s;
+}
+
+/* Hit Button */
+.acierta-hit-button {
+  background-color: #43a047;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 1.2rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-family: 'Poppins', sans-serif;
+  margin: 0.3rem;
+}
+
+.acierta-hit-button:hover {
+  background-color: #1b5e20;
+}
+
+/* End Screen */
+.acierta-end-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: #3b3637;
+  font-family: 'Poppins', sans-serif;
+}
+
+.acierta-end-screen h1 {
+  font-size: 2.5rem;
+  color: #c62828;
+}
+
+.acierta-end-screen p {
+  font-size: 1.2rem;
+  color: #d32f2f;
+}
+
+.acierta-end-screen button {
+  background-color: #b71c1c;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-family: 'Poppins', sans-serif;
+}
+
+.acierta-end-screen button:hover {
+  background-color: #7f0000;
+}
+
+.acierta-fin-juego-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Arial', sans-serif;
+  text-align: center;
+  background-color: #3498db;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  animation: aparecer 0.5s ease-out;
+}
+
+.acierta-fin-juego-container button {
+  background-color: #75e78e;
+  border: 2px solid #61bd75;
+  color: white;
+  padding: 12px 30px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  margin-top: 15px;
+  box-shadow: 0 2px 8px #0002;
+}
+
+.acierta-fin-juego-container button:hover {
+  background-color: #61bd75;
+  transform: translateY(-2px);
+  color: #fff;
+  transform: translateY(-2px) scale(1.04);
+}

@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './apunta-acierta.css'; // Include styles for the game
 
-const ApuntaYAcierta = () => {
+const BALL_SIZE = 20;
+const INITIAL_OFFSET = -BALL_SIZE;
+
+const ApuntaYAcierta = ({ onGameEnd }) => {
     const [timeLeft, setTimeLeft] = useState(60);
+    const [totalTime, setTotalTime] = useState(60);
     const [score, setScore] = useState(50);
     const [errors, setErrors] = useState(0);
     const [ballPosition, setBallPosition] = useState({ x: 0, y: 0 });
@@ -20,10 +24,47 @@ const ApuntaYAcierta = () => {
     const [gameOver, setGameOver] = useState(false);
     const [countdown, setCountdown] = useState(null);
     const [reactionTime, setReactionTime] = useState(0);
+    const [targetAppearTime, setTargetAppearTime] = useState(null);
     const [targetColor, setTargetColor] = useState('blue');
 
     const gameAreaRef = useRef(null);
     const intervalRef = useRef(null);
+    const isHandlingGameEnd = useRef(false); // Ref para evitar múltiples envíos de datos al finalizar el juego
+
+    const gameData = {
+        // Nombre fijo del juego para identificación en la BD
+        game_name: "Apunta y acierta",
+        // Nivel calculado según la reducción del tamaño del objetivo
+        // Comienza en 1 y aumenta cuando el objetivo se reduce
+        level: Math.floor((50 - targetSize) / 3),
+        // Dificultad basada en combinación de tamaño del objetivo y velocidad
+        difficulty: targetSize >= 40 && ballSpeed <= 4 ? "fácil" :
+            targetSize >= 25 && ballSpeed <= 7 ? "medio" : "difícil",
+        // Total de intentos realizados (correctos + errores)
+        actions_taken: totalAnswers,
+        // Porcentaje de precisión (evita división por cero)
+        accuracy: totalAnswers > 0 ? Math.round((correctAnswers / totalAnswers) * 100) : 0,
+        // Mayor racha de aciertos conseguida
+        streaks: consecutiveCorrect,
+        // Cantidad de errores cometidos
+        errors: errors,
+        // Puntaje final acumulado
+        score: score,
+    };
+
+    const handleGameEnd = () => {
+        // Envía los datos al GameLayout
+        // console.log("Datos del juego:", gameData);
+        onGameEnd(gameData);
+    };
+
+    useEffect(() => {
+        if (gameOver && !isHandlingGameEnd.current) {
+            isHandlingGameEnd.current = true;
+            handleGameEnd();
+            isHandlingGameEnd.current = false;
+        }
+    }, [gameOver]);
 
     // Manejo del temporizador
     useEffect(() => {
@@ -40,16 +81,15 @@ const ApuntaYAcierta = () => {
         if (gameStarted) {
             const gameArea = gameAreaRef.current;
             if (gameArea) {
-                // Centrando el objetivo, con un desplazamiento adicional
                 const centerX = gameArea.offsetWidth / 2;
                 const centerY = gameArea.offsetHeight / 2;
-                setTargetPosition({ x: centerX + 9, y: centerY + 9 });
 
-                // Ajustando la bola para que pase por el centro
+                setTargetPosition({ x: centerX, y: centerY });
+
                 setBallPosition(
                     trajectory === 'horizontal'
-                        ? { x: -20, y: centerY }
-                        : { x: centerX, y: -20 }
+                        ? { x: INITIAL_OFFSET, y: centerY }
+                        : { x: centerX, y: INITIAL_OFFSET }
                 );
             }
         }
@@ -63,27 +103,28 @@ const ApuntaYAcierta = () => {
                 const gameArea = gameAreaRef.current;
                 if (!gameArea) return prev;
 
-                const gameAreaWidth = gameArea.offsetWidth;
-                const gameAreaHeight = gameArea.offsetHeight;
+                const { offsetWidth: gameAreaWidth, offsetHeight: gameAreaHeight } = gameArea;
 
                 if (trajectory === 'horizontal') {
                     const newX = prev.x + ballSpeed;
-                    if (newX > gameAreaWidth + 20) {
+                    if (newX > gameAreaWidth + BALL_SIZE) {
                         const newTrajectory = Math.random() > 0.5 ? 'horizontal' : 'vertical';
                         setTrajectory(newTrajectory);
+
                         return newTrajectory === 'horizontal'
-                            ? { x: -20, y: prev.y }
-                            : { x: targetPosition.x - 9, y: -20 };
+                            ? { x: INITIAL_OFFSET, y: gameAreaHeight / 2 }
+                            : { x: gameAreaWidth / 2, y: INITIAL_OFFSET };
                     }
                     return { ...prev, x: newX };
                 } else {
                     const newY = prev.y + ballSpeed;
-                    if (newY > gameAreaHeight + 20) {
+                    if (newY > gameAreaHeight + BALL_SIZE) {
                         const newTrajectory = Math.random() > 0.5 ? 'horizontal' : 'vertical';
                         setTrajectory(newTrajectory);
+
                         return newTrajectory === 'horizontal'
-                            ? { x: -20, y: targetPosition.y - 9 }
-                            : { x: targetPosition.x - 9, y: -20 };
+                            ? { x: INITIAL_OFFSET, y: gameAreaHeight / 2 }
+                            : { x: gameAreaWidth / 2, y: INITIAL_OFFSET };
                     }
                     return { ...prev, y: newY };
                 }
@@ -92,7 +133,7 @@ const ApuntaYAcierta = () => {
 
         intervalRef.current = gameInterval;
         return () => clearInterval(gameInterval);
-    }, [gameStarted, ballSpeed, trajectory, targetPosition]);
+    }, [gameStarted, ballSpeed, trajectory]);
 
     useEffect(() => {
         if (gameStarted) {
@@ -115,6 +156,8 @@ const ApuntaYAcierta = () => {
         setGameStarted(true);
         setGameOver(false);
         setTimeLeft(60);
+        setTotalTime(60);
+        setReactionTime(0);
         setScore(50);
         setErrors(0);
         setBallPosition({ x: 0, y: 0 });
@@ -149,9 +192,19 @@ const ApuntaYAcierta = () => {
     };
 
     const checkHit = () => {
+        if (!gameStarted) return;
+
+        const now = Date.now();
+        const newReactionTime = targetAppearTime ? (now - targetAppearTime) / 1000 : 0;
+        setReactionTime(prev => (prev + newReactionTime) / (prev === 0 ? 1 : 2));
+        setTargetAppearTime(null);
+
         setTotalAnswers((prev) => prev + 1);
 
-        const getCenter = (pos) => ({ x: pos.x + 10, y: pos.y + 10 });
+        const getCenter = (pos) => ({
+            x: pos.x + BALL_SIZE / 2, // Centro real
+            y: pos.y + BALL_SIZE / 2
+        });
 
         const ballCenter = getCenter(ballPosition);
         const targetCenter = getCenter(targetPosition);
@@ -209,15 +262,36 @@ const ApuntaYAcierta = () => {
             {gameOver ? (
                 <div className="acierta-fin-juego-container">
                     <h1>Fin del juego</h1>
-                    <p>🎯 Puntaje final: {score}</p>
-                    <p>✅ Correctas: {correctAnswers} de {totalAnswers}</p>
-                    <p>📊 Precisión: {totalAnswers > 0 ? ((correctAnswers / totalAnswers) * 100).toFixed(2) : "0"}%</p>
-                    <p>⭐ Estrellas: {stars}</p>
-                    <p>🕒 Tiempo de reacción promedio: {reactionTime.toFixed(2)}s</p> 
-                    <p>🕒 Tiempo de recuperación: {calculateRecoveryTime()}</p>
-                    <button onClick={startCountdown}>
-                        Jugar de nuevo
-                    </button>
+                    <div className="acierta-stats-table-wrapper">
+                        <table className="acierta-stats-table">
+                            <thead>
+                                <tr>
+                                    <th>⏱️ Tiempo total</th>
+                                    <th>🎯 Puntaje final</th>
+                                    <th>⭐ Estrellas</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{totalTime}s</td>
+                                    <td>{score}</td>
+                                    <td>{stars}</td>
+                                </tr>
+                                <tr>
+                                    <td>✅ Correctas: {correctAnswers} de {totalAnswers}</td>
+                                    <td>❌ Errores: {errors}</td>
+                                    <td>📊 Precisión: {totalAnswers > 0 ? `${((correctAnswers / totalAnswers) * 100).toFixed(2)}%` : "0%"}</td>
+                                </tr>
+                                <tr>
+                                    <td colSpan={3}>🕒 Tiempo de reacción promedio: {reactionTime.toFixed(2)}s</td>
+                                </tr>
+                                <tr>
+                                    <td colSpan={3}>🕒 Tiempo de recuperación: {calculateRecoveryTime()}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <button onClick={startCountdown}>Jugar de nuevo</button>
                 </div>
             ) : !gameStarted ? (
                 countdown === null ? ( // Mostrar pantalla de inicio si NO hay cuenta regresiva
@@ -229,12 +303,18 @@ const ApuntaYAcierta = () => {
                     <div className="acierta-countdown">{countdown}</div>
                 )
             ) : (
-                <div>
-                    <div className="acierta-game-info">
-                        <p>Tiempo: {timeLeft}s</p>
-                        <p>Puntaje: {score}</p>
-                        <p>Errores: {errors}</p>
-                    </div>
+                <>
+                    <section className="acierta-info-row">
+                        <div className="stat-item">
+                            <strong>Puntaje:</strong> <span>{score}</span>
+                        </div>
+                        <div className="stat-item">
+                            <strong>Errores:</strong> <span>{errors}</span>
+                        </div>
+                        <div className="stat-item">
+                            <strong>Tiempo restante:</strong> <span>{timeLeft}s</span>
+                        </div>
+                    </section>
 
                     <div
                         className="acierta-game-area"
@@ -245,6 +325,10 @@ const ApuntaYAcierta = () => {
                             style={{
                                 left: `${ballPosition.x}px`,
                                 top: `${ballPosition.y}px`,
+                                width: `${BALL_SIZE}px`,
+                                height: `${BALL_SIZE}px`,
+                                borderRadius: '50%',
+                                position: 'absolute',
                             }}
                         ></div>
 
@@ -264,7 +348,7 @@ const ApuntaYAcierta = () => {
                     <button className="acierta-hit-button" onMouseDown={checkHit}>
                         Acierto
                     </button>
-                </div>
+                </>
             )}
         </div>
     );
