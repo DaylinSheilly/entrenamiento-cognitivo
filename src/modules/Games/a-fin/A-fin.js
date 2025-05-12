@@ -33,6 +33,7 @@ const SynonymGame = ({ onGameEnd }) => {
   const [score, setScore] = useState(0);      // Puntaje en el nivel actual
   const [errors, setErrors] = useState(0);      // Errores en el nivel actual
   const [time, setTime] = useState(LEVEL_TIME[1]);
+  const [totalTime, setTotalTime] = useState(0); // Tiempo total de juego
   const [currentWord, setCurrentWord] = useState('');
   const [options, setOptions] = useState([]);
   const [gameOver, setGameOver] = useState(false);
@@ -77,7 +78,7 @@ const SynonymGame = ({ onGameEnd }) => {
 
   const handleGameEnd = () => {
     // Envía los datos al GameLayout
-    console.log("Datos del juego:", gameData);
+    // console.log("Datos del juego:", gameData);
     onGameEnd(gameData);
   };
 
@@ -149,6 +150,7 @@ const SynonymGame = ({ onGameEnd }) => {
 
     if (time > 0 && !gameOver && gameStarted) {
       const timer = setTimeout(() => setTime(time - 1), 1000);
+      setTotalTime(prev => prev + 1);
       return () => clearTimeout(timer);
     } else if (time === 0 && !gameOver) {
       evaluateLevel();
@@ -228,7 +230,6 @@ const SynonymGame = ({ onGameEnd }) => {
         setLastErrorTimestamp(null);
       }
       setScore(score + 1);
-      console.log(`Correcto! Racha actual: ${newStreak}`);
     } else {
       // Reinicio de racha en errores
       setStreak(0);
@@ -264,7 +265,6 @@ const SynonymGame = ({ onGameEnd }) => {
       setNextLevelTimer(10);
     }
     else if (!passed) {
-      console.log(levelFails);
       if (levelFails >= 1) { // Segundo fallo consecutivo
         setIsGameOver(true);
         setGameOver(true);
@@ -334,69 +334,121 @@ const SynonymGame = ({ onGameEnd }) => {
     <div className="afin-game-container">
       {gameOver ? (
         <>
-        {console.log(gameOver)}
-        {console.log(isGameOver)}
           {(levelPassed || isGameOver) ? (
             (level === 5 || isGameOver) ? (
-              <div className="colores-fin-juego-container">
+              <div className="afin-fin-juego-container">
                 <h1>Fin del juego</h1>
-                <p>🕒 Tiempo total de juego: {calculateGameTime()} segundos</p>
-                <p>✅ Correctas: {globalStats.totalCorrect} de {globalStats.totalCorrect + globalStats.totalErrors}</p>
-                <p>❌ Errores: {globalStats.totalErrors}</p>
-                <p>📊 Precisión: {globalStats.totalCorrect + globalStats.totalErrors > 0
-                  ? ((globalStats.totalCorrect / (globalStats.totalCorrect + globalStats.totalErrors)) * 100).toFixed(2)
-                  : "0"}%</p>
-                <p>⚡ Respuestas rápidas (&lt; 1s): {globalStats.fastAnswers}</p>
-                <p>🕒 Tiempo de recuperación: {globalStats.recoveryTimes.length > 0
-                  ? Math.floor(globalStats.recoveryTimes.reduce((acc, t) => acc + t, 0) / globalStats.recoveryTimes.length)
-                  : "0"} ms</p>
+                <div className="afin-stats-table-wrapper">
+                  <table className="afin-stats-table">
+                    <thead>
+                      <tr>
+                        <th>⏱️ Tiempo total</th>
+                        <th>🎯 Puntaje final</th>
+                        <th>🏆 Nivel máximo</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>{totalTime} s</td>
+                        <td>{globalStats.totalCorrect}</td>
+                        <td>{level}</td>
+                      </tr>
+                      <tr>
+                        <td>✅ {globalStats.totalCorrect} correctas</td>
+                        <td>❌ {globalStats.totalErrors} errores</td>
+                        <td>
+                          📊 {globalStats.totalCorrect + globalStats.totalErrors > 0
+                            ? `${((globalStats.totalCorrect / (globalStats.totalCorrect + globalStats.totalErrors)) * 100).toFixed(2)}%`
+                            : "0%"} precisión
+                        </td>
+                      </tr>
+                      <tr>
+                        <td colSpan={3}>⚡ Respuestas rápidas: {globalStats.fastAnswers}</td>
+                      </tr>
+                      <tr>
+                        <td colSpan={3}>
+                          🕒 T. recuperación: {globalStats.recoveryTimes.length > 0
+                            ? `${Math.floor(globalStats.recoveryTimes.reduce((acc, t) => acc + t, 0) / globalStats.recoveryTimes.length)} ms`
+                            : "N/A"}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
                 <button onClick={startCountdown}>Jugar de nuevo</button>
               </div>
             ) : (
               <div className="afin-start-screen">
                 <h2>¡Nivel superado!</h2>
-                <p>Puntaje: {score}</p>
-                <p>Errores: {errors} ({score + errors > 0 ? ((errors / (score + errors)) * 100).toFixed(2) : "0"}%)</p>
+                <section className="afin-info-row">
+                  <div className="stat-item">
+                    <strong>Puntaje:</strong> <span>{score}</span>
+                  </div>
+                  <div className="stat-item">
+                    <strong>Errores:</strong> <span>{errors}</span>
+                  </div>
+                  <div className="stat-item">
+                    <strong>Tiempo jugado:</strong> <span>{LEVEL_TIME[level]}s</span>
+                  </div>
+                </section>
                 <p>Pasarás al siguiente nivel en: {nextLevelTimer} segundos</p>
               </div>
             )
           ) : (
             <div className="afin-start-screen">
               <h2>¡Nivel no superado!</h2>
-              <p>Puntaje: {score}</p>
-              <p>Errores: {errors} ({score + errors > 0 ? ((errors / (score + errors)) * 100).toFixed(2) : "0"}%)</p>
+              <section className="afin-info-row">
+                <div className="stat-item">
+                  <strong>Puntaje:</strong> <span>{score}</span>
+                </div>
+                <div className="stat-item">
+                  <strong>Errores:</strong> <span>{errors}</span>
+                </div>
+                <div className="stat-item">
+                  <strong>Tiempo jugado:</strong> <span>{LEVEL_TIME[level]}s</span>
+                </div>
+              </section>
               <p>
                 {score < MIN_SCORE_REQUIRED[level] ? `No alcanzaste el puntaje mínimo requerido (${MIN_SCORE_REQUIRED[level]}). ` : ''}
                 {((errors / (score + errors)) * 100) >= ERROR_THRESHOLD[level] ? `El porcentaje de errores (${((errors / (score + errors)) * 100).toFixed(2)}%) excede el límite permitido (${ERROR_THRESHOLD[level]}%).` : ''}
               </p>
               <button onClick={retryLevel}>Reintentar nivel</button>
-              {levelFails === 1 && (
-                <p style={{ color: "red" }}>¡Último intento!</p>
-              )}
+              {levelFails === 1 && <p style={{ color: "red" }}>¡Último intento!</p>}
             </div>
           )}
         </>
       ) : !gameStarted ? (
         countdown === null ? (
-          <div className="colores-start-screen">
+          <div className="afin-start-screen">
             <h2>¡Bienvenido a A fin!</h2>
             <button onClick={startCountdown}>Comenzar Juego</button>
           </div>
         ) : (
-          <div className="colores-countdown">{countdown}</div>
+          <div className="afin-countdown">{countdown}</div>
         )
       ) : (
         <div className="afin-game-container">
-          <div className="afin-game-info">
-            <p>Nivel: {level}</p>
-            <p>Puntaje: {score}</p>
-            <p>Errores: {errors}</p>
-            <p>Tiempo: {time}s</p>
+          <section className="afin-info-row">
+            <div className="stat-item">
+              <strong>Puntaje:</strong> <span>{score}</span>
+            </div>
+            <div className="stat-item">
+              <strong>Errores:</strong> <span>{errors}</span>
+            </div>
+            <div className="stat-item">
+              <strong>Tiempo:</strong> <span>{time}s</span>
+            </div>
+          </section>
+
+          <div className="stat-item">
+            <strong>Nivel:</strong> <span>{level}</span>
           </div>
+
           <div className="afin-word-container">
             <h2 className="afin-h2">Palabra objetivo:</h2>
             <h2>{currentWord}</h2>
           </div>
+
           <div className="afin-options-container">
             {options.map((option, index) => (
               <button key={index} onClick={() => handleChoice(option)}>

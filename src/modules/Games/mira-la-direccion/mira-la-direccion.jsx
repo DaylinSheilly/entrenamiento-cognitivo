@@ -29,7 +29,7 @@ const MiraLaDireccion = () => {
 
   // Manejo del temporizador
   useEffect(() => {
-    if (gameStarted) {return; } // No hacer nada si el juego no ha comenzado
+    if (!gameStarted) return; // No hacer nada si el juego no ha comenzado
     if (timeLeft > 0) {
       const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
       return () => clearTimeout(timer);
