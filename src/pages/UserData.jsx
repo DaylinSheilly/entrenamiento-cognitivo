@@ -47,6 +47,7 @@ const PerfilUsuario = () => {
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [juegoMasJugado, setJuegoMasJugado] = useState(null);
+    const [originalFormData, setOriginalFormData] = useState(null);
 
     const [formData, setFormData] = useState({
         nombre_usuario: '',
@@ -157,6 +158,7 @@ const PerfilUsuario = () => {
             );
             setEditMode(false);
             setFormData(response.data.user);
+            setOriginalFormData(null); // Limpia la copia
         } catch (error) {
             setError(error.response?.data?.message || 'Error al actualizar el perfil');
         }
@@ -371,7 +373,10 @@ const PerfilUsuario = () => {
                                                 <Button type="submit" variant="contained" color="primary">
                                                     Guardar Cambios
                                                 </Button>
-                                                <Button variant="outlined" onClick={() => setEditMode(false)}>
+                                                <Button variant="outlined" onClick={() => {
+                                                    setFormData(originalFormData); // Restaura los datos originales
+                                                    setEditMode(false);
+                                                }}>
                                                     Cancelar
                                                 </Button>
                                             </Box>
@@ -409,7 +414,10 @@ const PerfilUsuario = () => {
                                             </Dialog>
                                         </>
                                     ) : (
-                                        <Button variant="contained" onClick={() => setEditMode(true)}>
+                                        <Button variant="contained" onClick={() => {
+                                            setOriginalFormData(formData); // Guarda una copia de los datos actuales
+                                            setEditMode(true);
+                                        }}>
                                             Editar Perfil
                                         </Button>
                                     )}
