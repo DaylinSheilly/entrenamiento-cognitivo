@@ -44,7 +44,7 @@ const gamesByDomain = [
   {
     domain: "Habilidades visoconstructivas",
     games: [
-      { name: "Apunta y Acierta", path: "/games/apunta-acierta" },
+      { name: "Apunta y acierta", path: "/games/apunta-acierta" },
       { name: "Construye la cañería", path: "/games/construye-la-tuberia" },
       { name: "Colorea el camino", path: "/games/colorea-el-camino" },
     ]
