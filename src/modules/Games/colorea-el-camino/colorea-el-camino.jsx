@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './colorea-el-camino.css';
 
-const ColoreaElCamino = () => {
+const ColoreaElCamino = ({ onGameEnd }) => {
   // Estado global: tiempo de inicio del juego (no se reinicia)
   const [countdown, setCountdown] = useState(null);
   const [totalTime, setTotalTime] = useState(0);
 
   // Estado para el nivel actual 
+  const [score, setScore] = useState(50);
   const [nivel, setNivel] = useState(10);
   const hasAdvanced = useRef(false);
   const [message, setMessage] = useState("");
@@ -24,6 +25,9 @@ const ColoreaElCamino = () => {
   // Estados para medir tiempo de recuperación (se mide solo si el nivel se reinicia por error)
   const [recoveryStart, setRecoveryStart] = useState(null);
   const [recoveryTimes, setRecoveryTimes] = useState([]);
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [maxStreak, setMaxStreak] = useState(0);
+
 
   // Estados para la propagación
   const [isDrawing, setIsDrawing] = useState(false);
@@ -32,6 +36,39 @@ const ColoreaElCamino = () => {
   const [startTime, setStartTime] = useState(Date.now());
 
   const errorTimeRef = useRef(null);
+  const isHandlingGameEnd = useRef(false); // Ref para evitar múltiples envíos de datos al finalizar el juego
+
+  // FUNCIONES DE REGISTRO DE ESTADISTICAS -------------------------------------------- //
+
+  // Precisión
+  const precision = correctAnswers + totalErrors > 0
+    ? ((correctAnswers / (correctAnswers + totalErrors)) * 100).toFixed(2)
+    : "0";
+
+  const gameData = {
+    game_name: "Colorea el camino",
+    level: nivel,
+    difficulty: nivel <= 2 ? "fácil" : nivel <= 4 ? "medio" : "difícil",
+    actions_taken: totalAnswers,
+    accuracy: Number(precision), // como número, no string
+    streaks: maxStreak, // calcula la mejor racha si quieres
+    errors: totalErrors,
+    score: score // si tienes puntaje, si no, puedes poner correctAnswers o niveles superados
+  };
+
+  const handleGameEnd = () => {
+    // Envía los datos al GameLayout
+    // console.log("Datos del juego:", gameData);
+    onGameEnd(gameData);
+  };
+
+  useEffect(() => {
+    if (gameOver && !isHandlingGameEnd.current) {
+      isHandlingGameEnd.current = true;
+      handleGameEnd();
+      isHandlingGameEnd.current = false;
+    }
+  }, [gameOver]);
 
   // FUNCIONES DE LÓGICA DEL JUEGO -------------------------------------------- //
 
@@ -248,12 +285,17 @@ const ColoreaElCamino = () => {
     setMessage("");
     setTotalErrors(0);
     setGameOver(false);
+    setScore(50);
     setNivel(1); // Restablece el nivel inicial
     setResolutionTime(null);
     setIsResetting(false);
     setCurrentLevelTime(0);
     setRecoveryStart(null);
     setRecoveryTimes([]);
+    setMaxStreak(0);
+    setCurrentStreak(0);
+    setCorrectAnswers(0);
+    setTotalAnswers(0);
     setIsDrawing(false);
     setCurrentBlockIndex(null);
     setStartTime(Date.now()); // Reinicia el tiempo de inicio del nivel
@@ -374,6 +416,7 @@ const ColoreaElCamino = () => {
   const resetBoard = useCallback((button) => {
     setTotalAnswers((prev) => prev + 1);
     setTotalErrors(prev => prev + 1);
+    setScore(prev => Math.max(prev - 10, 0));
     errorTimeRef.current = Date.now();
     if (button) {
       setMessage("");
@@ -381,6 +424,7 @@ const ColoreaElCamino = () => {
     setLevelConfig(initialLevelConfig);
     setIsDrawing(false);
     setCurrentBlockIndex(null);
+    setCurrentStreak(0);
   }, [initialLevelConfig]);
 
   // Al completar el nivel, se registra el tiempo y se pasa al siguiente nivel.
@@ -527,6 +571,7 @@ const ColoreaElCamino = () => {
   }, [nivel, initializeLevel]);
 
   useEffect(() => {
+    if (gameOver || !gameStarted) return;
     const gridFull = levelConfig.grid.every(row => row.every(cell => cell !== 0));
 
     if (gridFull && !hasAdvanced.current) {
@@ -541,7 +586,13 @@ const ColoreaElCamino = () => {
 
       setTotalAnswers((prev) => prev + 1);
       setCorrectAnswers((prev) => prev + 1);
+      setScore(prev => prev + 50);
       setMessage("¡Excelente trabajo! Has completado el nivel con éxito.");
+      setCurrentStreak(prev => {
+        const newStreak = prev + 1;
+        setMaxStreak(max => Math.max(max, newStreak));
+        return newStreak;
+      });
       nextLevel();
 
       setTimeout(() => {
@@ -599,22 +650,60 @@ const ColoreaElCamino = () => {
     width: `${numCols * (cellSize + 2)}px`
   };
 
+  // Tiempo de recuperación promedio (en ms)
+  const avgRecoveryTime = recoveryTimes.length > 0
+    ? Math.floor(recoveryTimes.reduce((a, b) => a + b, 0) / recoveryTimes.length)
+    : "N/A";
+
+  // Tiempo de resolución promedio por nivel (si lo quieres mostrar)
+  const avgResolutionTime = totalAnswers > 0
+    ? Math.floor(totalTime / totalAnswers)
+    : "N/A";
+
   return (
     <div className="colores-game-container">
       {gameOver ? (
         <div className="colores-fin-juego-container">
           <h1>Fin del juego</h1>
-          <p>🕒 Tiempo total de juego: {(totalTime / 1000).toFixed(2)} segundos</p>
-          <p>✅ Correctas: {correctAnswers} de {totalAnswers}</p>
-          <p>❌ Errores: {totalErrors}</p>
-          <p>📊 Precisión: {totalAnswers > 0 ? ((correctAnswers / totalAnswers) * 100).toFixed(2) : "0"}%</p>
-          <p>🕒 Tiempo de recuperación: {calculateRecoveryTime()}</p>
+          <div className="colores-stats-table-wrapper">
+            <table className="colores-stats-table">
+              <thead>
+                <tr>
+                  <th>⏱️ Tiempo total</th>
+                  <th>🎯 Puntaje final</th>
+                  <th>🏆 Nivel máximo</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>{(totalTime / 1000).toFixed(2)} s</td>
+                  <td>{score}</td>
+                  <td>{nivel}</td>
+                </tr>
+                <tr>
+                  <td>✅ {correctAnswers} correctas</td>
+                  <td>❌ {totalErrors} errores</td>
+                  <td>📊 Precisión: {precision}%</td>
+                </tr>
+                <tr>
+                  <td colSpan={3}>
+                    🕒 T. recuperación promedio: {avgRecoveryTime !== "N/A" ? `${avgRecoveryTime / 1000} s` : "N/A"}
+                  </td>
+                </tr>
+                <tr>
+                  <td colSpan={3}>
+                    ⏱️ Tiempo promedio por nivel: {avgResolutionTime !== "N/A" ? `${avgResolutionTime / 1000} s` : "N/A"}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
           <button onClick={startCountdown}>
             Jugar de nuevo
           </button>
         </div>
       ) : !gameStarted ? (
-        countdown === null ? ( // Mostrar pantalla de inicio si NO hay cuenta regresiva
+        countdown === null ? (
           <div className="colores-start-screen">
             <h2>¡Bienvenido a Colorea el camino!</h2>
             <button onClick={startCountdown}>Comenzar Juego</button>
@@ -624,18 +713,22 @@ const ColoreaElCamino = () => {
         )
       ) : (
         <div className="colores-app">
+          {/* Barra de estadísticas superior */}
+          <section className="colores-info-row">
+            <div className="stat-item">
+              <strong>Puntaje:</strong> <span>{score}</span>
+            </div>
+            <div className="stat-item">
+              <strong>Errores:</strong> <span>{totalErrors}</span>
+            </div>
+            <div className="stat-item">
+              <strong>Tiempo de resolución:</strong> <span>{currentLevelTime ? Math.round(currentLevelTime / 1000) + " s" : "0 s"}</span>
+            </div>
+          </section>
+          <div className="stat-item">
+            <strong>Nivel:</strong> <span>{nivel}</span>
+          </div>
           <div className="colores-grid-container">
-            <>
-              <div className="colores-game-info">
-                <div className="colores-game-stats">
-                  <p>Nivel: {nivel}</p>
-                  <p>Errores: {totalErrors}</p>
-                  <p>Tiempo de resolución: {currentLevelTime ? Math.round(currentLevelTime / 1000) + " s" : "0" + " s"}</p>
-                </div>
-                {message && <p>{message}</p>}
-
-              </div>
-            </>
             <div
               className="colores-grid"
               style={gridStyle}
