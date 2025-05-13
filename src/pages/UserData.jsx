@@ -67,20 +67,23 @@ const PerfilUsuario = () => {
     };
 
     // Opciones para selects
-    const opcionesGenero = ['Masculino', 'Femenino', 'Otro'];
+    const opcionesGenero = ["Masculino", "Femenino", "No binario", "Prefiero no decir"
+    ];
     const opcionesNivelEducativo = [
-        'Ninguno',
-        'Primaria',
-        'Secundaria',
-        'Técnico',
-        'Universitario',
-        'Postgrado'
+        "Sin estudios formales",
+        "Educación Primaria",
+        "Educación Secundaria/Bachillerato",
+        "Formación Técnica/Tecnológica",
+        "Educación Universitaria",
+        "Postgrado/Especialización",
+        "Maestría",
+        "Doctorado"
     ];
     const paises = [
-        'Argentina', 'Bolivia', 'Brasil', 'Chile', 'Colombia', 'Costa Rica',
-        'Cuba', 'Ecuador', 'El Salvador', 'España', 'Guatemala', 'Honduras',
-        'México', 'Nicaragua', 'Panamá', 'Paraguay', 'Perú', 'Puerto Rico',
-        'República Dominicana', 'Uruguay', 'Venezuela'
+        "Argentina", "Bolivia", "Brasil", "Chile", "Colombia", "Costa Rica",
+        "Cuba", "Ecuador", "El Salvador", "España", "Guatemala", "Honduras",
+        "México", "Nicaragua", "Panamá", "Paraguay", "Perú", "Puerto Rico",
+        "República Dominicana", "Uruguay", "Venezuela", "Otro"
     ];
 
     useEffect(() => {
@@ -118,7 +121,6 @@ const PerfilUsuario = () => {
 
                 setJuegoMasJugado(mostPlayedGame);
             } catch (error) {
-                console.error("[PerfilUsuario] Error al cargar datos:", error);
                 if (error.response?.status === 404) {
                     console.log("[PerfilUsuario] Usuario no encontrado, redirigiendo a /complete-profile");
                     navigate('/complete-profile');
@@ -236,27 +238,32 @@ const PerfilUsuario = () => {
                             <Grid container spacing={3} direction="column">
                                 {Object.entries(camposEditables).map(([campo, label]) => (
                                     <Grid item xs={12} key={campo}>
+                                        {/* Fecha de nacimiento: SIEMPRE solo lectura */}
                                         {campo === 'fecha_nacimiento' ? (
-                                            <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-                                                <DatePicker
-                                                    label={label}
-                                                    value={formData[campo] ? new Date(formData[campo]) : null}
-                                                    onChange={() => { }}
-                                                    disabled
-                                                    renderInput={(params) =>
-                                                        <TextField
-                                                            {...params}
-                                                            fullWidth
-                                                            inputProps={{
-                                                                ...params.inputProps,
-                                                                readOnly: true,
-                                                                tabIndex: -1,
-                                                                style: { cursor: 'not-allowed', backgroundColor: '#f5f5f5' }
-                                                            }}
-                                                        />
+                                            <TextField
+                                                fullWidth
+                                                label={label}
+                                                value={
+                                                    formData[campo]
+                                                        ? new Date(formData[campo]).toLocaleDateString()
+                                                        : "No especificado"
+                                                }
+                                                variant="filled"
+                                                InputProps={{
+                                                    readOnly: true,
+                                                    disableUnderline: true,
+                                                    style: {
+                                                        backgroundColor: '#f5f5f5',
+                                                        color: '#222',
+                                                        cursor: 'not-allowed',
+                                                        WebkitTextFillColor: '#222',
                                                     }
-                                                />
-                                            </LocalizationProvider>
+                                                }}
+                                                InputLabelProps={{
+                                                    style: { color: '#888' }
+                                                }}
+                                                disabled
+                                            />
                                         ) : campo === 'genero' || campo === 'nivel_educativo' || campo === 'pais' ? (
                                             editMode ? (
                                                 <FormControl fullWidth>
@@ -282,9 +289,34 @@ const PerfilUsuario = () => {
                                                 <TextField
                                                     fullWidth
                                                     label={label}
+                                                    name={campo}
                                                     value={formData[campo] || "No especificado"}
                                                     variant="filled"
-                                                    InputProps={{ readOnly: true }}
+                                                    InputProps={{
+                                                        readOnly: true,
+                                                        disableUnderline: true,
+                                                        style: {
+                                                            backgroundColor: '#f5f5f5',
+                                                            color: '#222',
+                                                            cursor: 'not-allowed',
+                                                            WebkitTextFillColor: '#222',
+                                                        }
+                                                    }}
+                                                    InputLabelProps={{
+                                                        style: { color: '#888' }
+                                                    }}
+                                                    sx={{
+                                                        '& .MuiFilledInput-root': {
+                                                            backgroundColor: '#f5f5f5 !important',
+                                                            color: '#222 !important',
+                                                            cursor: 'not-allowed',
+                                                        },
+                                                        '& .Mui-disabled': {
+                                                            color: '#222 !important',
+                                                            WebkitTextFillColor: '#222 !important',
+                                                        },
+                                                    }}
+                                                    disabled
                                                 />
                                             )
                                         ) : (
@@ -294,6 +326,39 @@ const PerfilUsuario = () => {
                                                 name={campo}
                                                 value={formData[campo] || ""}
                                                 onChange={handleChange}
+                                                variant="filled"
+                                                InputProps={
+                                                    !editMode
+                                                        ? {
+                                                            readOnly: true,
+                                                            disableUnderline: true,
+                                                            style: {
+                                                                backgroundColor: '#f5f5f5',
+                                                                color: '#222',
+                                                                cursor: 'not-allowed',
+                                                                WebkitTextFillColor: '#222',
+                                                            }
+                                                        }
+                                                        : undefined
+                                                }
+                                                InputLabelProps={{
+                                                    style: { color: '#888' }
+                                                }}
+                                                sx={
+                                                    !editMode
+                                                        ? {
+                                                            '& .MuiFilledInput-root': {
+                                                                backgroundColor: '#f5f5f5 !important',
+                                                                color: '#222 !important',
+                                                                cursor: 'not-allowed',
+                                                            },
+                                                            '& .Mui-disabled': {
+                                                                color: '#222 !important',
+                                                                WebkitTextFillColor: '#222 !important',
+                                                            },
+                                                        }
+                                                        : undefined
+                                                }
                                                 disabled={!editMode}
                                             />
                                         )}
@@ -310,7 +375,6 @@ const PerfilUsuario = () => {
                                                     Cancelar
                                                 </Button>
                                             </Box>
-                                            {/* Botón eliminar cuenta debajo, ocupa toda la fila */}
                                             <Button
                                                 variant="contained"
                                                 color="error"
@@ -354,7 +418,6 @@ const PerfilUsuario = () => {
                         </form>
                     </Paper>
                 </Grid>
-
                 {/* Columna derecha: Estadísticas y máximas puntuaciones */}
                 <Grid item xs={12} md={7}>
                     <Paper elevation={3} sx={{ p: 3 }}>
@@ -407,19 +470,6 @@ const PerfilUsuario = () => {
                                             <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                                                 {juego.game_name}
                                             </Typography>
-                                            <LinearProgress
-                                                variant="determinate"
-                                                value={(juego.max_score / maxPossible) * 100}
-                                                sx={{
-                                                    height: 10,
-                                                    borderRadius: 5,
-                                                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                                                    '& .MuiLinearProgress-bar': {
-                                                        borderRadius: 5,
-                                                        backgroundColor: theme.palette.secondary.main
-                                                    }
-                                                }}
-                                            />
                                             <Typography variant="body2" sx={{ mt: 1 }}>
                                                 {juego.max_score} pts
                                             </Typography>
