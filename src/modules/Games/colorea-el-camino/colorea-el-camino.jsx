@@ -687,12 +687,12 @@ const ColoreaElCamino = ({ onGameEnd }) => {
                 </tr>
                 <tr>
                   <td colSpan={3}>
-                    🕒 T. recuperación promedio: {avgRecoveryTime !== "N/A" ? `${avgRecoveryTime / 1000} s` : "N/A"}
+                    🕒 T. recuperación promedio: {avgRecoveryTime !== "N/A" ? `${(avgRecoveryTime / 1000).toFixed(2)} s` : "N/A"}
                   </td>
                 </tr>
                 <tr>
                   <td colSpan={3}>
-                    ⏱️ Tiempo promedio por nivel: {avgResolutionTime !== "N/A" ? `${avgResolutionTime / 1000} s` : "N/A"}
+                    ⏱️ Tiempo promedio por nivel: {avgResolutionTime !== "N/A" ? `${(avgResolutionTime / 1000).toFixed(2)} s` : "N/A"}
                   </td>
                 </tr>
               </tbody>
