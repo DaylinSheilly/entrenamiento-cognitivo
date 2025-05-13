@@ -93,13 +93,28 @@ const ProgressCharts = () => {
             y: {
               max_score: dates.map(date => statsByDate[date].max_score),
               min_score: dates.map(date => statsByDate[date].min_score),
-              avg_score: dates.map(date => statsByDate[date].avg_score),
+              avg_score: dates.map(date => {
+                const val = statsByDate[date]?.avg_score;
+                return (val !== undefined && val !== null && !isNaN(Number(val)))
+                  ? Math.round(Number(val) * 100) / 100
+                  : null;
+              }),
               max_errors: dates.map(date => statsByDate[date].max_errors),
               min_errors: dates.map(date => statsByDate[date].min_errors),
-              avg_errors: dates.map(date => statsByDate[date].avg_errors),
+              avg_errors: dates.map(date => {
+                const val = statsByDate[date]?.avg_errors;
+                return (val !== undefined && val !== null && !isNaN(Number(val)))
+                  ? Math.round(Number(val) * 100) / 100
+                  : null;
+              }),
               max_streaks: dates.map(date => statsByDate[date].max_streaks),
               min_streaks: dates.map(date => statsByDate[date].min_streaks),
-              avg_streaks: dates.map(date => statsByDate[date].avg_streaks),
+              avg_streaks: dates.map(date => {
+                const val = statsByDate[date]?.avg_streaks;
+                return (val !== undefined && val !== null && !isNaN(Number(val)))
+                  ? Math.round(Number(val) * 100) / 100
+                  : null;
+              }),
               games_count: dates.map(date => statsByDate[date].games_count),
             }
           };
@@ -234,10 +249,13 @@ const ProgressCharts = () => {
                     tooltip: {
                       formatter: (value) => {
                         const index = data.y[stat].indexOf(value);
+                        // Redondea el valor si es promedio
+                        const isAvg = stat.startsWith('avg_');
+                        const displayValue = isAvg ? Number(value).toFixed(2) : value;
                         return `
-                          ${value} ${stat.includes('score') ? 'pts' : stat.includes('errors') ? 'errores' : 'rachas'}
-                          (Fecha: ${data.x[index]})
-                        `;
+      ${displayValue} ${stat.includes('score') ? 'pts' : stat.includes('errors') ? 'errores' : 'rachas'}
+      (Fecha: ${data.x[index]})
+    `;
                       }
                     }
                   }]}
