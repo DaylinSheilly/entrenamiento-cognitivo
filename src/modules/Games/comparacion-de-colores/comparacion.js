@@ -21,7 +21,7 @@ const MAX_LEVEL = 4;
 
 const GAME_TIME = 45;
 
-const CognitiveInhibitionGame = () => {
+const CognitiveInhibitionGame = ({ onGameEnd }) => {
     const [gameState, setGameState] = useState({
         timeLeft: GAME_TIME,
         score: 50,
@@ -38,6 +38,7 @@ const CognitiveInhibitionGame = () => {
         gameOver: false,
         feedbackColor: null,  // Nuevo estado para mostrar aciertos/errores
     });
+    const [maxStreak, setMaxStreak] = useState(0);
 
     const [countdown, setCountdown] = useState(null);
     const [reactionTimes, setReactionTimes] = useState([]);
@@ -45,6 +46,40 @@ const CognitiveInhibitionGame = () => {
 
     const [lastGeneratedColor, setLastGeneratedColor] = useState(null);
     const timerRef = useRef(null);
+    const isHandlingGameEnd = useRef(false);
+
+    // FUNCIONES DE REGISTRO DE ESTADISTICAS -------------------------------------------- //
+
+    const gameData = {
+        game_name: "Comparación de colores",
+        level: gameState.maxLevelReached,
+        difficulty: gameState.maxLevelReached <= 2 ? "fácil" : gameState.maxLevelReached <= 3 ? "medio" : "difícil",
+        actions_taken: gameState.totalCount,
+        accuracy: Number(precision),
+        streaks: maxStreak,
+        errors: gameState.totalErrors,
+        score: gameState.score
+    };
+
+    const handleGameEnd = () => {
+        // Envía los datos al GameLayout
+        // console.log("Datos del juego:", gameData);
+        onGameEnd(gameData);
+    };
+
+    useEffect(() => {
+        if (gameState.gameOver && !isHandlingGameEnd.current) {
+            isHandlingGameEnd.current = true;
+            handleGameEnd();
+            isHandlingGameEnd.current = false;
+        }
+    }, [gameState.gameOver]);
+
+    useEffect(() => {
+        if (gameState.consecutiveCorrect > maxStreak) {
+            setMaxStreak(gameState.consecutiveCorrect);
+        }
+    }, [gameState.consecutiveCorrect, maxStreak]);
 
     const startCountdown = () => {
         if (timerRef.current) clearInterval(timerRef.current); // Limpiar cualquier temporizador previo
@@ -167,9 +202,6 @@ const CognitiveInhibitionGame = () => {
                     return;
                 }
 
-                console.log("⏳ Tiempo inicial:", reactionStartTime.current);
-                console.log("⏳ Tiempo actual:", reactionEndTime);
-
                 switch (gameState.level) {
                     case 1:
                         // Nivel 1: Coincidencia exacta de colores.
@@ -203,7 +235,6 @@ const CognitiveInhibitionGame = () => {
                 const playerCorrect = event.key === correctKey;
 
                 const reactionTime = reactionEndTime - reactionStartTime.current;
-                console.log("⏱ Tiempo de reacción calculado:", reactionTime);
                 setReactionTimes(prevTimes => [...prevTimes, reactionTime]);
 
                 setGameState(prev => {
@@ -286,26 +317,20 @@ const CognitiveInhibitionGame = () => {
     }, [gameState.gameStarted]);
 
     const calculateReactionTime = () => {
-        console.log("Calculando tiempo de reacción...");
 
         if (!reactionTimes || reactionTimes.length === 0) {
-            console.log("No hay tiempos de reacción registrados.");
             return 0;
         }
 
         // Filtrar valores no numéricos o inválidos
         const validTimes = reactionTimes.filter(time => typeof time === "number" && !isNaN(time));
-        console.log("Tiempos válidos:", validTimes);
 
         if (validTimes.length === 0) {
-            console.log("No hay tiempos de reacción válidos.");
             return 0;
         }
 
         const sum = validTimes.reduce((acc, time) => acc + time, 0);
         const average = parseFloat((sum / validTimes.length).toFixed(2));
-
-        console.log(`Suma total: ${sum}, Cantidad: ${validTimes.length}, Promedio: ${average}`);
 
         return average;
     };
@@ -315,14 +340,34 @@ const CognitiveInhibitionGame = () => {
             {gameState.gameOver ? (
                 <div className="comparacion-fin-juego-container">
                     <h1>Fin del juego</h1>
-                    <p>🕒 Tiempo total de juego: {GAME_TIME} segundos</p>
-                    <p>🏅 <strong>Puntaje final:</strong> {gameState.score}</p>
-                    <p>🎯 <strong>Nivel máximo:</strong> {gameState.maxLevelReached}</p>
-                    <p>✅ Correctas: {gameState.correctCount} de {gameState.totalCount}</p>
-                    <p>❌ Errores: {gameState.totalErrors}</p>
-                    <p>📊 Precisión: {precision}%</p>
-                    <p>⭐ <strong>Estrellas obtenidas:</strong> {gameState.stars}</p>
-                    <p>🕒 Tiempo de reacción: {(calculateReactionTime() / 1000).toFixed(2)} s</p>
+                    <div className="comparacion-stats-table-wrapper">
+                        <table className="comparacion-stats-table">
+                            <thead>
+                                <tr>
+                                    <th>⏱️ Tiempo total</th>
+                                    <th>🎯 Puntaje final</th>
+                                    <th>🏆 Nivel máximo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{GAME_TIME} s</td>
+                                    <td>{gameState.score}</td>
+                                    <td>{gameState.maxLevelReached}</td>
+                                </tr>
+                                <tr>
+                                    <td>✅ {gameState.correctCount} correctas</td>
+                                    <td>❌ {gameState.totalErrors} errores</td>
+                                    <td>📊 Precisión: {precision}%</td>
+                                </tr>
+                                <tr>
+                                    <td colSpan={3}>
+                                        🕒 Tiempo de reacción promedio: {(calculateReactionTime() / 1000).toFixed(2)} s
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                     <button onClick={startCountdown}>
                         Jugar de nuevo
                     </button>
@@ -338,6 +383,20 @@ const CognitiveInhibitionGame = () => {
                 )
             ) : (
                 <div>
+                    <section className="comparacion-info-row">
+                        <div className="stat-item">
+                            <strong>Puntaje:</strong> <span>{gameState.score}</span>
+                        </div>
+                        <div className="stat-item">
+                            <strong>Errores:</strong> <span>{gameState.totalErrors}</span>
+                        </div>
+                        <div className="stat-item">
+                            <strong>Tiempo:</strong> <span>{gameState.timeLeft}s</span>
+                        </div>
+                    </section>
+                    <div className="stat-item">
+                        <strong>Nivel:</strong> <span>{gameState.level}</span>
+                    </div>
                     <div className="comparacion-game-app comparacion-justify-between mb-4" style={{ backgroundColor: gameState.feedbackColor || "#9ebde6" }}>
                         <div
                             className="comparacion-canvas-contenedor w-1/2 mr-2 p-4 text-center"
