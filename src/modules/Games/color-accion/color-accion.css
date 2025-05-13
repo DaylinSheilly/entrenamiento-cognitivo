@@ -9,7 +9,11 @@
   background-color: #fff;
   color: #ffffff;
   margin: 0;
-  padding: 20px;
+}
+
+.concentrarse-body-bordered {
+  border: 4px solid #8e44ad;
+  border-radius: 26px;
 }
 
 .concentrarse-game-container {
@@ -56,7 +60,7 @@
   text-align: center;
   padding: 2rem;
   background-color: #9ebde6;
-  border: 2px solid #f0a500;
+  border: 2px solid #8e44ad;
   border-radius: 15px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   margin: 2rem;
@@ -76,6 +80,101 @@
 .concentrarse-start-screen button:hover {
   background-color: #2980b9;
   transform: translateY(-2px);
+}
+
+.concentrarse-info-row {
+  
+  position: absolute;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f8f6fb;
+  border: 2px solid #8e44ad;
+  border-radius: 15px;
+  color: black;
+  font-family: 'Arial', sans-serif;
+  box-shadow: 0 4px 6px #8e44ad22;
+  width: fit-content;
+  max-width: 98vw;
+  margin: 1.2rem auto 1.2rem auto;
+  padding: 0.1rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.1;
+  gap: 1.5rem;
+  position: absolute;
+  min-height: 44px;
+  top: 0;
+}
+
+.stat-item {
+  flex: none;
+  text-align: center;
+  white-space: nowrap;
+  padding: 0 0.4rem;
+}
+
+.concentrarse-stats-table-wrapper {
+  margin: 0 auto 2rem auto;
+  overflow-x: auto;
+}
+
+.concentrarse-stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #f8f6fb;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px #8e44ad22;
+  margin-top: 1.5rem;
+  font-family: inherit;
+  font-size: 1.08rem;
+  min-width: 260px;
+}
+
+.concentrarse-stats-table th {
+  background: #8e44ad;
+  color: #fff;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #6c3483;
+}
+
+.concentrarse-stats-table td {
+  background: #f3eafc;
+  color: #333;
+  font-weight: 500;
+}
+
+.concentrarse-stats-table tr:nth-child(even) td {
+  background: #ede1f8;
+}
+
+.concentrarse-stats-table td,
+.concentrarse-stats-table th {
+  padding: 0.7rem 0.4rem;
+  text-align: center;
+  border-bottom: 1px solid #8e44ad22;
+}
+
+.concentrarse-stats-table tr:last-child td {
+  border-bottom: none;
+}
+
+@media (max-width: 600px) {
+  .concentrarse-info-row {
+    font-size: 0.95rem;
+    padding: 0.15rem 0.2rem;
+    gap: 0.7rem;
+  }
+
+  .concentrarse-stats-table th,
+  .concentrarse-stats-table td {
+    font-size: 0.97rem;
+    padding: 0.5rem 0.1rem;
+  }
 }
 
 /* Score */
@@ -142,6 +241,7 @@
   from {
     top: 50%;
   }
+
   to {
     top: -50%;
   }
@@ -151,6 +251,7 @@
   from {
     top: 50%;
   }
+
   to {
     top: 150%;
   }
@@ -160,6 +261,7 @@
   from {
     left: 50%;
   }
+
   to {
     left: -50%;
   }
@@ -169,6 +271,7 @@
   from {
     left: 50%;
   }
+
   to {
     left: 150%;
   }
@@ -218,13 +321,12 @@
 .fin-juego-boton:hover {
   background-color: #1e40af;
 }
-  
+
 .concentrarse-fin-juego-container button {
   background-color: #75e78e;
   border: 2px solid #61bd75;
   color: white;
   padding: 12px 30px;
-  border: none;
   border-radius: 25px;
   cursor: pointer;
   font-size: 16px;
@@ -232,11 +334,14 @@
   text-transform: uppercase;
   transition: all 0.3s ease;
   margin-top: 15px;
+  box-shadow: 0 2px 8px #0002;
 }
 
 .concentrarse-fin-juego-container button:hover {
   background-color: #61bd75;
   transform: translateY(-2px);
+  color: #fff;
+  transform: translateY(-2px) scale(1.04);
 }
 
 .concentrarse-countdown {
@@ -255,6 +360,7 @@
     opacity: 0;
     transform: translate(-50%, -60%);
   }
+
   to {
     opacity: 1;
     transform: translate(-50%, -50%);

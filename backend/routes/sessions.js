@@ -195,8 +195,8 @@ router.post('/start', checkJwt, getInternalUserId, async (req, res) => {
 
     // Crear nueva sesión
     const newSession = await client.query(
-      `INSERT INTO "Sessions" (id_usuario, start_time) 
-       VALUES ($1, NOW()) 
+      `INSERT INTO "Sessions" (id_usuario, start_time, total_games) 
+       VALUES ($1, NOW(), 0) 
        RETURNING id_session`,
       [internalUserId]
     );
