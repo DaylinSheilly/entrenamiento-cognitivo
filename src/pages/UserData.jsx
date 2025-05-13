@@ -46,6 +46,7 @@ const PerfilUsuario = () => {
     const theme = useTheme();
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    const [juegoMasJugado, setJuegoMasJugado] = useState(null);
 
     const [formData, setFormData] = useState({
         nombre_usuario: '',
@@ -94,17 +95,28 @@ const PerfilUsuario = () => {
             console.log("[PerfilUsuario] Iniciando carga de datos...");
             try {
                 const token = await getAccessTokenSilently();
-                const [perfilRes, progresoRes] = await Promise.all([
+                const [perfilRes, progresoRes, playsRes] = await Promise.all([
                     axios.get('http://localhost:5000/auth/me', {
                         headers: { Authorization: `Bearer ${token}` }
                     }),
                     axios.get('http://localhost:5000/games/max-scores', {
                         headers: { Authorization: `Bearer ${token}` }
+                    }),
+                    axios.get('http://localhost:5000/games/plays-by-game', {
+                        headers: { Authorization: `Bearer ${token}` }
                     })
                 ]);
-                console.log("[PerfilUsuario] Datos recibidos");
+
                 setFormData(perfilRes.data);
                 setProgressData(progresoRes.data);
+
+                const gameCountsData = playsRes.data;
+                const mostPlayedGame = Object.entries(gameCountsData)
+                    .reduce((max, [game, count]) =>
+                        (!max || count > max.count) ? { game_name: game, count } : max
+                        , null);
+
+                setJuegoMasJugado(mostPlayedGame);
             } catch (error) {
                 console.error("[PerfilUsuario] Error al cargar datos:", error);
                 if (error.response?.status === 404) {
@@ -358,10 +370,12 @@ const PerfilUsuario = () => {
                             </Grid>
                             <Grid item xs={12} sm={4}>
                                 <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                                    Mejor puntuación global
+                                    Juego más veces jugado
                                 </Typography>
                                 <Typography variant="h5" color="secondary">
-                                    {Math.max(...progressData.map(p => p.max_score), 0)}
+                                    {juegoMasJugado
+                                        ? `${juegoMasJugado.game_name} (${juegoMasJugado.count})`
+                                        : "N/A"}
                                 </Typography>
                             </Grid>
                             <Grid item xs={12} sm={4}>
