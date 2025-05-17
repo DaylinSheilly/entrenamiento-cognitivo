@@ -3,32 +3,25 @@ const express = require('express');
 const router = express.Router();
 const { Pool } = require('pg');
 const { body, param, validationResult } = require('express-validator');
-const jwt = require('jsonwebtoken');
+const { auth } = require('express-oauth2-jwt-bearer');
+const axios = require('axios');
 
 // 1. Configuración mejorada del Pool de PostgreSQL
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' 
-    ? { rejectUnauthorized: true } 
+  ssl: process.env.NODE_ENV === 'production'
+    ? { rejectUnauthorized: true }
     : false,
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
 });
 
-// 2. Middleware de autenticación JWT
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  
-  if (!token) return res.sendStatus(401);
-
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403);
-    req.user = user;
-    next();
-  });
-};
+const checkJwt = auth({
+  audience: 'https://api.neurosite.com',
+  issuerBaseURL: 'https://dev-fynybihn682z8p6r.us.auth0.com/',
+  tokenSigningAlg: 'RS256'
+});
 
 // 3. Middleware de validación
 const validateRequest = (req, res, next) => {
@@ -42,7 +35,7 @@ const validateRequest = (req, res, next) => {
 // 4. Middleware de manejo de errores global
 const errorHandler = (err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ 
+  res.status(500).json({
     error: 'Error interno del servidor',
     details: process.env.NODE_ENV === 'development' ? err.message : null
   });
@@ -50,14 +43,27 @@ const errorHandler = (err, req, res, next) => {
 
 // 5. Middleware para verificar la propiedad de la sesión
 const checkSessionOwnership = async (req, res, next) => {
-  const { id } = req.params; // Usa "id" (nombre del parámetro en la ruta)
-  const userId = req.user.userId;
+  const { id } = req.params;
 
   try {
+    // Necesitarás mapear el Auth0 userId (sub) a tu ID de usuario interno
+    // Opción 1: Guarda el sub de Auth0 en tu tabla Users
+    // Opción 2: Crea una tabla de mapeo Auth0ID -> UserID
+
+    const userMapping = await pool.query(
+      `SELECT id_usuario FROM "Users" WHERE auth0_id = $1`,
+      [req.auth.payload.sub]
+    );
+
+    if (!userMapping.rows.length) {
+      return res.status(403).json({ error: 'Usuario no encontrado' });
+    }
+
+    const internalUserId = userMapping.rows[0].id_usuario;
+
     const session = await pool.query(
-      `SELECT 1 FROM "Sessions" 
-       WHERE id_session = $1 AND id_usuario = $2`,
-      [id, userId]
+      `SELECT 1 FROM "Sessions" WHERE id_session = $1 AND id_usuario = $2`,
+      [id, internalUserId]
     );
 
     if (!session.rows.length) {
@@ -70,16 +76,43 @@ const checkSessionOwnership = async (req, res, next) => {
   }
 };
 
-// Nuevo endpoint GET /sessions/active
-router.get('/active', authenticateToken, async (req, res, next) => {
+const getInternalUserId = async (req, res, next) => {
   try {
+    const auth0UserId = req.auth.payload.sub;
+    const userResult = await pool.query(
+      'SELECT id_usuario FROM "Users" WHERE auth0_id = $1',
+      [auth0UserId]
+    );
+
+    if (!userResult.rows.length) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    req.internalUserId = userResult.rows[0].id_usuario;
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Nuevo endpoint GET /sessions/active
+router.get('/active', checkJwt, async (req, res, next) => {
+  try {
+    const auth0UserId = req.auth.payload.sub;
+    const userResult = await pool.query(
+      'SELECT id_usuario FROM "Users" WHERE auth0_id = $1',
+      [auth0UserId]
+    );
+    if (!userResult.rows.length) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    const internalUserId = userResult.rows[0].id_usuario;
     const result = await pool.query(
       `SELECT id_session FROM "Sessions"
        WHERE id_usuario = $1 AND end_time IS NULL
        ORDER BY start_time DESC LIMIT 1`,
-      [req.user.userId]
+      [internalUserId]
     );
-    
     res.json(result.rows[0] || {});
   } catch (error) {
     next(error);
@@ -87,13 +120,12 @@ router.get('/active', authenticateToken, async (req, res, next) => {
 });
 
 // Nuevo endpoint PATCH /sessions/:id/update
-router.patch(
-  '/:id/update',
+router.patch('/:id/update',
   [
     param('id').isUUID(4).withMessage('ID de sesión inválido'),
     body('games_played').isInt({ min: 0 }).withMessage('Valor inválido para juegos jugados')
   ],
-  authenticateToken,
+  checkJwt,
   checkSessionOwnership,
   validateRequest,
   async (req, res, next) => {
@@ -127,57 +159,88 @@ router.patch(
 );
 
 // Endpoint POST /start
-router.post(
-  '/start',
-  authenticateToken,
-  async (req, res, next) => {
-    try {
-      const userId = req.user.userId;
+router.post('/start', checkJwt, getInternalUserId, async (req, res) => {
 
-      const activeSession = await pool.query(
-        `SELECT id_session 
-         FROM "Sessions" 
-         WHERE id_usuario = $1 AND end_time IS NULL
-         ORDER BY start_time DESC
-         LIMIT 1`,
-        [userId]
-      );
-
-      if (activeSession.rows.length > 0) {
-        return res.json({ 
-          id_session: activeSession.rows[0].id_session,
-          is_new: false
-        });
-      }
-
-      const newSession = await pool.query(
-        `INSERT INTO "Sessions" (id_usuario, total_games) 
-         VALUES ($1, 0) 
-         RETURNING id_session, start_time`,
-        [userId]
-      );
-
-      res.status(201).json({
-        id_session: newSession.rows[0].id_session,
-        is_new: true
-      });
-    } catch (error) {
-      next(error);
+  const client = await pool.connect().catch(error => {
+    console.error("Error al conectar:", error);
+    return res.status(500).json({ message: "Error de conexión con la base de datos" });
+  });
+  try {
+    const auth0UserId = req.auth.payload.sub;
+    const userResult = await pool.query(
+      'SELECT id_usuario FROM "Users" WHERE auth0_id = $1',
+      [auth0UserId]
+    );
+    if (!userResult.rows.length) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
     }
+    const internalUserId = userResult.rows[0].id_usuario;
+
+    // Verificar sesión activa existente
+    const activeSession = await client.query(
+      `SELECT id_session 
+       FROM "Sessions" 
+       WHERE id_usuario = $1 AND end_time IS NULL
+       ORDER BY start_time DESC 
+       LIMIT 1`,
+      [internalUserId]
+    );
+
+    if (activeSession.rows.length > 0) {
+      return res.status(409).json({
+        message: "Ya tienes una sesión activa",
+        sessionId: activeSession.rows[0].id_session
+      });
+    }
+
+    // Crear nueva sesión
+    const newSession = await client.query(
+      `INSERT INTO "Sessions" (id_usuario, start_time, total_games) 
+       VALUES ($1, NOW(), 0) 
+       RETURNING id_session`,
+      [internalUserId]
+    );
+
+    await client.query(
+      `UPDATE "Users" 
+       SET 
+         total_sessions = total_sessions + 1,
+         ultima_sesion = NOW()
+       WHERE id_usuario = $1`,
+      [internalUserId]
+    );
+
+    await client.query('COMMIT');
+
+    res.json({
+      id_session: newSession.rows[0].id_session,
+      start_time: newSession.rows[0].start_time
+    });
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error("Error al iniciar sesión de juego:", error);
+    res.status(500).json({
+      message: "Error al iniciar sesión de juego",
+      error: error.message  // Solo para ambiente de desarrollo
+    });
+  } finally {
+    client.release();
   }
-);
+});
 
 // Endpoint PUT /end/:id_session
-router.put(
-  '/end/:id_session',
+router.put('/end/:id_session',
   [
     param('id_session').isUUID(4).withMessage('ID de sesión inválido'),
     body('total_games').isInt({ min: 0 }),
     body('total_trials').isInt({ min: 0 })
   ],
-  authenticateToken,
+  checkJwt,
   validateRequest,
   async (req, res, next) => {
+    const userId = req.auth.payload.sub;
+
     const { id_session } = req.params;
     const { total_games, total_trials } = req.body;
 
@@ -206,20 +269,29 @@ router.put(
 );
 
 // Endpoint GET /user-history/:id_usuario
-router.get(
-  '/user-history/:id_usuario',
+router.get('/user-history/:id_usuario',
   [
     param('id_usuario').isUUID(4).withMessage('ID de usuario inválido')
   ],
-  authenticateToken,
+  checkJwt,
   validateRequest,
   async (req, res, next) => {
+    const userId = req.auth.payload.sub;
     const { id_usuario } = req.params;
     const { page = 1, limit = 10 } = req.query;
 
     try {
+      const auth0UserId = req.auth.payload.sub;
+      const userResult = await pool.query(
+        'SELECT id_usuario FROM "Users" WHERE auth0_id = $1',
+        [auth0UserId]
+      );
+      if (!userResult.rows.length || userResult.rows[0].id_usuario !== id_usuario) {
+        return res.status(403).json({ error: 'Acceso no autorizado' });
+      }
+
       const offset = (page - 1) * limit;
-      
+
       const result = await pool.query(
         `SELECT 
           id_session, 
@@ -253,51 +325,60 @@ router.get(
 );
 
 // Cerrar sesión activa
-router.put(
-  '/end',
-  authenticateToken,
-  async (req, res) => {
-    const client = await pool.connect();
-    try {
-      await client.query('BEGIN');
-      const userId = req.user.userId;
+router.put('/end', checkJwt, async (req, res) => {
+  const auth0UserId = req.auth.payload.sub;
+  const client = await pool.connect();
 
-      // 1. Buscar sesión activa
-      const activeSession = await client.query(
-        `SELECT id_session FROM "Sessions" 
-         WHERE id_usuario = $1 AND end_time IS NULL
-         ORDER BY start_time DESC LIMIT 1`,
-        [userId]
-      );
+  try {
+    await client.query('BEGIN');
 
-      if (!activeSession.rows.length) {
-        return res.status(404).json({ error: 'No hay sesión activa' });
-      }
+    // 1. Cerrar sesión en la base de datos
+    const userResult = await client.query(
+      'SELECT id_usuario FROM "Users" WHERE auth0_id = $1',
+      [auth0UserId]
+    );
 
-      // 2. Actualizar sesión
-      const sessionId = activeSession.rows[0].id_session;
-      const result = await client.query(
-        `UPDATE "Sessions"
-         SET 
-           end_time = NOW(),
-           total_time = EXTRACT(EPOCH FROM (NOW() - start_time))
-         WHERE id_session = $1
-         RETURNING *`,
-        [sessionId]
-      );
-
-      await client.query('COMMIT');
-      res.json(result.rows[0]);
-    } catch (error) {
-      await client.query('ROLLBACK');
-      res.status(500).json({ error: 'Error al cerrar sesión' });
-    } finally {
-      client.release();
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
     }
+
+    const userId = userResult.rows[0].id_usuario;
+
+    // Cerrar TODAS las sesiones activas del usuario
+    await client.query(
+      `UPDATE "Sessions"
+       SET end_time = NOW(),
+           total_time = EXTRACT(EPOCH FROM (NOW() - start_time))
+       WHERE id_usuario = $1 AND end_time IS NULL`,
+      [userId]
+    );
+
+    // 2. Invalidar token de Auth0
+    await axios.post(
+      `https://${process.env.AUTH0_DOMAIN}/oauth/revoke`,
+      new URLSearchParams({
+        client_id: process.env.AUTH0_CLIENT_ID,
+        client_secret: process.env.AUTH0_CLIENT_SECRET,
+        token: req.auth.token
+      }),
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+    );
+
+    await client.query('COMMIT');
+    res.json({ success: true });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error en cierre de sesión:', error);
+    res.status(500).json({
+      error: 'Error al cerrar sesión',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  } finally {
+    client.release();
   }
-);
+});
 
 // Aplicar manejador de errores global
-router.use(errorHandler, checkSessionOwnership);
+router.use(errorHandler);
 
 module.exports = router;

@@ -22,12 +22,12 @@
 }
 
 .compo-info-panel::-webkit-scrollbar-thumb {
-  background: #f0a500;
+  background: #8e44ad;
   border-radius: 4px;
 }
 
 .compo-info-panel::-webkit-scrollbar-thumb:hover {
-  background: #d98c00;
+  background: #6d3186;
 }
 
 .compo-info-panel p {

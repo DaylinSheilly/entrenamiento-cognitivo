@@ -89,8 +89,6 @@ const MemoriaSecuencial = ({ onGameEnd }) => {
     setUserInput([]);
     setSelectedIndices([]);
     setHighlightIndex(-1);
-
-    console.log(newSequence);
   };
 
   const showSequence = () => {

@@ -3,10 +3,12 @@ import './mira-la-direccion.css';
 
 const MiraLaDireccion = () => {
   const [timeLeft, setTimeLeft] = useState(45);
+  const [totalTime, setTotalTime] = useState(45);
   const [score, setScore] = useState(50);
   const [stars, setStars] = useState(0);
   const [totalAnswers, setTotalAnswers] = useState(0);
   const [correctAnswers, setCorrectAnswers] = useState(0);
+  const [errorAnswers, setErrorAnswers] = useState(0);
   const [consecutiveCorrect, setConsecutiveCorrect] = useState(0);
   const [gameStarted, setGameStarted] = useState(false);
   const [gameOver, setGameOver] = useState(false);
@@ -27,6 +29,7 @@ const MiraLaDireccion = () => {
 
   // Manejo del temporizador
   useEffect(() => {
+    if (!gameStarted) return; // No hacer nada si el juego no ha comenzado
     if (timeLeft > 0) {
       const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
       return () => clearTimeout(timer);
@@ -37,6 +40,7 @@ const MiraLaDireccion = () => {
   }, [timeLeft, gameStarted]);
 
   const startGame = () => {
+    setErrorAnswers(0);
     setGameOver(false);
     setGameStarted(true);
     setTimeLeft(45);
@@ -128,6 +132,7 @@ const MiraLaDireccion = () => {
         setStars((prev) => prev + 1);
       }
     } else {
+      setErrorAnswers((prev) => prev + 1);
       setFeedback('incorrect'); // Puedes manejar un feedback rojo si quieres
       setScore((prev) => prev - 50);
       setConsecutiveCorrect(0);
@@ -148,13 +153,36 @@ const MiraLaDireccion = () => {
       {gameOver ? (
         <div className="mira-fin-juego-container">
           <h1>Fin del juego</h1>
-          <p>🎯 Puntaje final: {score}</p>
-          <p>✅ Correctas: {correctAnswers} de {totalAnswers}</p>
-          <p>📊 Precisión: {totalAnswers > 0 ? ((correctAnswers / totalAnswers) * 100).toFixed(2) : "0"}%</p>
-          <p>⭐ Estrellas: {stars}</p>
-          <button onClick={startCountdown}>
-            Jugar de nuevo
-          </button>
+          <div className="mira-stats-table-wrapper">
+            <table className="mira-stats-table">
+              <thead>
+                <tr>
+                  <th>⏱️ Tiempo total</th>
+                  <th>🎯 Puntaje final</th>
+                  <th>🏆 Nivel máximo</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>{totalTime}</td>
+                  <td>{score}</td>
+                  <td>
+                    {totalAnswers}
+                  </td>
+                </tr>
+                <tr>
+                  <td>✅ Correctas: {correctAnswers}</td>
+                  <td>❌ Errores: {errorAnswers}</td>
+                  <td>📊 Precisión: {totalAnswers > 0 ? `${((correctAnswers / totalAnswers) * 100).toFixed(2)}%` : "0%"}</td>
+                </tr>
+                <tr>
+                  <td colSpan={2}>🔁 Total de respuestas: {totalAnswers}</td>
+                  <td>⭐ Estrellas: {stars}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <button onClick={startCountdown}>Jugar de nuevo</button>
         </div>
       ) : !gameStarted ? (
         countdown === null ? ( // Mostrar pantalla de inicio si NO hay cuenta regresiva
@@ -167,9 +195,17 @@ const MiraLaDireccion = () => {
         )
       ) : (
         <>
-          <h2 className="mira-score">🎯 Puntaje: {score}</h2>
-          <h3 className="mira-stars">⭐ Estrellas: {stars}</h3>
-          <h3 className="mira-timer">⏳ Tiempo restante: {timeLeft}s</h3>
+          <section className="mira-info-row">
+            <div className="stat-item">
+              <strong>Puntaje:</strong> <span>{score}</span>
+            </div>
+            <div className="stat-item">
+              <strong>Errores:</strong> <span>{errorAnswers}</span>
+            </div>
+            <div className="stat-item">
+              <strong>Tiempo restante:</strong> <span>{timeLeft}s</span>
+            </div>
+          </section>
 
           <div className="mira-grid">
             {Array.isArray(objects.objects) && objects.objects.length > 0 ? (

@@ -1,6 +1,7 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from 'react-router-dom';
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
 import {
   Box,
   Button,
@@ -8,22 +9,30 @@ import {
   Typography,
   Alert,
   Paper,
-  Avatar
+  Avatar,
+  InputAdornment,
+  IconButton,
+  CircularProgress,
+  Link
 } from "@mui/material";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import { useAuth } from "../../context/AuthContext";
+import { 
+  LockOutlined as LockOutlinedIcon,
+  Visibility,
+  VisibilityOff,
+  Email
+} from "@mui/icons-material";
 
 const Login = () => {
   const [formData, setFormData] = useState({
     correo_electronico: "",
     contraseña: "",
   });
-  const { login } = useAuth(); // Hook de autenticación
-
-  const [message, setMessage] = useState(""); // Estado para mensajes de error/éxito
-  const [messageType, setMessageType] = useState(""); // "success" o "error"
-
-  const navigate = useNavigate(); // Hook de navegación
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("");
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   // Manejar cambios en los inputs del formulario
   const handleChange = (e) => {
@@ -33,16 +42,32 @@ const Login = () => {
   // Manejar envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage(""); // Limpiar mensaje anterior
-
+    setMessage("");
+    setLoading(true);
     try {
       const response = await axios.post("http://localhost:5000/auth/login", formData);
-
+      
       if (response.data.token) {
-        login(response.data.token, response.data.user); // <-- usa el contexto
+        // Verificar que todos los campos necesarios estén presentes
+        const userData = response.data.user;
+        const requiredFields = [
+          'id_usuario', 'nombre_usuario', 'correo_electronico', 
+          'fecha_registro', 'estado_cuenta', 'edad', 
+          'fecha_nacimiento', 'genero', 'nivel_educativo', 
+          'pais', 'ultima_sesion'
+        ];
+        
+        // Validación opcional de campos
+        const missingFields = requiredFields.filter(field => !userData.hasOwnProperty(field));
+        if (missingFields.length > 0) {
+          console.warn("Campos faltantes en datos de usuario:", missingFields);
+        }
+        
+        // Actualizar estado de autenticación con todos los datos
+        login(response.data.token, userData);
         setMessage("Inicio de sesión exitoso");
         setMessageType("success");
-        setTimeout(() => navigate("/home"), 1000);
+        setTimeout(() => navigate("/home"), 2000);
       } else {
         setMessage("Error: No se recibió el token");
         setMessageType("error");
@@ -50,6 +75,8 @@ const Login = () => {
     } catch (error) {
       setMessage(error.response?.data?.message || "Error desconocido en el servidor");
       setMessageType("error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -63,12 +90,12 @@ const Login = () => {
         justifyContent: "center"
       }}
     >
-      <Paper elevation={6} sx={{ p: 4, maxWidth: 400, width: "100%" }}>
+      <Paper elevation={6} sx={{ p: 4, maxWidth: 400, width: "100%", borderRadius: 2 }}>
         <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <Avatar sx={{ m: 1, bgcolor: "primary.main" }}>
-            <LockOutlinedIcon />
+          <Avatar sx={{ m: 1, bgcolor: "primary.main", width: 56, height: 56 }}>
+            <LockOutlinedIcon fontSize="large" />
           </Avatar>
-          <Typography component="h1" variant="h5" sx={{ mb: 2 }}>
+          <Typography component="h1" variant="h5" sx={{ mb: 2, fontWeight: 600 }}>
             Iniciar sesión
           </Typography>
           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1, width: "100%" }}>
@@ -83,6 +110,13 @@ const Login = () => {
               autoFocus
               value={formData.correo_electronico}
               onChange={handleChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Email color="action" />
+                  </InputAdornment>
+                )
+              }}
             />
             <TextField
               margin="normal"
@@ -90,13 +124,30 @@ const Login = () => {
               fullWidth
               name="contraseña"
               label="Contraseña"
-              type="password"
+              type={showPassword ? "text" : "password"}
               autoComplete="current-password"
               value={formData.contraseña}
               onChange={handleChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LockOutlinedIcon color="action" />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                )
+              }}
             />
             {message && (
-              <Alert severity={messageType === "success" ? "success" : "error"} sx={{ mt: 2 }}>
+              <Alert severity={messageType} sx={{ mt: 2 }}>
                 {message}
               </Alert>
             )}
@@ -105,10 +156,26 @@ const Login = () => {
               fullWidth
               variant="contained"
               color="primary"
-              sx={{ mt: 3, mb: 2 }}
+              sx={{ mt: 3, mb: 2, py: 1.2, fontSize: "1rem" }}
+              disabled={loading}
             >
-              Ingresar
+              {loading ? (
+                <>
+                  <CircularProgress size={24} sx={{ mr: 1 }} color="inherit" />
+                  Ingresando...
+                </>
+              ) : "Ingresar"}
             </Button>
+            
+            <Box sx={{ mt: 2, textAlign: "center" }}>
+              <Link 
+                href="/register" 
+                variant="body2"
+                sx={{ fontWeight: 500 }}
+              >
+                ¿No tienes cuenta? Regístrate aquí
+              </Link>
+            </Box>
           </Box>
         </Box>
       </Paper>

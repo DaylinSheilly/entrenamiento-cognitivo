@@ -33,8 +33,8 @@ const gameInfo = {
     description: "Recuerda los patrones.",
     instructions: "Haz clic solo en los cuadrados que se iluminaron."
   },
-  "/games/juego-de-atencion": {
-    title: "Juego de Atención",
+  "/games/observa-y-compara": {
+    title: "Observa y Compara",
     description: "Pon a prueba tu capacidad de concentración.",
     instructions: "Pon atención a la figura que se presenta. Debes identificar si es igual o diferente a la mostrada anteriormente."
   },
@@ -79,7 +79,7 @@ const gameInfo = {
     "description": "Identifica los objetos en el tablero en constante movimiento.",
     "instructions": "Observa el tablero que apaercen en el tablero; luego cuando nuevos objetos aparezcan y se mezclen, debes identificar los primeros al detenerse. Si el tiempo acaba tienes 10 segundos para terminar el nivel en el que estés."
   },
-  "/games/concentrarse-en-el-objetivo": {
+  "/games/color-y-accion": {
     "title": "Concentrate en el Objetivo",
     "description": "Pon a prueba tu concentración revisando el color y dirección de cada círculo.",
     "instructions": "Observa cada círculo: si es verde, presiona la flecha del teclado en la dirección de su movimiento; si es amarillo, presiona la tecla que corresponde a la flecha que aparece en su interior."
