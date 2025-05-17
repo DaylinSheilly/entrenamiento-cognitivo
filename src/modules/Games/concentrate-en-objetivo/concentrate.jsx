@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import './concentrate.css';
 
 const GAME_TIME = 45; // Tiempo total del juego en segundos
+const GRID_SIZE = 520; // Tamaño fijo del grid
 
-const ConcentranteEnElObjetivo = () => {
+const ConcentranteEnElObjetivo = ({ onGameEnd }) => {
   const [showIntro, setShowIntro] = useState(true); // Nueva vista inicial
   const [gameStarted, setGameStarted] = useState(false);
   const [round, setRound] = useState(0);
@@ -23,10 +24,39 @@ const ConcentranteEnElObjetivo = () => {
   const directions = ['↑', '↓', '←', '→'];
   const [targetColor, setTargetColor] = useState('');
   const targetDirectionRef = useRef();
-  const [consecutiveCorrectAnswers, setConsecutiveCorrectAnswers] = useState(0);
-  const [bonusMultiplier, setBonusMultiplier] = useState(100); // Comienza en 100
-  const [startTime, setStartTime] = useState(null);
+  const [maxStreak, setMaxStreak] = useState(0);
   const [reactionTimes, setReactionTimes] = useState([]);
+  const startTimeRef = useRef(null);
+  const isGenerating = useRef(false);
+  const timeoutRef = useRef();
+  const isHandlingGameEnd = useRef(false);
+
+  // FUNCIONES DE REGISTRO DE ESTADISTICAS -------------------------------------------- //
+
+  const gameData = {
+    game_name: "Concéntrate en el objetivo",
+    level: stage,  // Nivel actual alcanzado
+    difficulty: stage <= 2 ? "fácil" : stage <= 4 ? "medio" : "difícil",
+    actions_taken: totalCards,  // Total de interacciones del jugador
+    accuracy: totalCards > 0 ? Number(((correctAnswers / totalCards) * 100).toFixed(2)) : 0,
+    streaks: maxStreak,  // Máxima racha de aciertos consecutivos
+    errors: totalErrors,
+    score: score
+  };
+
+  const handleGameEnd = () => {
+    // Envía los datos al GameLayout
+    // console.log("Datos del juego:", gameData);
+    onGameEnd(gameData);
+  };
+
+  useEffect(() => {
+    if (gameOver && !isHandlingGameEnd.current) {
+      isHandlingGameEnd.current = true;
+      handleGameEnd();
+      isHandlingGameEnd.current = false;
+    }
+  }, [gameOver]);
 
   const startCountdown = () => {
     setGameOver(false);
@@ -44,43 +74,68 @@ const ConcentranteEnElObjetivo = () => {
     }, 1000);
   };
 
-  const handleKeyPress = (e) => {
-    const directionMap = {
-      ArrowUp: '↑',
-      ArrowDown: '↓',
-      ArrowLeft: '←',
-      ArrowRight: '→',
+  useEffect(() => {
+    if (consecutiveCorrect > maxStreak) {
+      setMaxStreak(consecutiveCorrect);
+    }
+  }, [consecutiveCorrect]);
+
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (!gameStarted || gameOver) return;
+
+      const directionMap = {
+        ArrowUp: '↑',
+        ArrowDown: '↓',
+        ArrowLeft: '←',
+        ArrowRight: '→'
+      };
+
+      const direction = directionMap[e.key];
+      if (direction) handleInput(direction);
     };
-    if (directionMap[e.key]) handleInput(directionMap[e.key]);
-  };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [gameStarted, gameOver]); // Solo recrear cuando cambien estos estados
 
   const startGame = () => {
+    // Reiniciar todos los estados principales
     setGameStarted(true);
+    setGameOver(false);
     setStage(1);
+    setRound(0);
     setScore(50);
     setCorrectAnswers(0);
     setTotalErrors(0);
     setTotalCards(0);
-    setGameOver(false);
+    setMaxStreak(0);
     setStars(0);
     setTargetDirection('');
     setCountdown(null);
     setTimer(GAME_TIME);
     setCircles([]);
     setTargetColor('');
-    setConsecutiveCorrectAnswers(0);
-    setBonusMultiplier(100);
-    setReactionTimes([]);
 
+    // Reiniciar estados secundarios y referencias
+    setConsecutiveCorrect(0);
+    setReactionTimes([]);
+    targetDirectionRef.current = null;
+    startTimeRef.current = null;
+
+    // Generar primeros círculos
     generateCircles();
-    window.addEventListener('keydown', handleKeyPress);
   };
 
   useEffect(() => {
-    if (gameOver) {
-      window.removeEventListener('keydown', handleKeyPress);
+    return () => clearTimeout(timeoutRef.current);
+  }, []);
+
+  useEffect(() => {
+    if (circles.length > 0) {
+      startTimeRef.current = Date.now();
     }
-  }, [gameOver]);
+  }, [circles]);
 
   useEffect(() => {
     const countdown = setInterval(() => {
@@ -102,14 +157,21 @@ const ConcentranteEnElObjetivo = () => {
   }, [timer]);
 
   useEffect(() => {
+    if (!gameStarted || isGenerating.current) return;
+
+    isGenerating.current = true;
     generateCircles();
-  }, [stage, round]);
+    const timer = setTimeout(() => {
+      isGenerating.current = false;
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [round]);
 
   const generateCircles = () => {
-    console.log(stage);
     let newCircles = [];
-    const numColumns = Math.max(1, Math.floor(window.innerWidth / (circleSize + 20)) - 6);
-    const numRows = Math.max(1, Math.floor(window.innerHeight / (circleSize + 20)));
+    const numColumns = Math.max(1, Math.floor(GRID_SIZE / (circleSize + 20)));
+    const numRows = Math.max(1, Math.floor(GRID_SIZE / (circleSize + 20)));
     const positions = [];
     let targetDir;
 
@@ -119,20 +181,20 @@ const ConcentranteEnElObjetivo = () => {
         setTargetDirection(targetDir);
         targetDirectionRef.current = targetDir;
 
-        console.log(`Debes presionar la flecha: ${targetDir}`);
+        // console.log(`Debes presionar la flecha: ${targetDir}`);
 
         newCircles = Array.from({ length: numColumns }).map(() => ({
           direction: targetDir,
-          color: 'white',
+          color: 'black', // Color de fondo
+          arrowColor: 'white' // Color de flecha por defecto
         }));
-        console.log(`nivel: ${stage}`);
         break;
 
       case 2:
         targetDir = directions[Math.floor(Math.random() * directions.length)];
         setTargetDirection(targetDir);
         targetDirectionRef.current = targetDir;
-        console.log(`Debes presionar la flecha común: ${targetDir}`);
+        // console.log(`Debes presionar la flecha común: ${targetDir}`);
 
         const numTarget = Math.ceil(numColumns * 0.6);
         const mixedDirections = [...Array(numTarget).fill(targetDir),
@@ -140,7 +202,8 @@ const ConcentranteEnElObjetivo = () => {
           .map(dir => dir ?? directions[Math.floor(Math.random() * directions.length)]);
         newCircles = mixedDirections.map(direction => ({
           direction,
-          color: 'white',
+          color: 'black', // Color de fondo
+          arrowColor: 'white' // Color de flecha por defecto
         }));
         break;
 
@@ -149,7 +212,7 @@ const ConcentranteEnElObjetivo = () => {
         setTargetDirection(targetDir);
         targetDirectionRef.current = targetDir;
 
-        console.log(`Debes presionar la flecha correcta: ${targetDir}`);
+        // console.log(`Debes presionar la flecha correcta: ${targetDir}`);
 
         // Generar direcciones aleatorias excluyendo la dirección objetivo
         const directionsSet = Array.from({ length: numColumns }).map(() => {
@@ -173,7 +236,8 @@ const ConcentranteEnElObjetivo = () => {
         // Crear los círculos con las direcciones asignadas
         newCircles = directionsSet.map(direction => ({
           direction,
-          color: 'white',
+          color: 'black', // Color de fondo
+          arrowColor: 'white' // Color de flecha por defecto
         }));
 
         // Mezclar los círculos para mayor aleatoriedad
@@ -185,11 +249,12 @@ const ConcentranteEnElObjetivo = () => {
         setTargetDirection(targetDir);
         targetDirectionRef.current = targetDir;
 
-        console.log(`Debes deducir la dirección correcta: ${targetDir}`);
+        // console.log(`Debes deducir la dirección correcta: ${targetDir}`);
 
         newCircles = Array.from({ length: numColumns }).map(() => ({
           direction: '', // No hay flecha visible
-          color: 'white',
+          color: 'black', // Color de fondo
+          arrowColor: 'white' // Color de flecha por defecto
         }));
         break;
 
@@ -198,21 +263,21 @@ const ConcentranteEnElObjetivo = () => {
         setTargetDirection(targetDir);
         targetDirectionRef.current = targetDir;
 
-        console.log(`Busca la flecha ${targetDir}`);
+        const numCircles = Math.min(numColumns * numRows, 30);
 
-        // Generar círculos con fondo negro y flechas blancas en direcciones aleatorias
-        newCircles = Array.from({ length: numColumns * numRows }).map(() => ({
-          direction: directions[Math.floor(Math.random() * directions.length)], // Flecha aleatoria
-          color: 'black', // Fondo negro
-          arrowColor: 'white' // Flechas blancas
+        // 1. Generar círculos con color base negro y flecha blanca
+        newCircles = Array.from({ length: numCircles }).map(() => ({
+          direction: directions[Math.floor(Math.random() * directions.length)],
+          color: 'black', // Color de fondo
+          arrowColor: 'white' // Color de flecha por defecto
         }));
 
-        // Seleccionar un círculo al azar para la flecha verde correcta
-        const targetIndex = Math.floor(Math.random() * newCircles.length);
+        // 2. Seleccionar y modificar el círculo objetivo
+        const targetIndex = Math.floor(Math.random() * numCircles);
         newCircles[targetIndex] = {
-          direction: targetDir, // Flecha apunta a la dirección objetivo
-          color: 'black', // Fondo negro
-          arrowColor: 'blue' // Flecha azul
+          ...newCircles[targetIndex],
+          direction: targetDir,
+          arrowColor: '#00f3ff', // Flecha cyan
         };
 
         break;
@@ -220,11 +285,11 @@ const ConcentranteEnElObjetivo = () => {
 
     setCircles(newCircles.map((circle) => {
       let col, row, xPos, yPos;
-      const margen = numColumns > 1 ? (600 - (numColumns * circleSize)) / (numColumns - 1) : 0; // Espaciado entre círculos
       const offsetTopRows = 1; // Número de filas reservadas para el encabezado
       const minSpacing = circleSize * 1.2; // Espacio mínimo entre círculos
-      const maxWidth = 600 - circleSize; // Límite derecho del área de juego
-      const maxHeight = 550 - circleSize; // Límite inferior del área de juego
+      const margen = numColumns > 1 ? (GRID_SIZE - (numColumns * circleSize)) / (numColumns - 1) : 0;
+      const maxWidth = GRID_SIZE - circleSize;
+      const maxHeight = GRID_SIZE - circleSize;
 
       let isOverlapping;
 
@@ -279,95 +344,65 @@ const ConcentranteEnElObjetivo = () => {
       } while (isOverlapping); // Si se solapan, repetir hasta encontrar una posición válida
 
       positions.push({ col, row, x: xPos, y: yPos }); // Guardar posición con coordenadas
-      return { ...circle, x: xPos, y: yPos, color: "#1a1a1a" }; // Color inicial negro
+      return { ...circle, x: xPos, y: yPos }; // Color inicial negro
     }));
-    setStartTime(Date.now());
   };
 
   const handleInput = (direction) => {
-    console.log(`El jugador presionó: ${direction}`);
-    console.log(`Debes presionar la flecha: ${targetDirectionRef.current}`);
-
-    let isCorrect = false;
-
     const endTime = Date.now();
-    const reactionTime = endTime - startTime;
-    setReactionTimes(prev => [...prev, reactionTime]);
+    const isCorrect = direction === targetDirectionRef.current;
+    setTotalCards(prev => prev + 1);
 
-    isCorrect = direction === targetDirectionRef.current;
-
-    setTotalCards((prev) => prev + 1); // Aumentar total de intentos
+    if (startTimeRef.current) {
+      const reactionTime = endTime - startTimeRef.current;
+      setReactionTimes(prev => [...prev, reactionTime]);
+    }
 
     if (isCorrect) {
-      setCorrectAnswers((prev) => prev + 1);
-      setScore((prev) => prev + 50);
+      setCorrectAnswers(prev => prev + 1);
+      setCircles(prev => prev.map(c => ({ ...c, color: "green" })));
 
-      // Cambiar color a verde
-      setCircles((prev) =>
-        prev.map((circle) => ({ ...circle, color: "green" }))
-      );
+      setConsecutiveCorrect(prev => {
+        const newConsecutive = prev + 1;
 
-      setConsecutiveCorrect((prevConsecutive) => {
-        const updatedConsecutive = prevConsecutive + 1;
+        if ((newConsecutive % 4) === 0) {
+          const bonus = Math.floor(newConsecutive / 4) * 50;
 
-        if (updatedConsecutive % 4 === 0) {
-          const bonus = 100 + ((updatedConsecutive / 4 - 1) * 50);
-          setScore((prev) => prev + bonus);
-          setStars((prev) => prev + 1);
-
-          setTimeout(() => {
-            setStage((prev) => (prev < 5 ? prev + 1 : prev));
-            generateCircles(); // Solo se llama si se sube de nivel
+          clearTimeout(timeoutRef.current); 
+          setStage(prevStage => {
+            const newStage = Math.min(prevStage + 1, 5);
+            setScore(s => s + 50 + bonus);
+            setStars(s => s + 1);
+            return newStage;
+          });
+          timeoutRef.current = setTimeout(() => {
+            setRound(1);
           }, 300);
-        } else {
-          setTimeout(() => {
-            setRound((prev) => prev + 1);
-            generateCircles(); // Solo se llama si NO se sube de nivel
-          }, 300);
+          return newConsecutive;
         }
-
-        return updatedConsecutive;
+        setScore(prev => prev + 50);
+        return newConsecutive;
       });
     } else {
-      setTotalErrors((prev) => prev + 1);
-      setScore((prev) => prev - 50);
+      setTotalErrors(prev => prev + 1);
+      setScore(prev => Math.max(0, prev - 50));
       setConsecutiveCorrect(0);
-
-      // Cambiar color a rojo
-      setCircles((prev) =>
-        prev.map((circle) => ({ ...circle, color: "red" }))
-      );
-
-      setTimeout(() => {
-        setRound((prev) => prev + 1);
-        generateCircles(); // Nueva ronda tras error
+      setCircles(prev => prev.map(c => ({ ...c, color: "red" })));
+    }
+    if (consecutiveCorrect + 1 % 4 !== 0) {
+      timeoutRef.current = setTimeout(() => {
+        setRound(prev => prev + 1);
       }, 300);
     }
   };
 
   const calculateReactionTime = () => {
-    console.log("Calculando tiempo de reacción...");
+    if (!reactionTimes || reactionTimes.length === 0) return 0;
 
-    if (!reactionTimes || reactionTimes.length === 0) {
-      console.log("No hay tiempos de reacción registrados.");
-      return 0;
-    }
-
-    // Filtrar valores no numéricos o inválidos
-    const validTimes = reactionTimes.filter(time => typeof time === "number" && !isNaN(time));
-    console.log("Tiempos válidos:", validTimes);
-
-    if (validTimes.length === 0) {
-      console.log("No hay tiempos de reacción válidos.");
-      return 0;
-    }
-
-    const sum = validTimes.reduce((acc, time) => acc + time, 0);
-    const average = parseFloat((sum / validTimes.length).toFixed(2));
-
-    console.log(`Suma total: ${sum}, Cantidad: ${validTimes.length}, Promedio: ${average}`);
-
-    return average;
+    const validTimes = reactionTimes
+      .filter(time => typeof time === "number" && !isNaN(time)); // Filtrar tiempos válidos
+    if (validTimes.length === 0) return 0;
+    return validTimes.reduce((acc, time) => acc + time, 0) / validTimes.length;
   };
 
   return (
@@ -376,55 +411,94 @@ const ConcentranteEnElObjetivo = () => {
         {gameOver ? (
           <div className="concentrate-fin-juego-container">
             <h1>Fin del juego</h1>
-            <p>🕒 Tiempo total de juego: {GAME_TIME} segundos</p>
-            <p>🏅 <strong>Puntaje final:</strong> {score}</p>
-            <p>✅ Correctas: {correctAnswers} de {totalCards}</p>
-            <p>❌ Errores: {totalErrors}</p>
-            <p>📊 Precisión: {totalCards > 0 ? ((correctAnswers / totalCards) * 100).toFixed(2) : "0"}%</p>
-            <p>🕒 Tiempo de reacción: {(calculateReactionTime() / 1000).toFixed(2)} s</p>
+            <div className="concentrate-stats-table-wrapper">
+              <table className="concentrate-stats-table">
+                <thead>
+                  <tr>
+                    <th>⏱️ Tiempo total</th>
+                    <th>🎯 Puntaje final</th>
+                    <th>🏆 Nivel máximo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>{GAME_TIME} s</td>
+                    <td>{score}</td>
+                    <td>{stage}</td>
+                  </tr>
+                  <tr>
+                    <td>✅ {correctAnswers} correctas</td>
+                    <td>❌ {totalErrors} errores</td>
+                    <td>📊 Precisión: {totalCards > 0 ? ((correctAnswers / totalCards) * 100).toFixed(2) : "0"}%</td>
+                  </tr>
+                  <tr>
+                    <td>⭐ {stars} Estrellas obtenidas</td>
+                    <td>⚡ {reactionTimes.filter(t => t < 750).length} {/* Menos de 750ms */}
+                      Respuestas rápidas
+                      {reactionTimes.length > 0 &&
+                        ` (${((reactionTimes.filter(t => t < 750).length / reactionTimes.length) * 100).toFixed(1)}%)`}</td>
+                    <td>🏅 Máxima racha: {maxStreak}</td>
+                  </tr>
+                  <tr>
+                    <td colSpan={3}>
+                      🕒 Tiempo de reacción promedio: {calculateReactionTime() > 0 ?
+                        `${(calculateReactionTime() / 1000).toFixed(2)} s` : "N/A"}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
             <button onClick={startCountdown}>
               Jugar de nuevo
             </button>
           </div>
         ) : !gameStarted ? (
-          countdown === null ? ( // Mostrar pantalla de inicio si NO hay cuenta regresiva
+          countdown === null ? (
             <div className="concentrate-start-screen">
-              <h2>¡Bienvenido a Juego de atención!</h2>
+              <h2>¡Bienvenido a Concentrante en el Objetivo!</h2>
               <button onClick={startCountdown}>Comenzar Juego</button>
             </div>
           ) : (
             <div className="concentrate-countdown">{countdown}</div>
           )
         ) : (
-          <>
-            <h2 className="concentrate-score">🎯 Puntaje: {score}</h2>
-            <h3 className="concentrate-stars">📈 Nivel: {stage}</h3>
-            <h3 className="concentrate-timer">⏳ Tiempo restante: {timer}s</h3>
+          <div className="concentrate-app">
+            {/* Barra de estadísticas superior */}
+            <section className="concentrate-info-row">
+              <div className="stat-item">
+                <strong>Puntaje:</strong> <span>{score}</span>
+              </div>
+              <div className="stat-item">
+                <strong>Errores:</strong> <span>{totalErrors}</span>
+              </div>
+              <div className="stat-item">
+                <strong>Tiempo:</strong> <span>{timer}s</span>
+              </div>
+            </section>
+
+            <div className="stat-item">
+              <strong>Nivel:</strong> <span>{stage}</span>
+            </div>
+
+            {/* Área de juego */}
             <div className="concentrate-grid">
               {circles.map((circle, index) => (
                 <div
                   key={index}
                   className="concentrate-circle"
                   style={{
-                    backgroundColor: circle.color, // Aplica el color dinámico
-                    color: "#fff",
-                    position: "absolute",
-                    top: `${circle.y}px`,
+                    backgroundColor: circle.color,
                     left: `${circle.x}px`,
+                    top: `${circle.y}px`,
                     width: `${circleSize}px`,
-                    height: `${circleSize}px`,
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    transition: "background-color 0.3s ease",
+                    height: `${circleSize}px`
                   }}
                 >
-                  <span>{circle.direction}</span>
+                  <span style={{ color: circle.arrowColor }}>{circle.direction}</span>
                 </div>
               ))}
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>

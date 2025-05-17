@@ -23,14 +23,7 @@ app.use(cors({
 app.use(express.json());
 
 // Configurar conexión a PostgreSQL
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  max: 15,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
-  allowExitOnIdle: true
-});
+const pool = require('./db');
 
 // Listeners de conexión
 pool.on('connect', () => console.log('Nueva conexión establecida'));
@@ -45,9 +38,9 @@ if (!process.env.AUTH0_AUDIENCE || !process.env.AUTH0_ISSUER_BASE_URL) {
 // Middleware para manejar errores de Auth0
 app.use((err, req, res, next) => {
   if (err.name === 'UnauthorizedError') {
-    return res.status(401).json({ 
+    return res.status(401).json({
       error: 'Token inválido o expirado',
-      details: process.env.NODE_ENV === 'development' ? err.message : undefined 
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
   }
   next(err);
@@ -87,7 +80,7 @@ cron.schedule('0 2 * * *', async () => {
 // Middleware global para errores
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ 
+  res.status(500).json({
     error: 'Error interno del servidor',
     details: process.env.NODE_ENV === 'development' ? err.message : undefined
   });

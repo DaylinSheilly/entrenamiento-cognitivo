@@ -1,13 +1,9 @@
 const express = require('express');
-const { Pool } = require('pg');
 const { auth } = require('express-oauth2-jwt-bearer');
 
 const router = express.Router();
 
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false },
-});
+const pool = require('../db');
 
 // Middleware Auth0
 const checkJwt = auth({

@@ -1,21 +1,12 @@
 // sessions.js (backend)
 const express = require('express');
 const router = express.Router();
-const { Pool } = require('pg');
 const { body, param, validationResult } = require('express-validator');
 const { auth } = require('express-oauth2-jwt-bearer');
 const axios = require('axios');
 
 // 1. Configuración mejorada del Pool de PostgreSQL
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production'
-    ? { rejectUnauthorized: true }
-    : false,
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
-});
+const pool = require('../db');
 
 const checkJwt = auth({
   audience: 'https://api.neurosite.com',
@@ -77,10 +68,15 @@ const checkSessionOwnership = async (req, res, next) => {
 };
 
 const getInternalUserId = async (req, res, next) => {
+  console.log('Iniciando getInternalUserId'); // 🐛
+  let client;
   try {
+    client = await pool.connect(); // ✅ Adquirir cliente explícitamente
+    console.log('Conexión adquirida'); // 🐛
     const auth0UserId = req.auth.payload.sub;
-    const userResult = await pool.query(
-      'SELECT id_usuario FROM "Users" WHERE auth0_id = $1',
+
+    const userResult = await client.query(
+      'SELECT id_usuario FROM "Users" WHERE auth0_id = $1 LIMIT 1',
       [auth0UserId]
     );
 
@@ -91,7 +87,13 @@ const getInternalUserId = async (req, res, next) => {
     req.internalUserId = userResult.rows[0].id_usuario;
     next();
   } catch (error) {
+    console.error('Error en getInternalUserId:', error.message); // 🐛
     next(error);
+  } finally {
+    if (client) {
+      console.log('Liberando conexión'); // 🐛
+      client.release();
+    }
   }
 };
 
@@ -160,12 +162,22 @@ router.patch('/:id/update',
 
 // Endpoint POST /start
 router.post('/start', checkJwt, getInternalUserId, async (req, res) => {
-
-  const client = await pool.connect().catch(error => {
+  let client;
+  try {
+    client = await pool.connect();
+  } catch (error) {
     console.error("Error al conectar:", error);
     return res.status(500).json({ message: "Error de conexión con la base de datos" });
-  });
+  }
+
+  if (!client) {
+    return res.status(500).json({
+      error: "Error crítico de conexión con la base de datos"
+    });
+  }
+
   try {
+    await client.query('BEGIN');
     const auth0UserId = req.auth.payload.sub;
     const userResult = await pool.query(
       'SELECT id_usuario FROM "Users" WHERE auth0_id = $1',
@@ -176,11 +188,11 @@ router.post('/start', checkJwt, getInternalUserId, async (req, res) => {
     }
     const internalUserId = userResult.rows[0].id_usuario;
 
-    // Verificar sesión activa existente
+    // 1. Verificar sesión activa existente
     const activeSession = await client.query(
       `SELECT id_session 
        FROM "Sessions" 
-       WHERE id_usuario = $1 AND end_time IS NULL
+       WHERE id_usuario = $1 AND end_time IS NULL 
        ORDER BY start_time DESC 
        LIMIT 1`,
       [internalUserId]
@@ -193,11 +205,11 @@ router.post('/start', checkJwt, getInternalUserId, async (req, res) => {
       });
     }
 
-    // Crear nueva sesión
+    // 2. Crear nueva sesión
     const newSession = await client.query(
-      `INSERT INTO "Sessions" (id_usuario, start_time, total_games) 
-       VALUES ($1, NOW(), 0) 
-       RETURNING id_session`,
+      `INSERT INTO "Sessions" (id_usuario, start_time, total_games)
+       VALUES ($1, NOW(), 0)
+       RETURNING id_session, start_time`,
       [internalUserId]
     );
 
@@ -225,7 +237,7 @@ router.post('/start', checkJwt, getInternalUserId, async (req, res) => {
       error: error.message  // Solo para ambiente de desarrollo
     });
   } finally {
-    client.release();
+    if (client) client.release();
   }
 });
 

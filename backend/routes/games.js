@@ -1,14 +1,10 @@
 // games.js (backend)
 const express = require('express');
 const router = express.Router();
-const { Pool } = require('pg');
 const { body, validationResult } = require('express-validator');
 const { auth } = require('express-oauth2-jwt-bearer');
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
-});
+const pool = require('../db');
 
 const checkJwt = auth({
   audience: 'https://api.neurosite.com',
