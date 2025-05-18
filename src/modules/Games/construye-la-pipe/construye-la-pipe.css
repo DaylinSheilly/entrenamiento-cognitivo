@@ -5,7 +5,8 @@
   font-family: 'Roboto', sans-serif;
   text-align: center;
   flex-direction: column;
-  background-color: transparent;  /* Para que adopte el color del contenedor */
+  background-color: transparent;
+  /* Para que adopte el color del contenedor */
   color: #ffffff;
   margin: 0;
   padding: 20px;
@@ -13,7 +14,8 @@
   height: 100%;
   max-width: 100%;
   max-height: 100%;
-  overflow: hidden; /* Evita que el contenido se expanda más de la caja */
+  overflow: hidden;
+  /* Evita que el contenido se expanda más de la caja */
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -31,8 +33,10 @@
   width: 600px;
   background-color: transparent;
   text-align: center;
-  position: relative; /* Asegura que los elementos absolutos se posicionen dentro */
-  overflow: hidden; /* Previene que los elementos sobresalgan */
+  position: relative;
+  /* Asegura que los elementos absolutos se posicionen dentro */
+  overflow: hidden;
+  /* Previene que los elementos sobresalgan */
 }
 
 /* Estilos para títulos */
@@ -59,7 +63,7 @@
 .pipe-game-container p {
   font-size: 1rem;
   font-weight: bold;
-  color: #fff;
+  color: black;
   margin: 2px;
 }
 
@@ -68,9 +72,11 @@
 .pipe-timer {
   position: absolute;
   color: white;
-  font-size: 0.875rem; /* Reducido a 14px */
+  font-size: 0.875rem;
+  /* Reducido a 14px */
   font-weight: bold;
-  white-space: nowrap; /* Evita saltos de línea */
+  white-space: nowrap;
+  /* Evita saltos de línea */
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
@@ -94,7 +100,8 @@
 .pipe-game-container .pipe-score,
 .pipe-game-container .pipe-stars,
 .pipe-game-container .pipe-timer {
-  font-size: 1rem; /* Asegurar tamaño menor dentro del contenedor */
+  font-size: 1rem;
+  /* Asegurar tamaño menor dentro del contenedor */
   color: #222 !important;
 }
 
@@ -114,7 +121,7 @@
   text-align: center;
   padding: 2rem;
   background-color: #9ebde6;
-  border: 2px solid #f0a500;
+  border: 2px solid #8e44ad;
   border-radius: 15px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   margin: 2rem;
@@ -141,21 +148,73 @@
   transform: translateY(-2px);
 }
 
-.pipe-game-info {
-  text-align: center;
-  padding: 0.5rem 2rem;
-  background-color: #9ebde6;
-  border: 2px solid #f0a500;
+.pipe-info-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(248, 246, 251, 0.95);
+  border: 2px solid #8e44ad;
   border-radius: 15px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  margin: 0rem;
+  box-shadow: 0 4px 6px rgba(142, 68, 173, 0.2);
+  width: fit-content;
+  max-width: 98vw;
+  margin: 1rem auto;
+  padding: 0.5rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  gap: 1.5rem;
+  color: #2c3e50;
+}
+
+.stat-item {
+  flex: none;
+  text-align: center;
+  white-space: nowrap;
+  padding: 0 0.5rem;
+}
+
+.pipe-stats-table-wrapper {
+  margin: 1rem auto;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.pipe-stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #f8f6fb;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px #f0a50022;
+  margin: 1rem 0;
+}
+
+.pipe-stats-table th {
+  background: #f0a500;
+  color: #fff;
+  padding: 0.8rem;
+  font-weight: bold;
+  border-bottom: 2px solid #db9400;
+}
+
+.pipe-stats-table td {
+  padding: 0.6rem;
+  background: #f3eafc;
+  border-bottom: 1px solid #f0a50022;
+}
+
+.pipe-stats-table tr:nth-child(even) td {
+  background: #ede1f8;
 }
 
 .pipe-game-stats {
   display: flex;
-  justify-content: center; /* Centra horizontalmente */
-  align-items: center; /* Asegura alineación vertical */
-  gap: 20px; /* Espacio entre "Puntaje" y "Errores" */
+  justify-content: center;
+  /* Centra horizontalmente */
+  align-items: center;
+  /* Asegura alineación vertical */
+  gap: 20px;
+  /* Espacio entre "Puntaje" y "Errores" */
 }
 
 .pipe-app button {
@@ -241,9 +300,11 @@
   border: 4px solid #f0a500;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-  max-width: 90%; /* Limitar para que no se salga del contenedor */
+  max-width: 90%;
+  /* Limitar para que no se salga del contenedor */
   max-height: 90%;
-  overflow: hidden; /* Evitar desbordamientos */
+  overflow: hidden;
+  /* Evitar desbordamientos */
   margin: 5px;
 }
 
@@ -264,11 +325,13 @@
 }
 
 .pipe-cell-correct-solution {
-  border-color: #38ad3c; /* Verde */
+  border-color: #38ad3c;
+  /* Verde */
 }
 
 .pipe-cell-wrong-solution {
-  border-color: #ff4d4d; /* Rojo */
+  border-color: #ff4d4d;
+  /* Rojo */
 }
 
 .pipe-cell img {
@@ -309,13 +372,12 @@
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
   animation: aparecer 0.5s ease-out;
 }
-  
+
 .pipe-fin-juego-container button {
   background-color: #75e78e;
   border: 2px solid #61bd75;
   color: white;
   padding: 12px 30px;
-  border: none;
   border-radius: 25px;
   cursor: pointer;
   font-size: 16px;
@@ -323,9 +385,12 @@
   text-transform: uppercase;
   transition: all 0.3s ease;
   margin-top: 15px;
+  box-shadow: 0 2px 8px #0002;
 }
 
 .pipe-fin-juego-container button:hover {
   background-color: #61bd75;
   transform: translateY(-2px);
+  color: #fff;
+  transform: translateY(-2px) scale(1.04);
 }

@@ -100,7 +100,7 @@ const gameInfo = {
     instructions: "Haz clic en el botón cuando ambos circulos compartan ubicación."
   },
   "/games/construye-la-tuberia": {
-    title: "Construye la Tubería",
+    title: "Construye la Cañería",
     description: "Arma la cañería para conducir el flujo.",
     instructions: "Gira las piezas y encájalas correctamente."
   },
