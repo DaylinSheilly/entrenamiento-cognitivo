@@ -427,8 +427,19 @@ const PerfilUsuario = () => {
                     </Paper>
                 </Grid>
                 {/* Columna derecha: Estadísticas y máximas puntuaciones */}
-                <Grid item xs={12} md={7}>
-                    <Paper elevation={3} sx={{ p: 3 }}>
+                <Grid item xs={12} md={7} sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    height: 'fit-content', // Asegura altura consistente con la columna izquierda
+                    overflow: 'hidden' // Contener el contenido
+                }}>
+                    <Paper elevation={3} sx={{
+                        p: 3,
+                        flex: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        overflow: 'hidden'
+                    }}>
                         {/* Estadísticas globales en una fila */}
                         <Grid container spacing={2} sx={{ mb: 3 }}>
                             <Grid item xs={12} sm={4}>
@@ -463,17 +474,14 @@ const PerfilUsuario = () => {
                         <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
                             Máximas Puntuaciones por Juego
                         </Typography>
-                        <Grid container spacing={3}>
-                            {progressData.map((juego, idx) => {
-                                const maxPossibleScores = {
-                                    'Matriz de Memoria': 1000,
-                                    'Sigue la Secuencia': 500,
-                                    'Recuerda los Objetos': 750
-                                    // ...otros juegos
-                                };
-                                const maxPossible = maxPossibleScores[juego.game_name] || 1000;
-                                return (
+                        <Box sx={{
+                            maxWidth: 420, // O el valor que prefieras
+                            width: '100%',
+                        }}>
+                            <Grid container spacing={3}>
+                                {progressData.map((juego, idx) => (
                                     <Grid item xs={12} sm={6} md={4} key={juego.game_name}>
+                                        {/* Contenido de la tarjeta */}
                                         <Paper elevation={2} sx={{ p: 2, textAlign: 'center' }}>
                                             <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                                                 {juego.game_name}
@@ -483,9 +491,9 @@ const PerfilUsuario = () => {
                                             </Typography>
                                         </Paper>
                                     </Grid>
-                                );
-                            })}
-                        </Grid>
+                                ))}
+                            </Grid>
+                        </Box>
                     </Paper>
                 </Grid>
             </Grid>
