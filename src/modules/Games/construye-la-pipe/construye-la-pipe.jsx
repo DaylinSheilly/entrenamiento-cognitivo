@@ -127,15 +127,11 @@ const App = ({ onGameEnd }) => {
 
     // Cargar nivel inicial
     if (levels.length > 0) {
-      console.log("Cargando nivel inicial...");
       loadLevel(levels[0]);
     }
   };
 
   const loadLevel = (level) => {
-    console.log("Cargando nivel:", level);
-
-    console.log("Cargando nivel con tamaño de cuadrícula:", level.gridSize);
     setGridSize(level.gridSize);
 
     const newGrid = Array.from({ length: level.gridSize }, (_, x) =>
@@ -150,8 +146,6 @@ const App = ({ onGameEnd }) => {
     levelTimerRef.current = setInterval(() => {
       setLevelTime(prev => prev + 1);
     }, 1000);
-
-    console.log("Nueva cuadrícula:", newGrid);
     setGrid(newGrid);
     setMessage("");
     errorTimeRef.current = Date.now(); // Reiniciar tiempo de error
@@ -172,7 +166,6 @@ const App = ({ onGameEnd }) => {
   };
 
   const verifySolution = () => {
-    console.log(!levels[currentLevel]);
     if (!grid || !levels[currentLevel]) return false; // Evita errores si grid o niveles no están cargados
 
     const currentAnswer = levels[currentLevel].answer;
