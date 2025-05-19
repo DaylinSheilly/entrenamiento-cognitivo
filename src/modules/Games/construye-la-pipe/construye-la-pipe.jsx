@@ -15,6 +15,8 @@ const App = ({ onGameEnd }) => {
   const [levelTimes, setLevelTimes] = useState([]);
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [totalAnswers, setTotalAnswers] = useState(0);
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [maxStreak, setMaxStreak] = useState(0);
   const [isSolutionCorrect, setIsSolutionCorrect] = useState(false);
   const [isSolutionWrong, setIsSolutionWrong] = useState(false);
   const [currentLevel, setCurrentLevel] = useState(0);
@@ -43,7 +45,7 @@ const App = ({ onGameEnd }) => {
     actions_taken: totalAnswers, // Total de interacciones del jugador
     accuracy: totalAnswers > 0 ?
       Number(((correctAnswers / totalAnswers) * 100).toFixed(2)) : 0,
-    streaks: recoveryTimes.length, // Cantidad de recuperaciones exitosas
+    streaks: maxStreak,
     errors: errors,
     score: score,
   };
@@ -104,6 +106,8 @@ const App = ({ onGameEnd }) => {
     setLevelTimes([]);
     setCorrectAnswers(0);
     setTotalAnswers(0);
+    setCurrentStreak(0);
+    setMaxStreak(0);
     setIsSolutionCorrect(false);
     setIsSolutionWrong(false);
     setMessage("");
@@ -237,12 +241,24 @@ const App = ({ onGameEnd }) => {
     setCurrentLevel((prev) => {
       const newLevel = prev + 1;
       setLevelTimes(times => [...times, levelTime]);
+
+      if (errors === 0) {
+        setCurrentStreak(prevStreak => {
+          const newStreak = prevStreak + 1;
+          if (newStreak > maxStreak) setMaxStreak(newStreak);
+          return newStreak;
+        });
+      } else {
+        setCurrentStreak(0); // Reiniciar racha si hubo errores
+      }
+
       if (newLevel >= levels.length) {
         setGameOver(true);
         if (levelTimerRef.current) clearInterval(levelTimerRef.current);
         setTotalTime(levelTimes.reduce((acc, t) => acc + t, 0) + levelTime);
         return 0;
       }
+
       loadLevel(levels[newLevel]);
       setMessage("¡Bienvenido al siguiente nivel! Sigue así.");
       return newLevel;
