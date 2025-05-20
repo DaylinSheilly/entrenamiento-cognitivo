@@ -6,26 +6,64 @@ const maxLevel = 9;
 const minSquareSize = 25; // Tamaño mínimo
 const maxSquareSize = 50; // Tamaño máximo
 
-const MemoryGame = () => {
+const MemoryGame = ({ onGameEnd }) => {
   const [level, setLevel] = useState(1);
   const [gridSize, setGridSize] = useState(2);
   const [sequence, setSequence] = useState([]);
   const [selected, setSelected] = useState([]);
+  const [countdown, setCountdown] = useState(null);
   const [message, setMessage] = useState("Memoriza la secuencia");
   const [showSequence, setShowSequence] = useState(true);
   const [isClickable, setIsClickable] = useState(false);
   const [error, setError] = useState(false);
-  const [gameFinished, setGameFinished] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
   const [rotationAngle, setRotationAngle] = useState(0);
+  const [globalSquareColor, setGlobalSquareColor] = useState(null);
 
   // Estados para las estadísticas
+  const [elapsedTime, setElapsedTime] = useState(0);
   const [score, setScore] = useState(50); // Inicia en 50
+  const [correctAnswers, setCorrectAnswers] = useState(0);
+  const [errors, setErrors] = useState(0);
   const [consecutiveCorrect, setConsecutiveCorrect] = useState(0);
   const [bonusValue, setBonusValue] = useState(100); // Bono inicial para 4 aciertos consecutivos
   const [stars, setStars] = useState(0);
+  const [maxStreak, setMaxStreak] = useState(0);
 
   const timers = useRef([]);
+  const consecutiveErrorsRef = useRef(0);
+  const timerRef = useRef(null);
+  const isHandlingGameEnd = useRef(false);
+
+  // FUNCIONES DE REGISTRO DE ESTADISTICAS -------------------------------------------- //
+
+  const gameData = {
+    game_name: "Matriz de memoria",
+    level: level,
+    difficulty: level <= 5 ? "fácil" :
+      level <= 7 ? "medio" : "difícil",
+    actions_taken: correctAnswers + errors, // Total de intentos
+    accuracy: (correctAnswers + errors) > 0 ?
+      Number(((correctAnswers / (correctAnswers + errors)) * 100).toFixed(2)) : 0,
+    streaks: maxStreak,
+    errors: errors,
+    score: score,
+  };
+
+  const handleGameEnd = () => {
+    // Envía los datos al GameLayout
+    // console.log("Datos del juego:", gameData);
+    onGameEnd(gameData);
+  };
+
+  useEffect(() => {
+    if (gameOver && !isHandlingGameEnd.current) {
+      isHandlingGameEnd.current = true;
+      handleGameEnd();
+      isHandlingGameEnd.current = false;
+    }
+  }, [gameOver]);
 
   // Función para calcular el tamaño de los cuadrados basado en el nivel
   const calculateSquareSize = (level) => {
@@ -43,6 +81,12 @@ const MemoryGame = () => {
       timers.current = [];
     };
   }, []);
+
+  useEffect(() => {
+    if (consecutiveCorrect > maxStreak) {
+      setMaxStreak(consecutiveCorrect);
+    }
+  }, [consecutiveCorrect]);
 
   const generateSequence = (size) => {
     const newSequence = [];
@@ -62,104 +106,95 @@ const MemoryGame = () => {
   // • Nivel 6: Se muestra el patrón ya rotado (90° o -90°) mientras se visualiza.
   // • Niveles 7-9: Se muestra el patrón sin rotación y, luego de ocultarlo,
   //             se espera 200ms y se aplica la rotación (90° o -90°).
-  const initializeLevel = (currentGridSize) => {
+  const initializeLevel = (currentGridSize, nextLevel = level) => {
     const newSequence = generateSequence(currentGridSize);
     setSequence(newSequence);
     setSelected([]);
     setIsClickable(false);
     setShowSequence(true);
     setMessage("Memoriza la secuencia");
+    setGlobalSquareColor(null);
 
-    if (level < 6) {
-      // Niveles 1-5: Sin rotación.
-      setRotationAngle(0);
-      addTimeout(() => {
-        setShowSequence(false);
-        setMessage("Selecciona los cuadrados correctos");
-        setIsClickable(true);
-      }, displayTime);
-    } else if (level >= 6 && level <= 7) {
-      // Niveles 6-7: Se muestra el patrón ya rotado sumándole +90 o -90 al ángulo actual.
-      setRotationAngle((prev) => prev + (Math.random() < 0.5 ? 90 : -90));
-      addTimeout(() => {
-        setShowSequence(false);
-        setMessage("Selecciona los cuadrados correctos");
-        setIsClickable(true);
-      }, displayTime);
-    } else if (level >= 8 && level <= 9) {
-      // Niveles 8-9: Se muestra el patrón sin rotación (se conserva el ángulo actual).
-      addTimeout(() => {
-        setShowSequence(false);
-        setMessage("Selecciona los cuadrados correctos");
-        setIsClickable(true);
-        // 200ms después, se suma o resta 90° al ángulo actual.
-        addTimeout(() => {
-          setRotationAngle((prev) => prev + (Math.random() < 0.5 ? 90 : -90));
-        }, 200);
-      }, displayTime);
+    // Calcula el ángulo de rotación según el nivel
+    let rotation = rotationAngle;
+    if (nextLevel >= 6 && nextLevel <= 7) {
+      rotation += Math.random() < 0 ? 90 : -90;
     }
+    setRotationAngle(rotation);
+
+    // Muestra la secuencia y luego permite interacción
+    addTimeout(() => {
+      setShowSequence(false);
+      setMessage("Selecciona los cuadrados correctos");
+      setIsClickable(true);
+      // Para niveles 8-9, rota después de mostrar la secuencia
+      if (nextLevel >= 8 && nextLevel <= 9) {
+        addTimeout(() => {
+          setRotationAngle(prev => prev + (Math.random() < 0 ? 90 : -90));
+        }, 200);
+      }
+    }, displayTime);
+  };
+
+  const startCountdown = () => {
+    setGameStarted(false);
+    setCountdown(3); // Inicia en 3 segundos
+    let timeLeft = 3;
+    const interval = setInterval(() => {
+      timeLeft -= 1;
+      setCountdown(timeLeft);
+      if (timeLeft === 0) {
+        clearInterval(interval);
+        setCountdown(null);
+        setGameStarted(true); // Inicia el juego cuando llega a 0
+        startGame();
+      }
+    }, 1000);
   };
 
   const resetAfterError = () => {
-    addTimeout(() => {
-      setSelected([]);
-      setShowSequence(true);
-      setIsClickable(false);
-      if (level < 6) {
-        setRotationAngle(0);
-        addTimeout(() => {
-          setShowSequence(false);
-          setMessage("Selecciona los cuadrados correctos");
-          setIsClickable(true);
-        }, displayTime);
-      } else if (level >= 6 && level <= 7) {
-        setRotationAngle((prev) => prev + (Math.random() < 0.5 ? 90 : -90));
-        addTimeout(() => {
-          setShowSequence(false);
-          setMessage("Selecciona los cuadrados correctos");
-          setIsClickable(true);
-        }, displayTime);
-      } else if (level >= 8 && level <= 9) {
-        // En niveles 8-9 se muestra el patrón sin cambiar la rotación.
-        addTimeout(() => {
-          setShowSequence(false);
-          setMessage("Selecciona los cuadrados correctos");
-          setIsClickable(true);
-          // Luego, 200ms después, se aplica la rotación acumulada.
-          addTimeout(() => {
-            setRotationAngle((prev) => prev + (Math.random() < 0.5 ? 90 : -90));
-          }, 200);
-        }, displayTime);
-      }
-      setError(false);
-    }, 1000);
+    // Espera la animación de error (800ms) y luego inicia el nivel de nuevo
+    initializeLevel(gridSize, level);
+    setError(false);
+    setGlobalSquareColor(null);
   };
+
 
   const startGame = () => {
     setGameStarted(true);
     resetGame();
+
+    // Iniciar temporizador
+    timerRef.current = setInterval(() => {
+      setElapsedTime(prev => prev + 1);
+    }, 1000);
   };
 
   const resetGame = () => {
     setLevel(1);
     setGridSize(2);
     setError(false);
-    setGameFinished(false);
+    setGameOver(false);
+    setGlobalSquareColor(null);
     // Reiniciar estadísticas
     setScore(50);
+    setErrors(0);
     setConsecutiveCorrect(0);
     setBonusValue(100);
     setStars(0);
+    consecutiveErrorsRef.current = 0;
     timers.current.forEach((timerId) => clearTimeout(timerId));
     timers.current = [];
     initializeLevel(2);
+    clearInterval(timerRef.current);
+    setElapsedTime(0);
   };
 
   useEffect(() => {
     if (!gameStarted) return;
 
     if (level > maxLevel) {
-      setGameFinished(true);
+      setGameOver(true);
       setMessage("¡Felicidades! Has completado todos los niveles.");
       return;
     }
@@ -168,7 +203,7 @@ const MemoryGame = () => {
   }, [level, gridSize, gameStarted]);
 
   const handleSquareClick = (row, col) => {
-    if (!isClickable || gameFinished) return;
+    if (!isClickable || gameOver) return;
 
     const clickedSquare = `${row}-${col}`;
     if (selected.includes(clickedSquare)) {
@@ -186,35 +221,61 @@ const MemoryGame = () => {
   // Al verificar la selección del usuario se actualizan las estadísticas
   const handleUserSelection = () => {
     if (!isClickable) return;
+    setIsClickable(false);
 
     if (arraysEqual(selected, sequence)) {
-      // Acierto: suma 50 puntos base
-      setScore((prevScore) => prevScore + 50);
-      const newConsecutive = consecutiveCorrect + 1;
-      setConsecutiveCorrect(newConsecutive);
-      // Cada 4 aciertos consecutivos se otorga un bono
-      if (newConsecutive % 4 === 0) {
-        setScore((prevScore) => prevScore + bonusValue);
-        setStars((prevStars) => prevStars + 1);
-        setBonusValue((prevBonus) => prevBonus + 50);
-      }
-      const nextLevel = level + 1;
-      if (nextLevel > maxLevel) {
-        setGameFinished(true);
-        setMessage("¡Felicidades! Has completado todos los niveles.");
-      } else {
-        setMessage(`¡Correcto! Avanzando al nivel ${nextLevel}`);
-        setLevel(nextLevel);
-        setGridSize(gridSize + 1);
-        setError(false);
-      }
+      setCorrectAnswers(prev => prev + 1);
+      // Resetear errores consecutivos al acertar
+      consecutiveErrorsRef.current = 0;
+      setGlobalSquareColor("green");
+      addTimeout(() => {
+        setGlobalSquareColor(null);
+        setScore(prev => prev + 50);
+        const newConsecutive = consecutiveCorrect + 1;
+        setConsecutiveCorrect(newConsecutive);
+        if (newConsecutive % 4 === 0) {
+          setScore(prev => prev + bonusValue);
+          setStars(prev => prev + 1);
+          setBonusValue(prev => prev + 50);
+        }
+        const nextLevel = level + 1;
+        if (nextLevel > maxLevel) {
+          clearInterval(timerRef.current);
+          setGameOver(true);
+          setMessage("¡Felicidades! Has completado todos los niveles.");
+        } else {
+          setLevel(nextLevel);
+          setGridSize(gridSize + 1);
+          setError(false);
+          initializeLevel(gridSize + 1, nextLevel);
+        }
+      }, 800);
     } else {
-      // Error: se reinician contadores y el bono vuelve a 100
-      setError(true);
-      setMessage("¡Secuencia incorrecta! Intenta de nuevo");
-      setConsecutiveCorrect(0);
-      setBonusValue(100);
-      resetAfterError();
+      consecutiveErrorsRef.current += 1;
+      setGlobalSquareColor("red");
+      setErrors(prev => prev + 1);
+
+      addTimeout(() => {
+        // Game Over tras 4 errores consecutivos
+        if (consecutiveErrorsRef.current >= 4) {
+          clearInterval(timerRef.current);
+          setGameOver(true);
+          setMessage("¡Demasiados errores consecutivos! Juego terminado");
+          consecutiveErrorsRef.current = 0;
+        }
+        // Reducción de nivel tras 2 errores
+        else if (consecutiveErrorsRef.current == 2) {
+          const newLevel = Math.max(1, level - 1);
+          const newGridSize = Math.max(2, gridSize - 1);
+          setLevel(newLevel);
+          setGridSize(newGridSize);
+          setMessage(`Nivel reducido a ${newLevel}`);
+          initializeLevel(newGridSize, newLevel);
+        } else {
+          setMessage("¡Secuencia incorrecta! Intenta de nuevo");
+          resetAfterError();
+        }
+      }, 800);
     }
   };
 
@@ -224,22 +285,37 @@ const MemoryGame = () => {
     <div className="memory-body">
       <div className="memory-game">
         {!gameStarted ? (
-          <div className="memory-start-screen">
-            <h2 className="memory-h2">¡Bienvenido al Matriz de Memoria!</h2>
-            <button className="memory-start-button" onClick={startGame}>
-              Comenzar Juego
-            </button>
-          </div>
+          countdown === null ? (
+            <div className="memory-start-screen">
+              <h2 className="memory-h2">¡Bienvenido al Matriz de Memoria!</h2>
+              <button className="memory-start-button" onClick={startCountdown}>
+                Comenzar Juego
+              </button>
+            </div>
+          ) : (
+            <div className="memory-countdown">{countdown}</div>
+          )
         ) : (
           <>
-            <h1 className="memory-h1">Matriz de Memoria</h1>
-            <div className="memory-game-info">
-              <h3 className="memory-h3">Nivel {level}</h3>
-              <p className={error ? "memory-message error" : "memory-message"}>{message}</p>
-              <p className="memory-score">Puntaje: {score}</p> {/* Muestra el puntaje actual */}
+            <section className="memory-info-row">
+              <div className="stat-item">
+                <strong>Puntaje:</strong> <span>{score}</span>
+              </div>
+              <div className="stat-item">
+                <strong>Errores:</strong> <span>{errors}</span>
+              </div>
+              <div className="stat-item">
+                <strong>Tiempo:</strong> <span>{elapsedTime}</span>
+              </div>
+            </section>
+            {!gameOver && (
+              <p className={`memory-message${error ? " error" : ""}`}>{message}</p>
+            )}
+            <div className="stat-item">
+              <strong>Nivel:</strong> <span>{level}</span>
             </div>
 
-            {!gameFinished && (
+            {!gameOver && (
               <div
                 className="memory-grid"
                 style={{
@@ -258,8 +334,25 @@ const MemoryGame = () => {
                     return (
                       <div
                         key={squareId}
-                        className={`memory-square ${showSequence && isActive ? "active" : ""} ${isSelected ? "selected" : ""}`}
-                        style={{ width: squareSize - 7, height: squareSize - 7 }}
+                        className={`memory-square 
+    ${showSequence && isActive ? "active" : ""} 
+    ${isSelected ? "selected" : ""}`}
+                        style={{
+                          width: squareSize - 7,
+                          height: squareSize - 7,
+                          backgroundColor: globalSquareColor
+                            ? globalSquareColor
+                            : (showSequence && isActive)
+                              ? "#3498db"
+                              : isSelected
+                                ? "#2ecc71"
+                                : "white",
+                          borderColor: globalSquareColor
+                            ? (globalSquareColor === "green" ? "#27ae60" : "#e74c3c")
+                            : (isSelected
+                              ? "#27ae60"
+                              : "#bdc3c7")
+                        }}
                         onClick={() => handleSquareClick(row, col)}
                       />
                     );
@@ -268,27 +361,46 @@ const MemoryGame = () => {
               </div>
             )}
 
-            {!gameFinished && selected.length === sequence.length && (
+            {!gameOver && selected.length === sequence.length && (
               <memory-button className="verify-button" onClick={handleUserSelection} disabled={!isClickable}>
                 Verificar Secuencia
               </memory-button>
             )}
 
-            {gameFinished && (
+            {gameOver && (
               <div className="memory-game-over">
-                <h2 className="memory-h2">¡Felicidades!</h2>
-                <p className="memory-message">Has completado todos los niveles</p>
-                <div className="game-stats">
-                  <p>Puntaje Final: {score}</p>
-                  <p>Estrellas Obtenidas: {stars}</p>
-                  <p>Nivel Alcanzado: {level}</p>
+                <h2 className="memory-h2">¡Juego Terminado!</h2>
+                <p className="memory-message">{message}</p>
+                <div className="memory-stats-table-wrapper">
+                  <table className="memory-stats-table">
+                    <thead>
+                      <tr>
+                        <th>⏱️ Tiempo total</th>
+                        <th>🎯 Puntaje final</th>
+                        <th>🏆 Niveles completados</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>{elapsedTime} s</td>
+                        <td>{score}</td>
+                        <td>{level}</td>
+                      </tr>
+                      <tr>
+                        <td>✅ {correctAnswers} correctas</td>
+                        <td>❌ {errors} errores</td>
+                        <td>
+                          📊 {correctAnswers + errors > 0
+                            ? `${((correctAnswers / (correctAnswers + errors)) * 100).toFixed(2)}%`
+                            : "0%"}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
-                <memory-button onClick={() => {
-                  setGameStarted(false);
-                  resetGame();
-                }}>
+                <button onClick={startCountdown}>
                   Jugar de Nuevo
-                </memory-button>
+                </button>
               </div>
             )}
           </>
