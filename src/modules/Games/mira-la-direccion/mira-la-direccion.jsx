@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './mira-la-direccion.css';
 
-const MiraLaDireccion = () => {
+const MiraLaDireccion = ({ onGameEnd }) => {
   const [timeLeft, setTimeLeft] = useState(45);
   const [totalTime, setTotalTime] = useState(45);
   const [score, setScore] = useState(50);
@@ -9,12 +9,42 @@ const MiraLaDireccion = () => {
   const [totalAnswers, setTotalAnswers] = useState(0);
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [errorAnswers, setErrorAnswers] = useState(0);
+  const [maxStreak, setMaxStreak] = useState(0);
   const [consecutiveCorrect, setConsecutiveCorrect] = useState(0);
   const [gameStarted, setGameStarted] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [isInputActive, setIsInputActive] = useState(true); // Controla si las teclas están activas
   const [countdown, setCountdown] = useState(null);
   const [feedback, setFeedback] = useState(null); // 'correct' o 'incorrect'
+  const isHandlingGameEnd = useRef(false);
+
+  // FUNCIONES DE REGISTRO DE ESTADISTICAS -------------------------------------------- //
+
+  const gameData = {
+    game_name: "Mira la dirección",
+    level: Math.floor(totalAnswers / 5) + 1, // Nivel basado en progreso
+    difficulty: "N/A",
+    actions_taken: totalAnswers,
+    accuracy: totalAnswers > 0 ?
+      Number(((correctAnswers / totalAnswers) * 100).toFixed(2)) : 0,
+    streaks: maxStreak,
+    errors: errorAnswers,
+    score: Math.max(0, score),
+  };
+
+  const handleGameEnd = () => {
+    // Envía los datos al GameLayout
+    // console.log("Datos del juego:", gameData);
+    onGameEnd(gameData);
+  };
+
+  useEffect(() => {
+    if (gameOver && !isHandlingGameEnd.current) {
+      isHandlingGameEnd.current = true;
+      handleGameEnd();
+      isHandlingGameEnd.current = false;
+    }
+  }, [gameOver]);
 
   useEffect(() => {
     setObjects(generateObjects());
@@ -26,6 +56,12 @@ const MiraLaDireccion = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [gameOver, isInputActive]);
+
+  useEffect(() => {
+    if (consecutiveCorrect > maxStreak) {
+      setMaxStreak(consecutiveCorrect);
+    }
+  }, [consecutiveCorrect]);
 
   // Manejo del temporizador
   useEffect(() => {
@@ -159,16 +195,14 @@ const MiraLaDireccion = () => {
                 <tr>
                   <th>⏱️ Tiempo total</th>
                   <th>🎯 Puntaje final</th>
-                  <th>🏆 Nivel máximo</th>
+                  <th>⭐ Estrellas:</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td>{totalTime}</td>
                   <td>{score}</td>
-                  <td>
-                    {totalAnswers}
-                  </td>
+                  <td>{stars}</td>
                 </tr>
                 <tr>
                   <td>✅ Correctas: {correctAnswers}</td>
@@ -176,8 +210,7 @@ const MiraLaDireccion = () => {
                   <td>📊 Precisión: {totalAnswers > 0 ? `${((correctAnswers / totalAnswers) * 100).toFixed(2)}%` : "0%"}</td>
                 </tr>
                 <tr>
-                  <td colSpan={2}>🔁 Total de respuestas: {totalAnswers}</td>
-                  <td>⭐ Estrellas: {stars}</td>
+                  <td colSpan={3}>🔁 Total de respuestas: {totalAnswers}</td>
                 </tr>
               </tbody>
             </table>
