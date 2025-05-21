@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './observa-compara.css'
 
-const GAME_TIME = 181; // Duración del juego en segundos
+const GAME_TIME = 90; // Duración del juego en segundos
+const FAST_ANSWER_THRESHOLD = 500;
 
-const ObservaCompara = () => {
+const ObservaCompara = ({ onGameEnd }) => {
   const canvasRef = useRef(null);
   const [puntaje, setPuntaje] = useState(0);
   const [tarjetaActual, setTarjetaActual] = useState(null);
@@ -17,11 +18,45 @@ const ObservaCompara = () => {
   const [repeticionesRestantes, setRepeticionesRestantes] = useState(0); // Nuevo estado para controlar las repeticiones
   const [colorFondo, setColorFondo] = useState("#abd9f5");
   const [correctAnswers, setCorrectAnswers] = useState(0);
+  const [consecutiveCorrect, setConsecutiveCorrect] = useState(0);
+  const [maxStreak, setMaxStreak] = useState(0);
   const [totalAnswers, setTotalAnswers] = useState(0);
   const [totalErrors, setTotalErrors] = useState(0);
+  const [stars, setStars] = useState(0);
+  const [fastAnswers, setFastAnswers] = useState(0);
   const [countdown, setCountdown] = useState(null);
   const [reactionTimes, setReactionTimes] = useState([]);
   const [startTime, setStartTime] = useState(null);
+  const isHandlingGameEnd = useRef(false);
+
+  // FUNCIONES DE REGISTRO DE ESTADISTICAS -------------------------------------------- //
+
+  const gameData = {
+    game_name: "Observa y compara",
+    level: stars,
+    difficulty: "N/A",
+    actions_taken: totalAnswers,
+    accuracy: totalAnswers > 0
+      ? Number(((correctAnswers / totalAnswers) * 100).toFixed(2))
+      : 0,
+    streaks: maxStreak,
+    errors: totalErrors,
+    score: puntaje,
+  };
+
+  const handleGameEnd = () => {
+    // Envía los datos al GameLayout
+    // console.log("Datos del juego:", gameData);
+    onGameEnd(gameData);
+  };
+
+  useEffect(() => {
+    if (gameOver && !isHandlingGameEnd.current) {
+      isHandlingGameEnd.current = true;
+      handleGameEnd();
+      isHandlingGameEnd.current = false;
+    }
+  }, [gameOver]);
 
   const tiposTarjetas = ["CUADRADO", "CIRCULO", "TRIANGULO", "ESTRELLA"];
 
@@ -48,7 +83,6 @@ const ObservaCompara = () => {
   const elegirTarjetaAleatoria = () => {
     if (repeticionesRestantes > 0) {
       // Imprimir en consola cuántas veces se va a repetir la figura
-      console.log(`La figura ${tarjetaActual.tipo} se repetirá ${repeticionesRestantes} vez/veces más.`);
       setRepeticionesRestantes(repeticionesRestantes - 1);
       return tarjetaActual; // Mantener la misma figura mientras haya repeticiones
     }
@@ -73,6 +107,17 @@ const ObservaCompara = () => {
     if (esCorrecto) {
       setPuntaje(prev => prev + 1);
       setCorrectAnswers(prev => prev + 1); // Aumenta el contador de correctas
+      setConsecutiveCorrect(prev => {
+        const newConsecutive = prev + 1;
+        if (newConsecutive > maxStreak) {
+          setMaxStreak(newConsecutive);
+        }
+        // Cada 4 aciertos consecutivos suma una estrella
+        if (newConsecutive % 4 === 0) {
+          setStars(stars => stars + 1);
+        }
+        return newConsecutive;
+      });
       nuevoColor = "#4caf50"; // Verde si acierta
     } else {
       setTotalErrors(prev => prev + 1); // Aumenta el contador de errores
@@ -85,7 +130,10 @@ const ObservaCompara = () => {
 
     // Cambiar el color de fondo temporalmente
     setColorFondo(nuevoColor);
-    setTimeout(() => setColorFondo("#abd9f5"), 500);
+    setTimeout(() => setColorFondo("#abd9f5"), 250);
+    if (reactionTime <= FAST_ANSWER_THRESHOLD) {
+      setFastAnswers(prev => prev + 1);
+    }
 
     // Cambiar tarjeta
     setTarjetaAnterior(tarjetaActual);
@@ -141,22 +189,26 @@ const ObservaCompara = () => {
   const startGame = () => {
     setGameOver(false);
     setGameStarted(true);
-
     setTimeout(() => {
       setPuntaje(0);
       setTiempoRestante(GAME_TIME);
       setTarjetaAnterior(elegirTarjetaAleatoria());
-      setTarjetaActual(null); // Se inicializa en null antes de la primera elección
+      setTarjetaActual(null);
       setMostrandoPrimeraTarjeta(true);
       setPrimerTurno(true);
       setTurnoJugador(false);
-      setRepeticionesRestantes(0); // Reinicia el contador de repeticiones
-      setColorFondo("#abd9f5"); // Restablece el color de fondo
+      setRepeticionesRestantes(0);
+      setColorFondo("#abd9f5");
       setCorrectAnswers(0);
       setTotalAnswers(0);
       setTotalErrors(0);
-      setCountdown(null); // Elimina cualquier cuenta regresiva previa
-      setReactionTimes([]); // Reinicia los tiempos de reacción
+      setFastAnswers(0);
+      setCountdown(null);
+      setReactionTimes([]);
+      setStartTime(performance.now());
+      setStars(0); // Reinicia estrellas
+      setConsecutiveCorrect(0); // Reinicia racha
+      setMaxStreak(0);
     }, 100);
   };
 
@@ -274,7 +326,6 @@ const ObservaCompara = () => {
   const calculateReactionTime = () => {
     if (!reactionTimes || reactionTimes.length === 0) return 0;
 
-    // Filtra y convierte a segundos
     const validTimes = reactionTimes
       .filter(time => typeof time === "number" && time > 0)
       .map(time => time / 1000);
@@ -283,7 +334,7 @@ const ObservaCompara = () => {
 
     const sum = validTimes.reduce((acc, time) => acc + time, 0);
     const average = sum / validTimes.length;
-    return average.toFixed(2); // Devuelve string con 2 decimales
+    return average.toFixed(2);
   };
 
   return (
@@ -302,7 +353,7 @@ const ObservaCompara = () => {
               </thead>
               <tbody>
                 <tr>
-                  <td>{GAME_TIME - 1} s</td>
+                  <td>{GAME_TIME} s</td>
                   <td>{puntaje}</td>
                   <td>{totalAnswers || '-'}</td>
                 </tr>
@@ -314,9 +365,10 @@ const ObservaCompara = () => {
                   </td>
                 </tr>
                 <tr>
-                  <td colSpan={3}>
+                  <td colSpan={2}>
                     🕒 Tiempo de reacción promedio: {calculateReactionTime()} s
                   </td>
+                  <td>⚡ Respuestas rápidas: {fastAnswers}</td>
                 </tr>
               </tbody>
             </table>
