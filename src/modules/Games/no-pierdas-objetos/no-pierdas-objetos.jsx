@@ -11,17 +11,17 @@ const niveles = [
     { objetivos: 2, distractores: 10, movimiento: 250, dimension: 355, previsualizacion: 1500, movimientoTiempo: 5000 },
     { objetivos: 3, distractores: 12, movimiento: 300, dimension: 360, previsualizacion: 1000, movimientoTiempo: 4500 },
     { objetivos: 3, distractores: 15, movimiento: 350, dimension: 365, previsualizacion: 1000, movimientoTiempo: 4000 },
-    { objetivos: 4, distractores: 18, movimiento: 400, dimension: 370, previsualizacion: 500, movimientoTiempo: 3500 },
-    { objetivos: 4, distractores: 20, movimiento: 450, dimension: 375, previsualizacion: 500, movimientoTiempo: 3000 },
+    { objetivos: 4, distractores: 18, movimiento: 400, dimension: 370, previsualizacion: 750, movimientoTiempo: 3500 },
+    { objetivos: 4, distractores: 20, movimiento: 450, dimension: 375, previsualizacion: 700, movimientoTiempo: 3000 },
 ];
 
 
-const NoPierdasLosObjetos = () => {
+const NoPierdasLosObjetos = ({ onGameEnd }) => {
     const [nivel, setNivel] = useState(1);
     const [tiempoTotal, setTiempoTotal] = useState(120); // Tiempo total del juego
     const [objetos, setObjetos] = useState([]);
     const [fondoEstado, setFondoEstado] = useState(""); // Controla el color del fondo
-    const [juegoTerminado, setJuegoTerminado] = useState(false);
+    const [gameOver, setgameOver] = useState(false);
     const [movimientoActivo, setMovimientoActivo] = useState(false);
     const [puntaje, setPuntaje] = useState(50); // Inicia con 50 puntos
     const [rachaAciertos, setRachaAciertos] = useState(0); // Contador de aciertos consecutivos
@@ -34,6 +34,38 @@ const NoPierdasLosObjetos = () => {
     const [objetivosSeleccionados, setObjetivosSeleccionados] = useState([]);
     const [gameStarted, setGameStarted] = useState(false);
     const [countdown, setCountdown] = useState(null);
+    const [fastAnswers, setFastAnswers] = useState(0);
+    const readyToClickTimeRef = useRef(null);
+    const isHandlingGameEnd = useRef(false);
+
+    // FUNCIONES DE REGISTRO DE ESTADISTICAS -------------------------------------------- //
+
+    const gameData = {
+        game_name: "No pierdas los objetos",
+        level: nivel-1, // nivel ya empieza en 1
+        difficulty: nivel <= 3 ? "fácil" :
+            nivel <= 6 ? "medio" : "difícil",
+        actions_taken: totalAnswers,
+        accuracy: totalAnswers > 0 ?
+            Number(((correctAnswers / totalAnswers) * 100).toFixed(2)) : 0,
+        streaks: rachaAciertos,
+        errors: errorAnswers,
+        score: puntaje,
+    };
+
+    const handleGameEnd = () => {
+        // Envía los datos al GameLayout
+        // console.log("Datos del juego:", gameData);
+        onGameEnd(gameData);
+    };
+
+    useEffect(() => {
+        if (gameOver && !isHandlingGameEnd.current) {
+            isHandlingGameEnd.current = true;
+            handleGameEnd();
+            isHandlingGameEnd.current = false;
+        }
+    }, [gameOver]);
 
     // Timer: cuenta regresiva de 45 segundos
     useEffect(() => {
@@ -44,7 +76,7 @@ const NoPierdasLosObjetos = () => {
 
             return () => clearTimeout(timer);
         }
-        if (tiempoRestante === 0 && gameStarted) {
+        else if (tiempoRestante === 0 && gameStarted) {
             // ⏳ Espera 10 segundos adicionales antes de finalizar el juego
             if (!timeoutRef.current) {
                 timeoutRef.current = setTimeout(() => {
@@ -72,7 +104,7 @@ const NoPierdasLosObjetos = () => {
         setNivel(1);
         setObjetos([]);
         setFondoEstado(""); // Restaurar fondo a estado normal
-        setJuegoTerminado(false);
+        setgameOver(false);
         setMovimientoActivo(false);
         setPuntaje(50); // Iniciar con 50 puntos
         setRachaAciertos(0); // Reiniciar racha de aciertos consecutivos
@@ -84,12 +116,13 @@ const NoPierdasLosObjetos = () => {
         setObjetivosSeleccionados([]);
         setGameStarted(true);
         setCountdown(null);
+        setFastAnswers(0);
 
         iniciarNivel(1); // Reiniciar en el nivel 1
     };
 
     const startCountdown = () => {
-        setJuegoTerminado(false);
+        setgameOver(false);
         setCountdown(3); // Inicia en 3 segundos
 
         let countdownValue = 3; // Variable local para manejar el estado correctamente
@@ -194,6 +227,7 @@ const NoPierdasLosObjetos = () => {
             clearInterval(intervalo);
             setMovimientoActivo(false); // Permitir clics nuevamente
             setFondoEstado(""); // Restaurar fondo normal
+            readyToClickTimeRef.current = Date.now();
         }, config.movimientoTiempo);
     };
 
@@ -206,6 +240,10 @@ const NoPierdasLosObjetos = () => {
                     const nuevosSeleccionados = [...prev, id];
                     // Si se han seleccionado todos los objetivos, avanzar nivel
                     if (nuevosSeleccionados.length === niveles[nivel - 1].objetivos) {
+                        const now = Date.now();
+                        if (readyToClickTimeRef.current && now - readyToClickTimeRef.current <= 1000) {
+                            setFastAnswers(prev => prev + 1);
+                        }
                         setFondoEstado("exito"); // Activar fondo verde
                         setPuntaje(prev => prev + 50);
                         setTimeout(() => {
@@ -268,13 +306,13 @@ const NoPierdasLosObjetos = () => {
     };
 
     const finalizarJuego = () => {
-        setJuegoTerminado(true);
+        setgameOver(true);
         setGameStarted(false);
     };
 
     return (
         <div className="no-pierdas-game-container">
-            {juegoTerminado ? (
+            {gameOver ? (
                 <div className="no-pierdas-fin-juego-container">
                     <h1>Fin del juego</h1>
                     <div className="no-pierdas-stats-table-wrapper">
@@ -318,7 +356,7 @@ const NoPierdasLosObjetos = () => {
                                     <td>
                                         <span>⭐ Estrellas: {estrellas}</span>
                                     </td>
-                                    <td colSpan={2}></td>
+                                    <td colSpan={2}>⚡ Respuestas rápidas: {fastAnswers}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -370,6 +408,9 @@ const NoPierdasLosObjetos = () => {
                             <strong>Tiempo restante:</strong> <span aria-live="polite">{tiempoRestante}s</span>
                         </div>
                     </section>
+                    <div className="stat-item">
+                        <strong>Nivel:</strong> <span>{nivel}</span>
+                    </div>
                     <div className="no-pierdas-objetos">
                         <div
                             className={`no-pierdas-tablero ${fondoEstado ? `no-pierdas-tablero-fondo-${fondoEstado}` : ""}`}
