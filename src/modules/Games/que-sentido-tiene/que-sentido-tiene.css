@@ -8,8 +8,10 @@
   width: 600px;
   background-color: transparent;
   text-align: center;
-  position: relative; /* Asegura que los elementos absolutos se posicionen dentro */
-  overflow: hidden; /* Previene que los elementos sobresalgan */
+  position: relative;
+  /* Asegura que los elementos absolutos se posicionen dentro */
+  overflow: hidden;
+  /* Previene que los elementos sobresalgan */
 }
 
 /* Estilos para títulos */
@@ -45,9 +47,11 @@
 .sentido-timer {
   position: absolute;
   color: white;
-  font-size: 0.875rem; /* Reducido a 14px */
+  font-size: 0.875rem;
+  /* Reducido a 14px */
   font-weight: bold;
-  white-space: nowrap; /* Evita saltos de línea */
+  white-space: nowrap;
+  /* Evita saltos de línea */
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
@@ -71,7 +75,8 @@
 .sentido-game-container .sentido-score,
 .sentido-game-container .sentido-stars,
 .sentido-game-container .sentido-timer {
-  font-size: 1rem; /* Asegurar tamaño menor dentro del contenedor */
+  font-size: 1rem;
+  /* Asegurar tamaño menor dentro del contenedor */
   color: #222 !important;
 }
 
@@ -80,7 +85,7 @@
   text-align: center;
   padding: 2rem;
   background-color: #9ebde6;
-  border: 2px solid #f0a500;
+  border: 2px solid #8e44ad;
   border-radius: 15px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   margin: 2rem;
@@ -111,6 +116,64 @@
   font-weight: bold;
   color: #222;
   animation: fadeIn 0.5s ease-in-out;
+}
+
+.sentido-info-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(248, 246, 251, 0.95);
+  border: 2px solid #8e44ad;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px #f0a50022;
+  width: fit-content;
+  max-width: 98vw;
+  margin: 0.5rem auto;
+  padding: 0.5rem 1.5rem;
+  gap: 1.5rem;
+  font-size: 1rem;
+  color: #2c3e50;
+}
+
+.stat-item {
+  color: black;
+  flex: none;
+  text-align: center;
+  white-space: nowrap;
+  padding: 0 0.8rem;
+}
+
+.sentido-key-guide {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 40px;
+  margin: 18px 0 10px 0;
+}
+
+.key-guide-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #e1ecf4;
+  border-radius: 8px;
+  padding: 6px 18px;
+  font-size: 1.1em;
+  box-shadow: 0 2px 6px #4a90e222;
+}
+
+.key-arrow {
+  font-size: 2em;
+  color: #4a90e2;
+  font-weight: bold;
+  margin: 0 4px;
+}
+
+.key-label {
+  font-size: 1.1em;
+  color: #333;
+  font-weight: 600;
+  letter-spacing: 1px;
 }
 
 /* Contenedor principal del juego */
@@ -148,15 +211,17 @@
 }
 
 .sentido-word.correct {
-    background-color: #a8e6a2; /* Verde suave */
-    color: #2ecc71;
-    border-color: #2ecc71;
+  background-color: #a8e6a2;
+  /* Verde suave */
+  color: #2ecc71;
+  border-color: #2ecc71;
 }
 
 .sentido-word.incorrect {
-    background-color: #f8a5a5; /* Rojo suave */
-    color: #e74c3c;
-    border-color: #e74c3c;
+  background-color: #f8a5a5;
+  /* Rojo suave */
+  color: #e74c3c;
+  border-color: #e74c3c;
 }
 
 .sentido-fin-juego-container {
@@ -170,13 +235,47 @@
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
   animation: aparecer 0.5s ease-out;
 }
-  
+
+.sentido-stats-table-wrapper {
+  margin: 1rem auto 2rem;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.sentido-stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #f8f6fb;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px #f0a50022;
+}
+
+.sentido-stats-table th {
+  background: #f0a500;
+  color: #fff;
+  padding: 0.8rem;
+  font-weight: bold;
+  border-bottom: 2px solid #db9400;
+}
+
+.sentido-stats-table td {
+  padding: 12px;
+  font-size: 0.9rem;
+  background: #f3eafc;
+  border-bottom: 1px solid #f0a50022;
+  color: black;
+}
+
+.sentido-stats-table tr:nth-child(even) td {
+  background: #f0f0f0;
+}
+
 .sentido-fin-juego-container button {
   background-color: #75e78e;
   border: 2px solid #61bd75;
   color: white;
   padding: 12px 30px;
-  border: none;
   border-radius: 25px;
   cursor: pointer;
   font-size: 16px;
@@ -184,9 +283,12 @@
   text-transform: uppercase;
   transition: all 0.3s ease;
   margin-top: 15px;
+  box-shadow: 0 2px 8px #0002;
 }
 
 .sentido-fin-juego-container button:hover {
   background-color: #61bd75;
   transform: translateY(-2px);
+  color: #fff;
+  transform: translateY(-2px) scale(1.04);
 }
