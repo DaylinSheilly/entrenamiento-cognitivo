@@ -4,12 +4,18 @@ import './Sigue-la-secuencia.css';
 const MemoriaSecuencial = ({ onGameEnd }) => {
   // Nuevo estado para la pantalla de inicio
   const [gameStarted, setGameStarted] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
+  const [countdown, setCountdown] = useState(null);
 
   const [stage, setStage] = useState(1);
+  const [elapsedTime, setElapsedTime] = useState(0);
   const [sequence, setSequence] = useState([]);
   const [userInput, setUserInput] = useState([]);
+  const [score, setScore] = useState(0);
+  const [stars, setStars] = useState(0);
+  const [currentStreak, setCurrentStreak] = useState(0); // racha de aciertos consecutivos
+  const [bonusLevel, setBonusLevel] = useState(0);
   const [errorCount, setErrorCount] = useState(0);
-  const [isGameOver, setIsGameOver] = useState(false);
   const [gameStartTime, setGameStartTime] = useState(null);
   const [highlightIndex, setHighlightIndex] = useState(-1);
   const [selectedIndices, setSelectedIndices] = useState([]);
@@ -28,6 +34,7 @@ const MemoriaSecuencial = ({ onGameEnd }) => {
   const isProcessingRef = useRef(false);
   // Ref para el timer de error de omisión
   const omissionTimerRef = useRef(null);
+  const isHandlingGameEnd = useRef(false);
 
   const gameData = {
     game_name: "Sigue la secuencia",
@@ -40,20 +47,40 @@ const MemoriaSecuencial = ({ onGameEnd }) => {
     ),
     streaks: correctSequenceCount,
     errors: errorCount + omissionErrors,
-    score: maxMemorySpan * 100 + correctSequenceCount * 10
+    score: score
   };
 
   const handleGameEnd = () => {
     // Envía los datos al GameLayout
+    // console.log("Datos del juego:", gameData);
     onGameEnd(gameData);
   };
 
   useEffect(() => {
-    if (isGameOver) {
-      clearTimeout(omissionTimerRef.current);
-      handleGameEnd(); // ← Función que envia los datos del juego al backend
+    if (gameOver && !isHandlingGameEnd.current) {
+      isHandlingGameEnd.current = true;
+      handleGameEnd();
+      isHandlingGameEnd.current = false;
     }
-  }, [isGameOver]);
+  }, [gameOver]);
+
+  useEffect(() => {
+    if (!gameStarted || gameOver) {
+      setElapsedTime(0);
+      return;
+    }
+    setElapsedTime(
+      gameStartTime ? Math.floor((Date.now() - gameStartTime) / 1000) : 0
+    );
+
+    const interval = setInterval(() => {
+      setElapsedTime(
+        gameStartTime ? Math.floor((Date.now() - gameStartTime) / 1000) : 0
+      );
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [gameStarted, gameOver, gameStartTime]);
 
   useEffect(() => {
     if (gameStarted) {
@@ -66,6 +93,56 @@ const MemoriaSecuencial = ({ onGameEnd }) => {
       showSequence();
     }
   }, [sequence]);
+
+  const startCountdown = () => {
+    setGameOver(false);
+    setGameStarted(false);
+    setCountdown(3); // Inicia en 3 segundos
+    let timeLeft = 3;
+    const interval = setInterval(() => {
+      timeLeft -= 1;
+      setCountdown(timeLeft);
+      if (timeLeft === 0) {
+        clearInterval(interval);
+        setCountdown(null);
+        startGame(); // Iniciar el juego cuando llega a 0
+      }
+    }, 1000);
+  };
+
+  const startGame = () => {
+    // Resetear todos los estados del juego
+    setGameStarted(true);
+    setGameOver(false);
+    setCountdown(null);
+    setStage(1);
+    setSequence([]);
+    setUserInput([]);
+    setScore(0);
+    setStars(0);
+    setCurrentStreak(0);
+    setBonusLevel(0);
+    setErrorCount(0);
+    setGameStartTime(new Date());
+    setHighlightIndex(-1);
+    setSelectedIndices([]);
+    setCurrentClicked(null);
+    setPreviousClicked(null);
+    setNotification("");
+    setMaxMemorySpan(0);
+    setTotalResponseTime(0);
+    setCorrectSequenceCount(0);
+    setOmissionErrors(0);
+    setSequenceStartTime(null);
+
+    // Limpiar timers y referencias
+    if (omissionTimerRef.current) clearTimeout(omissionTimerRef.current);
+    isProcessingRef.current = false;
+    isHandlingGameEnd.current = false;
+
+    // Generar primera secuencia
+    generateSequence(1);
+  };
 
   const generateSequence = (currentStage) => {
     const sequenceLength = currentStage + 1;
@@ -126,11 +203,13 @@ const MemoriaSecuencial = ({ onGameEnd }) => {
     setCurrentClicked(number);
 
     if (!isCorrect) {
+      setCurrentStreak(0);
+      setBonusLevel(0);
       setErrorCount((prevErrors) => {
         const newErrorCount = prevErrors + 1;
         if (newErrorCount >= maxErrors) {
           setTimeout(() => {
-            setIsGameOver(true); // Esto activará el useEffect que llama a handleGameEnd
+            setGameOver(true); // Esto activará el useEffect que llama a handleGameEnd
             isProcessingRef.current = false;
           }, 1000);
         } else {
@@ -146,9 +225,25 @@ const MemoriaSecuencial = ({ onGameEnd }) => {
         return newErrorCount;
       });
     } else if (currentInputIndex + 1 === sequence.length) {
-      // Calcula el tiempo de respuesta para esta secuencia
+      const newStreak = currentStreak + 1;
+      let bonusToAdd = 0;
+      let newBonusLevel = bonusLevel;
       const responseTime = new Date() - sequenceStartTime;
       setTotalResponseTime(prev => prev + responseTime);
+      setCurrentStreak(prevStreak => {
+        const newStreak = prevStreak + 1;
+        setScore(prevScore => prevScore + 50);
+        if (newStreak % 4 === 0) {
+          setStars(prevStars => prevStars + 1);
+          newBonusLevel = bonusLevel + 1;
+          bonusToAdd = newBonusLevel * 50;
+          setBonusLevel(newBonusLevel);
+        } else {
+          setBonusLevel(bonusLevel); // No cambia, pero asegura consistencia si lo usas en otros lados
+        }
+        return newStreak;
+      });
+
       setCorrectSequenceCount(prev => prev + 1);
       // Actualiza el lapso de memoria si corresponde
       if (sequence.length > maxMemorySpan) {
@@ -157,7 +252,7 @@ const MemoriaSecuencial = ({ onGameEnd }) => {
       if (stage === 9) {
         setTimeout(() => {
           setNotification("¡Has completado el juego!");
-          setIsGameOver(true);
+          setGameOver(true);
           setTimeout(() => setNotification(""), 3000);
           isProcessingRef.current = false;
         }, 1000);
@@ -197,82 +292,90 @@ const MemoriaSecuencial = ({ onGameEnd }) => {
     return selected ? (selected.isCorrect ? 'correct' : 'incorrect') : '';
   };
 
-  // Si el juego no ha empezado, muestra la pantalla de inicio.
-  if (!gameStarted) {
-    return (
-      <div className="start-screen-secuencial">
-        <h1>Memoria Secuencial</h1>
-        <button
-          className="start-button-secuencial"
-          onClick={() => {
-            setGameStarted(true);
-            setGameStartTime(new Date());
-          }}
-        >
-          Empezar a jugar
-        </button>
-      </div>
-    );
-  }
-
-  if (isGameOver) {
-    return (
-      <div className="game-over-screen-secuancial">
-        <h1>Juego terminado</h1>
-        <p>Has cometido dos errores. Inténtalo de nuevo.</p>
-        <div className="game-stats">
-          <p>
-            <strong>Lapso de memoria:</strong> {maxMemorySpan > 10 ? 10 : maxMemorySpan}
-          </p>
-          <p>
-            <strong>Tiempo de respuesta:</strong> {correctSequenceCount > 0 ? Math.round(totalResponseTime / correctSequenceCount) : 0} ms
-          </p>
-          <p>
-            <strong>Errores de omisión:</strong> {omissionErrors}
-          </p>
-        </div>
-        <button
-          className="restart-button-secuancial"
-          onClick={() => {
-            // Reiniciar todos los estados
-            setStage(1);
-            setErrorCount(0);
-            setIsGameOver(false);
-            setMaxMemorySpan(0);
-            setTotalResponseTime(0);
-            setCorrectSequenceCount(0);
-            setOmissionErrors(0);
-            setGameStartTime(new Date());
-            generateSequence(1);
-          }}
-        >
-          Reiniciar juego
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <div className="centered-game-secuencia">
-      {/* Si hay mensaje de notificación, se muestra en un contenedor especial */}
-      <div className="game-container-secuancial">
-        <h1>Memoria Secuencial</h1>
-        <p>Etapa: {stage}</p>
-        <div className="circle-container-secuancial">
-          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((number) => (
-            <div
-              key={number}
-              className={`circle-secuancial ${getCircleClass(number)}`}
-              onClick={() => highlightIndex === -1 && handleUserInput(number)}
-            >
-              {number}
-            </div>
-          ))}
+    <div className="memoria-game-container">
+      {gameOver ? (
+        <div className="memoria-fin-juego-container">
+          <h1>Fin del juego</h1>
+          <div className="memoria-stats-table-wrapper">
+            <table className="memoria-stats-table">
+              <thead>
+                <tr>
+                  <th>⏱️ Tiempo total</th>
+                  <th>🎯 Puntaje final</th>
+                  <th>🏆 Nivel máximo</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>{elapsedTime} s</td>
+                  <td>{score}</td>
+                  <td>{stage}</td>
+                </tr>
+                <tr>
+                  <td>✅ {correctSequenceCount} correctas</td>
+                  <td>❌ {errorCount + omissionErrors} errores</td>
+                  <td>
+                    📊 {(correctSequenceCount + errorCount + omissionErrors) > 0
+                      ? ((correctSequenceCount / (correctSequenceCount + errorCount + omissionErrors)) * 100).toFixed(2)
+                      : "0"}%
+                  </td>
+                </tr>
+                <tr>
+                  <td>⭐ {stars} Estrellas</td>
+                  <td>🏅 Racha máxima: {maxMemorySpan}</td>
+                  <td>🔥 Mejor racha: {currentStreak}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <button onClick={startCountdown}>
+            Jugar de nuevo
+          </button>
         </div>
-      </div>
-      {notification && (
-        <div className="secuencia-notification">
-          {notification}
+      ) : !gameStarted ? (
+        countdown === null ? (
+          <div className="memoria-start-screen">
+            <h2>¡Bienvenido a Memoria Secuencial!</h2>
+            <button onClick={startCountdown}>Comenzar Juego</button>
+          </div>
+        ) : (
+          <div className="pipe-countdown">{countdown}</div>
+        )
+      ) : (
+        <div className="memoria-app">
+          <section className="memoria-info-row">
+            <div className="stat-item">
+              <strong>Puntaje:</strong> <span>{score}</span>
+            </div>
+            <div className="stat-item">
+              <strong>Errores:</strong> <span>{errorCount + omissionErrors}</span>
+            </div>
+            <div className="stat-item">
+              <strong>Tiempo:</strong> <span>{elapsedTime} s</span>
+            </div>
+          </section>
+          <div className="stat-item">
+            <strong>Nivel:</strong> <span>{stage}</span>
+          </div>
+
+          <main className="memoria-main">
+            <div className="memoria-grid">
+              {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((number) => (
+                <div
+                  key={number}
+                  className={`memoria-cell ${getCircleClass(number)}`}
+                  onClick={() => !gameOver && handleUserInput(number)}>
+                  {number}
+                </div>
+              ))}
+            </div>
+          </main>
+          {notification && (
+            <div className="memoria-notification">
+              {notification}
+            </div>
+          )}
         </div>
       )}
     </div>
