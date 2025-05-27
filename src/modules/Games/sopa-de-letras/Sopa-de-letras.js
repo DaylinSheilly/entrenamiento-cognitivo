@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './SopaDeLetras.css';
 import wordsData from './words-data.json';
 
-const WordSearch = () => {
+const WordSearch = ({ onGameEnd }) => {
   const [level, setLevel] = useState(1);
   const [wordGrid, setWordGrid] = useState([]);
   const [words, setWords] = useState([]);
@@ -16,6 +16,8 @@ const WordSearch = () => {
   const [errors, setErrors] = useState(0);
   const [finalErrors, setFinalErrors] = useState(0);
   const [correctAnswers, setCorrectAnswers] = useState(0);
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [maxStreak, setMaxStreak] = useState(0);
   const [totalAnswers, setTotalAnswers] = useState(0);
   const [lastErrorTime, setLastErrorTime] = useState(null);
   const [wordCoordinates, setWordCoordinates] = useState({});
@@ -26,6 +28,36 @@ const WordSearch = () => {
   const [gameStarted, setGameStarted] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [countdown, setCountdown] = useState(null);
+  const isHandlingGameEnd = useRef(false);
+
+  // FUNCIONES DE REGISTRO DE ESTADISTICAS -------------------------------------------- //
+
+  const gameData = {
+    game_name: "Sopa de letras",
+    level: level, // Usar el estado 'level' que ya existe (no currentLevel)
+    difficulty: level <= 1 ? "fácil" :
+      level <= 2 ? "medio" : "difícil",
+    actions_taken: totalAnswers,
+    accuracy: totalAnswers > 0 ?
+      Number(((correctAnswers / totalAnswers) * 100).toFixed(2)) : 0,
+    streaks: maxStreak,
+    errors: finalErrors, // Usar los errores finales acumulados
+    score: finalScore, // Usar el puntaje final acumulado
+  };
+
+  const handleGameEnd = () => {
+    // Envía los datos al GameLayout
+    // console.log("Datos del juego:", gameData);
+    onGameEnd(gameData);
+  };
+
+  useEffect(() => {
+    if (gameOver && !isHandlingGameEnd.current) {
+      isHandlingGameEnd.current = true;
+      handleGameEnd();
+      isHandlingGameEnd.current = false;
+    }
+  }, [gameOver]);
 
   const getLevelConfig = useCallback((level) => {
     switch (level) {
@@ -57,39 +89,41 @@ const WordSearch = () => {
   };
 
   const startGame = () => {
-    console.log("Iniciando juego...");
-
-    // Reiniciar niveles y estados generales del juego
-    setLevel(1); 
-    setGameOver(false);
+    // 1. Resetear estados principales del juego
     setGameStarted(true);
-
-    // Reiniciar tiempos y puntajes
-    setTime(0);
-    setTotalTime(0);
-    setStartTime(Date.now());
+    setGameOver(false);
     setCountdown(null);
+
+    // 2. Reiniciar estadísticas y puntuaciones
+    setLevel(1);
     setScore(0);
     setFinalScore(0);
     setErrors(0);
     setFinalErrors(0);
     setCorrectAnswers(0);
     setTotalAnswers(0);
+    setTime(0);
+    setTotalTime(0);
+    setStartTime(Date.now());
     setLastErrorTime(null);
 
-    // Reiniciar palabras y tablero
+    // 3. Reiniciar estado del tablero y palabras
     setWordGrid([]);
     setWords([]);
-    setWordCoordinates({});
-    setFullWordCoordinates({});
     setWordsFound([]);
     setCurrentSelection([]);
     setFoundCoordinates([]);
+    setWordCoordinates({});
+    setFullWordCoordinates({});
 
-    // Reiniciar interacciones
+    // 4. Resetear interacciones y mensajes
     setIsDragging(false);
     setMessage("");
 
+    // 5. Limpiar timers y referencias
+    isHandlingGameEnd.current = false;
+
+    // 6. Iniciar nueva partida
     startNewGame();
   };
 
@@ -322,6 +356,11 @@ const WordSearch = () => {
       !wordsFound.includes(selectedWord) &&
       !wordsFound.includes(reversedWord)
     ) {
+      setCurrentStreak(prev => {
+        const newStreak = prev + 1;
+        setMaxStreak(prevMax => Math.max(prevMax, newStreak));
+        return newStreak;
+      });
       const foundWord = words.includes(selectedWord) ? selectedWord : reversedWord;
 
       setMessage(`¡Palabra ${foundWord} encontrada!`);
@@ -344,6 +383,7 @@ const WordSearch = () => {
         }, 500);
       }
     } else {
+      setCurrentStreak(0);
       setMessage(`Esa no es una palabra de la lista. ¡Intentalo de nuevo!`);
       setErrors(prevErrors => prevErrors + 1);
       setLastErrorTime(Date.now());
@@ -472,11 +512,38 @@ const WordSearch = () => {
       {gameOver ? (
         <div className="sopa-fin-juego-container">
           <h1>Fin del juego</h1>
-          <p>🎯 Puntaje final: {finalScore}</p>
-          <p>✅ Correctas: {correctAnswers} de {totalAnswers}</p>
-          <p>❌ Errores: {finalErrors}</p>
-          <p>📊 Precisión: {totalAnswers > 0 ? ((correctAnswers / totalAnswers) * 100).toFixed(2) : "0"}%</p>
-          <p>🕒 Tiempo total de juego: {(totalTime / 1000).toFixed(2)} segundos</p>
+          <div className="sopa-stats-table-wrapper">
+            <table className="sopa-stats-table">
+              <thead>
+                <tr>
+                  <th>⏱️ Tiempo total</th>
+                  <th>🎯 Puntaje final</th>
+                  <th>🏆 Niveles completados</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>{(totalTime / 1000).toFixed(2)} s</td>
+                  <td>{finalScore}</td>
+                  <td>{level}</td>
+                </tr>
+                <tr>
+                  <td>✅ Correctas: {correctAnswers}</td>
+                  <td>❌ Errores: {finalErrors}</td>
+                  <td>
+                    📊 Precisión: {totalAnswers > 0
+                      ? ((correctAnswers / totalAnswers) * 100).toFixed(2)
+                      : "0"}%
+                  </td>
+                </tr>
+                <tr>
+                  <td colSpan={3}>
+                    🕒 Tiempo promedio por palabra: {correctAnswers > 0 ? `${(totalTime / correctAnswers / 1000).toFixed(2)} s` : "N/A"}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
           <button onClick={startCountdown}>
             Jugar de nuevo
           </button>
@@ -494,11 +561,19 @@ const WordSearch = () => {
         <div className='sopa-app'>
           <>
             <div className="sopa-game-info">
-              <div className="sopa-game-stats">
-                <p>Nivel: {level}</p>
-                <p>Puntaje: {score}</p>
-                <p>Errores: {errors}</p>
-                <p>Tiempo: {time} segundos</p>
+              <section className="sopa-info-row">
+                <div className="stat-item">
+                  <strong>Puntaje:</strong> <span>{score}</span>
+                </div>
+                <div className="stat-item">
+                  <strong>Errores:</strong> <span>{errors}</span>
+                </div>
+                <div className="stat-item">
+                  <strong>Tiempo:</strong> <span>{time} s</span>
+                </div>
+              </section>
+              <div className="stat-item">
+                <strong>Nivel:</strong> <span>{level}</span>
               </div>
               {message && <p>{message}</p>}
             </div>

@@ -1,9 +1,10 @@
   /* Estilos para "Construye la Cañería" */
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 
   .sopa-game-container {
     font-family: 'Roboto', sans-serif;
-    background-color: transparent;  /* Para que adopte el color del contenedor */
+    background-color: transparent;
+    /* Para que adopte el color del contenedor */
     color: #ffffff;
     margin: 0;
     padding: 20px;
@@ -16,8 +17,10 @@
     width: 600px;
     background-color: transparent;
     text-align: center;
-    position: relative; /* Asegura que los elementos absolutos se posicionen dentro */
-    overflow: hidden; /* Previene que los elementos sobresalgan */
+    position: relative;
+    /* Asegura que los elementos absolutos se posicionen dentro */
+    overflow: hidden;
+    /* Previene que los elementos sobresalgan */
   }
 
   /* Estilos para títulos */
@@ -26,63 +29,66 @@
     margin-bottom: 0px;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
   }
-  
+
   .sopa-game-container h2 {
     font-size: 2rem;
     font-weight: bold;
     color: #333;
     margin-bottom: 8px;
   }
-  
+
   .sopa-game-container h3 {
     font-size: 1.5rem;
     font-weight: normal;
     color: #444;
     margin-bottom: 6px;
   }
-  
+
   .sopa-game-container p {
     font-size: 1rem;
     font-weight: bold;
-    color: #fff;
+    color: #000;
     margin: 2px;
   }
-  
+
   .sopa-score,
   .sopa-stars,
   .sopa-timer {
     position: absolute;
     color: white;
-    font-size: 0.875rem; /* Reducido a 14px */
+    font-size: 0.875rem;
+    /* Reducido a 14px */
     font-weight: bold;
-    white-space: nowrap; /* Evita saltos de línea */
+    white-space: nowrap;
+    /* Evita saltos de línea */
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
   }
-  
+
   .sopa-score {
     top: 0.5rem;
     left: 0.5rem;
   }
-  
+
   .sopa-stars {
     top: 0.5rem;
     left: 50%;
     transform: translateX(-50%);
   }
-  
+
   .sopa-timer {
     top: 0.5rem;
     right: 0.5rem;
   }
-  
+
   /* Evitar conflictos con los estilos globales */
   .sopa-game-container .sopa-score,
   .sopa-game-container .sopa-stars,
   .sopa-game-container .sopa-timer {
-    font-size: 1rem; /* Asegurar tamaño menor dentro del contenedor */
+    font-size: 1rem;
+    /* Asegurar tamaño menor dentro del contenedor */
     color: #222 !important;
   }
-  
+
   .sopa-countdown {
     position: absolute;
     top: 50%;
@@ -93,23 +99,23 @@
     color: #222;
     animation: fadeIn 0.5s ease-in-out;
   }
-  
+
   /* Start Screen */
   .sopa-start-screen {
     text-align: center;
     padding: 2rem;
     background-color: #9ebde6;
-    border: 2px solid #f0a500;
+    border: 2px solid #8e44ad;
     border-radius: 15px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     margin: 2rem;
   }
-  
+
   .sopa-start-screen h1 {
     font-size: 2.5rem;
     color: #1565c0;
   }
-  
+
   .sopa-start-screen button {
     font-size: 1.2em;
     padding: 15px 30px;
@@ -120,34 +126,43 @@
     cursor: pointer;
     transition: all 0.3s ease;
   }
-  
+
   .sopa-start-screen button:hover {
     background-color: #2980b9;
     transform: translateY(-2px);
   }
 
-  .sopa-game-info {
-    text-align: center;
-    padding: 0.3rem 2rem;
-    background-color: #9ebde6;
-    border: 2px solid #f0a500;
-    border-radius: 15px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    margin: 0rem;
-  }
-  
-  .sopa-game-stats {
+  .sopa-info-row {
     display: flex;
-    justify-content: center; /* Centra horizontalmente */
-    align-items: center; /* Asegura alineación vertical */
-    gap: 20px; /* Espacio entre "Puntaje" y "Errores" */
+    justify-content: center;
+    align-items: center;
+    background: rgba(248, 246, 251, 0.95);
+    border: 2px solid #8e44ad;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(142, 68, 173, 0.2);
+    width: fit-content;
+    max-width: 98vw;
+    margin: 0.5rem auto;
+    padding: 0.5rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    gap: 1.5rem;
+    color: #2c3e50;
+  }
+
+  .stat-item {
+    flex: none;
+    text-align: center;
+    white-space: nowrap;
+    padding: 0 0.5rem;
   }
 
   .sopa-app {
     font-family: 'Roboto', sans-serif;
     text-align: center;
     flex-direction: column;
-    background-color: transparent;  /* Para que adopte el color del contenedor */
+    background-color: transparent;
+    /* Para que adopte el color del contenedor */
     color: #ffffff;
     margin: 0;
     padding: 20px;
@@ -155,7 +170,8 @@
     height: 100%;
     max-width: 100%;
     max-height: 100%;
-    overflow: hidden; /* Evita que el contenido se expanda más de la caja */
+    overflow: hidden;
+    /* Evita que el contenido se expanda más de la caja */
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -165,51 +181,53 @@
   }
 
   /* Contenedor de la lista de palabras */
-.sopa-words-list {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 5px;
-  padding: 5px;
-  background-color: #9ebde6;
-  border: 2px solid #f0a500;
-  border-radius: 15px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  max-width: 550px; /* Ajuste de ancho para centrar */
-  margin-left: auto;
-  margin-right: auto;
-}
-
-/* Cada palabra dentro de la lista */
-.sopa-words-list div {
-  padding: 3px 6px;
-  background-color: #f5f5f5;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: bold;
-  text-transform: capitalize;
-  transition: all 0.3s ease-in-out;
-  color: #333;
-  border: 2px solid transparent;
-  cursor: default;
-}
-
-/* Estilo para palabras encontradas */
-.sopa-words-list div.found {
-  background-color: #4caf50;
-  color: white;
-  text-decoration: line-through;
-  border: 2px solid #388e3c;
-  transform: scale(1.05);
+  .sopa-words-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 5px;
+    padding: 5px;
+    background-color: #9ebde6;
+    border: 2px solid #8e44ad;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 550px;
+    /* Ajuste de ancho para centrar */
+    margin-left: auto;
+    margin-right: auto;
   }
-  
+
+  /* Cada palabra dentro de la lista */
+  .sopa-words-list div {
+    padding: 3px 6px;
+    background-color: #f5f5f5;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: capitalize;
+    transition: all 0.3s ease-in-out;
+    color: #333;
+    border: 2px solid transparent;
+    cursor: default;
+  }
+
+  /* Estilo para palabras encontradas */
+  .sopa-words-list div.found {
+    background-color: #4caf50;
+    color: white;
+    text-decoration: line-through;
+    border: 2px solid #388e3c;
+    transform: scale(1.05);
+  }
+
   .sopa-button-container {
     display: flex;
     justify-content: center;
-    gap: 12px; /* Espacio entre los botones */
+    gap: 12px;
+    /* Espacio entre los botones */
     padding: 5px;
   }
-  
+
   .sopa-app button {
     border: none;
     padding: 10px 20px;
@@ -219,161 +237,224 @@
     transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
     font-family: 'Poppins', sans-serif;
     margin: 0;
-}
+  }
 
-/* Hint (Pista) - Amarillo/Naranja */
-.hint-button-sopa {
-    background-color: #f4c542;  /* Amarillo dorado */
-    color: #4a2c00;  /* Marrón oscuro para buen contraste */
-}
+  /* Hint (Pista) - Amarillo/Naranja */
+  .hint-button-sopa {
+    background-color: #f4c542;
+    /* Amarillo dorado */
+    color: #4a2c00;
+    /* Marrón oscuro para buen contraste */
+  }
 
-.hint-button-sopa:hover {
+  .hint-button-sopa:hover {
     background-color: #e0b13e;
     transform: translateY(-3px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
+  }
 
-.hint-button-sopa:active {
+  .hint-button-sopa:active {
     background-color: #c9972f;
     transform: translateY(1px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
+  }
 
-/* Reveal (Revelar palabra completa) - Azul */
-.reveal-button-sopa {
-    background-color: #2980b9; 
+  /* Reveal (Revelar palabra completa) - Azul */
+  .reveal-button-sopa {
+    background-color: #2980b9;
     color: white;
-}
+  }
 
-.reveal-button-sopa:hover {
-    background-color: #1f6aa5;  
+  .reveal-button-sopa:hover {
+    background-color: #1f6aa5;
     transform: translateY(-3px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
+  }
 
-.reveal-button-sopa:active {
+  .reveal-button-sopa:active {
     background-color: #165281;
     transform: translateY(1px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-  
-:root {
-  --cell-size: 22px; /* Tamaño fijo de cada celda */
-  --font-size: 16px; /* Tamaño fijo de fuente */
-}
-
-/* Ajustamos dinámicamente el nivel */
-.sopa-main {
-  width: 500px;
-}
-
-/* Contenedor del grid */
-#sopa-grid {
-  display: grid;
-  grid-template-columns: repeat(var(--grid-cols), var(--cell-size));
-  grid-template-rows: repeat(var(--grid-rows), var(--cell-size));
-  gap: 3px; /* Espacio entre celdas */
-  background-color: #2c3e50; /* Azul oscuro */
-  padding: 10px;
-  border: 5px solid #f39c12; /* Naranja vibrante */
-  border-radius: 10px;
-  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
-  width: fit-content;
-  height: fit-content;
-  max-width: 90vw;
-  max-height: 90vh;
-  margin: auto;
-  margin-top: 5px;
-  margin-bottom: 5px;
-}
-
-/* Diseño de cada celda */
-.sopa-cell {
-  width: var(--cell-size);
-  height: var(--cell-size);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: #ffffff;
-  border: 2px solid #34495e; /* Azul oscuro */
-  cursor: pointer;
-  user-select: none;
-  transition: background-color 0.3s ease-in-out, transform 0.1s ease;
-  color: #000;
-  font-size: var(--font-size);
-  font-weight: bold;
-}
-
-/* Efecto hover */
-.sopa-cell:hover {
-  background-color: #ecf0f1; /* Gris claro */
-  transform: scale(1.1);
-}
-
-/* Celdas encontradas */
-.sopa-cell.found {
-  background-color: #27ae60; /* Verde */
-  color: white;
-  font-weight: bold;
-  border-color: #2ecc71;
-  transition: background-color 0.5s ease;
-}
-
-/* Celdas en selección actual */
-.sopa-cell.selected {
-  background-color: #f1c40f; /* Amarillo */
-  color: black;
-  border: 2px solid #f39c12;
-}
-
-/* Resaltado al hacer hover */
-.sopa-cell.highlight {
-  background-color: #f39c12;
-  transition: background-color 1s ease;
-}
-
-/* Responsividad: Ajuste para pantallas pequeñas */
-@media (max-width: 600px) {
-  .sopa-cell {
-    font-size: 14px; /* Tamaño más pequeño en pantallas pequeñas */
-    width: 24px;
-    height: 24px;
   }
 
+  :root {
+    --cell-size: 22px;
+    /* Tamaño fijo de cada celda */
+    --font-size: 16px;
+    /* Tamaño fijo de fuente */
+  }
+
+  /* Ajustamos dinámicamente el nivel */
+  .sopa-main {
+    width: 500px;
+  }
+
+  /* Contenedor del grid */
   #sopa-grid {
-    gap: 2px;
+    display: grid;
+    grid-template-columns: repeat(var(--grid-cols), var(--cell-size));
+    grid-template-rows: repeat(var(--grid-rows), var(--cell-size));
+    gap: 3px;
+    /* Espacio entre celdas */
+    background-color: #2c3e50;
+    /* Azul oscuro */
     padding: 10px;
+    border: 2px solid #8e44ad;
+    /* Naranja vibrante */
+    border-radius: 10px;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+    width: fit-content;
+    height: fit-content;
+    max-width: 90vw;
+    max-height: 90vh;
+    margin: auto;
+    margin-top: 5px;
+    margin-bottom: 5px;
   }
-}
 
-.sopa-fin-juego-container {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 20px;
-  font-family: 'Arial', sans-serif;
-  text-align: center;
-  background-color: #3498db;
-  border-radius: 10px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-  animation: aparecer 0.5s ease-out;
-}
-  
-.sopa-fin-juego-container button {
-  background-color: #75e78e;
-  border: 2px solid #61bd75;
-  color: white;
-  padding: 12px 30px;
-  border: none;
-  border-radius: 25px;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: bold;
-  text-transform: uppercase;
-  transition: all 0.3s ease;
-  margin-top: 15px;
-}
+  /* Diseño de cada celda */
+  .sopa-cell {
+    width: var(--cell-size);
+    height: var(--cell-size);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #ffffff;
+    border: 2px solid #34495e;
+    /* Azul oscuro */
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.3s ease-in-out, transform 0.1s ease;
+    color: #000;
+    font-size: var(--font-size);
+    font-weight: bold;
+  }
 
-.sopa-fin-juego-container button:hover {
-  background-color: #61bd75;
-  transform: translateY(-2px);
-}
+  /* Efecto hover */
+  .sopa-cell:hover {
+    background-color: #ecf0f1;
+    /* Gris claro */
+    transform: scale(1.1);
+  }
+
+  /* Celdas encontradas */
+  .sopa-cell.found {
+    background-color: #27ae60;
+    /* Verde */
+    color: white;
+    font-weight: bold;
+    border-color: #2ecc71;
+    transition: background-color 0.5s ease;
+  }
+
+  /* Celdas en selección actual */
+  .sopa-cell.selected {
+    background-color: #f1c40f;
+    /* Amarillo */
+    color: black;
+    border: 2px solid #f39c12;
+  }
+
+  /* Resaltado al hacer hover */
+  .sopa-cell.highlight {
+    background-color: #f39c12;
+    transition: background-color 1s ease;
+  }
+
+  /* Responsividad: Ajuste para pantallas pequeñas */
+  @media (max-width: 600px) {
+    .sopa-cell {
+      font-size: 14px;
+      /* Tamaño más pequeño en pantallas pequeñas */
+      width: 24px;
+      height: 24px;
+    }
+
+    #sopa-grid {
+      gap: 2px;
+      padding: 10px;
+    }
+  }
+
+  .sopa-fin-juego-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Arial', sans-serif;
+    text-align: center;
+    background-color: #3498db;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    animation: aparecer 0.5s ease-out;
+  }
+
+  .sopa-stats-table-wrapper {
+    margin: 1rem auto 2rem;
+    overflow-x: auto;
+    max-width: 100%;
+  }
+
+  .sopa-stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #f8f6fb;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(142, 68, 173, 0.2);
+  }
+
+  .sopa-stats-table th {
+    background: #8e44ad;
+    color: #fff;
+    padding: 0.8rem;
+    font-weight: bold;
+    border-bottom: 2px solid #6c3483;
+  }
+
+  .sopa-stats-table td {
+    padding: 12px;
+    font-size: 0.9rem;
+    background: #f3eafc;
+    border-bottom: 1px solid rgba(142, 68, 173, 0.2);
+    color: black;
+  }
+
+  .sopa-stats-table tr:nth-child(even) td {
+    background: #ede1f8;
+  }
+
+  @media (max-width: 600px) {
+    .concentrate-info-row {
+      font-size: 0.9rem;
+      padding: 0.3rem;
+      gap: 1rem;
+    }
+
+    .concentrate-stats-table th,
+    .concentrate-stats-table td {
+      padding: 0.5rem;
+      font-size: 0.9rem;
+    }
+  }
+
+  .sopa-fin-juego-container button {
+    background-color: #75e78e;
+    border: 2px solid #61bd75;
+    color: white;
+    padding: 12px 30px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+    margin-top: 15px;
+    box-shadow: 0 2px 8px #0002;
+  }
+
+  .sopa-fin-juego-container button:hover {
+    background-color: #61bd75;
+    transform: translateY(-2px);
+    color: #fff;
+    transform: translateY(-2px) scale(1.04);
+  }
