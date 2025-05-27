@@ -200,7 +200,7 @@ memory-button:disabled {
 }
 
 .memory-stats-table-wrapper {
-  margin: 1rem auto;
+  margin: 1rem auto 2rem;
   overflow-x: auto;
   max-width: 100%;
 }
@@ -211,22 +211,23 @@ memory-button:disabled {
   background: #f8f6fb;
   border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 2px 12px #f0a50022;
-  margin: 1rem 0;
+  box-shadow: 0 2px 12px rgba(142, 68, 173, 0.2);
 }
 
 .memory-stats-table th {
-  background: #f0a500;
+  background: #8e44ad;
   color: #fff;
   padding: 0.8rem;
   font-weight: bold;
-  border-bottom: 2px solid #db9400;
+  border-bottom: 2px solid #6c3483;
 }
 
 .memory-stats-table td {
-  padding: 0.6rem;
+  padding: 12px;
+  font-size: 0.9rem;
   background: #f3eafc;
-  border-bottom: 1px solid #f0a50022;
+  border-bottom: 1px solid rgba(142, 68, 173, 0.2);
+  color: black;
 }
 
 .memory-stats-table tr:nth-child(even) td {

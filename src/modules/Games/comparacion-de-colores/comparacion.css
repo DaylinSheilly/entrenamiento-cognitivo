@@ -151,8 +151,9 @@
 }
 
 .comparacion-stats-table-wrapper {
-  margin: 0 auto 2rem auto;
+  margin: 1rem auto 2rem;
   overflow-x: auto;
+  max-width: 100%;
 }
 
 .comparacion-stats-table {
@@ -161,25 +162,23 @@
   background: #f8f6fb;
   border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 2px 12px #8e44ad22;
-  margin-top: 1.5rem;
-  font-family: inherit;
-  font-size: 1.08rem;
-  min-width: 260px;
+  box-shadow: 0 2px 12px rgba(142, 68, 173, 0.2);
 }
 
 .comparacion-stats-table th {
   background: #8e44ad;
   color: #fff;
+  padding: 0.8rem;
   font-weight: bold;
-  letter-spacing: 0.5px;
   border-bottom: 2px solid #6c3483;
 }
 
 .comparacion-stats-table td {
+  padding: 12px;
+  font-size: 0.9rem;
   background: #f3eafc;
-  color: #333;
-  font-weight: 500;
+  border-bottom: 1px solid rgba(142, 68, 173, 0.2);
+  color: black;
 }
 
 .comparacion-stats-table tr:nth-child(even) td {
