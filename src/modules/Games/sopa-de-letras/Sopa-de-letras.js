@@ -205,13 +205,12 @@ const WordSearch = ({ onGameEnd }) => {
               const newRow = row + i * dy;
               const newCol = col + i * dx;
 
-              console.log(`Placed word ${word} at coordinates:`, newRow, newCol);
+              // console.log(`Placed word ${word} at coordinates:`, newRow, newCol);
 
               // Verificar que las coordenadas están dentro de los límites del grid
               if (newRow >= 0 && newRow < gridSize && newCol >= 0 && newCol < gridSize) {
                 wordCoordinates.push([newRow, newCol]);
               } else {
-                console.error(`Coordenada fuera de límites: (${newRow}, ${newCol})`);
                 break; // Si alguna coordenada está fuera de los límites, detener el proceso
               }
             }
@@ -231,7 +230,7 @@ const WordSearch = ({ onGameEnd }) => {
       }
 
       if (!placed) {
-        console.warn(`Could not place word: ${word}`);
+        //console.warn(`Could not place word: ${word}`);
       }
     }
 
@@ -452,7 +451,7 @@ const WordSearch = ({ onGameEnd }) => {
     if (fullWordCoordinates[word]) {
       return fullWordCoordinates[word]; // Retorna las coordenadas de la palabra
     } else {
-      console.warn(`La palabra "${word}" no se encuentra en el diccionario.`);
+      // console.warn(`La palabra "${word}" no se encuentra en el diccionario.`);
       return null; // Retorna null si la palabra no está en el diccionario
     }
   });
@@ -465,7 +464,6 @@ const WordSearch = ({ onGameEnd }) => {
 
       // Obtiene las coordenadas de toda la palabra
       const wordCoords = getWordCoordinates(randomWord);
-      console.log(wordCoords)
 
       if (wordCoords) {
         // Aplica la clase "found" a todas las coordenadas de la palabra
