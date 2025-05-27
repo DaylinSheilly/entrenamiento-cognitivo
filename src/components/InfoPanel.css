@@ -1,35 +1,53 @@
 .compo-info-panel {
-  width: 380px; /* Ajusta el ancho según lo necesites */
-  padding: 10px;
-  background-color: #ffffff; /* Mismo fondo que el GameContainer */
+  width: 380px; /* O ajusta según tu diseño */
+  padding: 10px 16px;
+  background-color: #ffffff;
   color: #1a1a1a;
   box-shadow: 0px 12px 24px rgba(0, 0, 0, 0.2), 
-              0px -8px 16px rgba(0, 0, 0, 0.05); /* Sombra por todos lados */
+              0px -8px 16px rgba(0, 0, 0, 0.05);
   border-radius: 8px;
   box-sizing: border-box;
-  max-height: 220px; /* Ajusta la altura para que tenga scroll cuando el contenido sea extenso */
-  overflow-y: auto; /* Activa el scroll vertical */
+  height: 550px;         /* Fijo, suficiente para instrucciones largas */
+  max-height: 600px;     /* Nunca mayor a 600px */
+  overflow-y: auto;      /* Scroll si el contenido excede */
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Personalización del scroll */
-.compo-info-panel::-webkit-scrollbar {
-  width: 8px;
+.compo-info-panel h2 {
+  font-size: 1.5rem;
+  margin-top: 10px;
+  margin-bottom: 8px;
+  color: #6d3186;
+  text-align: center;
 }
 
-.compo-info-panel::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.compo-info-panel::-webkit-scrollbar-thumb {
-  background: #8e44ad;
-  border-radius: 4px;
-}
-
-.compo-info-panel::-webkit-scrollbar-thumb:hover {
-  background: #6d3186;
+.info-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 }
 
 .compo-info-panel p {
   white-space: pre-line;
+  font-size: 1rem;
+  margin: 8px 0;
+}
+
+/* Scrollbar personalizado */
+.compo-info-panel::-webkit-scrollbar {
+  width: 8px;
+}
+.compo-info-panel::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+.compo-info-panel::-webkit-scrollbar-thumb {
+  background: #8e44ad;
+  border-radius: 4px;
+}
+.compo-info-panel::-webkit-scrollbar-thumb:hover {
+  background: #6d3186;
 }
