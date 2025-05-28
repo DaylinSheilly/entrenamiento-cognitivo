@@ -138,6 +138,7 @@ function Games() {
   const [error, setError] = useState(null);
   const [playsByGame, setPlaysByGame] = useState(null);
   const [sortedDomains, setSortedDomains] = useState([]);
+  const [hoveredGame, setHoveredGame] = useState(null);
 
   // Cargar conteo de juegos solo si está autenticado
   useEffect(() => {
@@ -254,91 +255,180 @@ function Games() {
               {group.domain}
             </Typography>
             <Grid container spacing={3}>
-              {group.games.map((game) => (
-                <Grid item xs={12} sm={6} md={4} key={game.name}>
-                  <Box
-                    className="game-card"
-                    onClick={() => handleStartGame(game.path)}
-                    sx={{
-                      width: '100%',
-                      maxWidth: 340,
-                      minWidth: 200,
-                      height: 0,
-                      paddingBottom: '100%', // cuadrado responsivo
-                      position: 'relative',
-                      backgroundImage: `url(${game.image})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                      borderRadius: 3,
-                      boxShadow: 4,
-                      overflow: 'hidden',
-                      cursor: 'pointer',
-                      transition: 'transform 0.3s, box-shadow 0.3s',
-                      '&:hover': {
-                        transform: 'scale(1.05)',
-                        boxShadow: 8,
-                      }
-                    }}
-                  >
+              {group.games.map((game) => {
+                const isHovered = hoveredGame === game.name;
+                return (
+                  <Grid item xs={12} sm={6} md={4} key={game.name} sx={{ position: 'relative' }}>
                     <Box
-                      className="game-card-overlay"
+                      onMouseEnter={() => setHoveredGame(game.name)}
+                      onMouseLeave={() => setHoveredGame(null)}
                       sx={{
-                        position: 'absolute',
-                        inset: 0,
-                        background: 'rgba(0,0,0,0.18)',
-                        zIndex: 1,
-                        transition: 'background 0.2s',
-                      }}
-                    />
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        left: 0,
-                        bottom: 0,
-                        width: '100%',
-                        height: 'auto',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center', // <-- centra horizontalmente
-                        justifyContent: 'center',
-                        background: 'rgba(0,0,0,0.55)',
-                        color: '#fff',
-                        py: 2,
-                        px: 0,
-                        fontWeight: 700,
-                        fontSize: '1.1rem',
-                        letterSpacing: '1px',
-                        textAlign: 'center',
-                        textShadow: '1px 1px 4px #222',
-                        zIndex: 2,
+                        width: isHovered ? 400 : 220, // mismo ancho que la tarjeta expandida
+                        height: 0,
+                        paddingBottom: isHovered ? '50%' : '100%', // mismo alto que la tarjeta expandida
+                        position: 'relative',
+                        transition: 'width 0.3s, padding-bottom 0.3s',
+                        zIndex: isHovered ? 1301 : 1,
                       }}
                     >
-                      <Typography variant="h6" sx={{
-                        fontWeight: 700,
-                        fontSize: '1.1rem',
-                        textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
-                        lineHeight: 1.2,
-                        mb: 0.5,
-                        width: '100%',
-                        textAlign: 'center',
-                      }}>
-                        {game.name}
-                      </Typography>
-                      {isAuthenticated && playsByGame && playsByGame[game.name] > 0 && (
-                        <Typography variant="body2" sx={{
-                          fontSize: '0.85rem',
-                          opacity: 0.9,
-                          textAlign: 'center',
-                          width: '100%',
-                          textShadow: '1px 1px 2px rgba(0,0,0,0.8)'
-                        }}>
-                          ({playsByGame[game.name]} partidas)
-                        </Typography>
+                      {/* Placeholder invisible solo cuando expandido */}
+                      {isHovered && (
+                        <Box sx={{
+                          width: 220,
+                          height: 0,
+                          paddingBottom: '100%',
+                          visibility: 'hidden',
+                          pointerEvents: 'none',
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                        }} />
                       )}
+                      {/* Tarjeta real, normal o expandida */}
+                      <Box
+                        className="game-card"
+                        sx={{
+                          width: isHovered ? 580 : 220,
+                          minWidth: 140,
+                          maxWidth: 580,
+                          height: isHovered ? 406 : 220, // o el alto que prefieras
+                          position: 'relative',
+                          boxShadow: 4,
+                          borderRadius: 3,
+                          overflow: 'hidden',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          flexDirection: 'row',
+                          alignItems: 'stretch',
+                          background: '#fff',
+                          transition: 'width 0.3s, height 0.3s, box-shadow 0.3s',
+                          zIndex: isHovered ? 1301 : 1,
+                        }}
+                      >
+                        {/* Imagen */}
+                        <Box
+                          sx={{
+                            width: isHovered ? '70%' : 220, // cambia el ancho, no el scale
+                            height: isHovered ? '100%' : 220,
+                            backgroundImage: `url(${game.image})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                            borderRadius: 0,
+                            transition: 'width 0.3s',
+                            minWidth: 0,
+                            flexShrink: 0,
+                            position: 'relative',
+                            overflow: 'hidden',
+                            display: 'flex',
+                            alignItems: 'flex-end',
+                          }}
+                        >
+                          <Box
+                            className="game-card-overlay"
+                            sx={{
+                              position: 'absolute',
+                              inset: 0,
+                              background: 'rgba(0,0,0,0.18)',
+                              zIndex: 3,
+                              transition: 'background 0.2s',
+                            }}
+                          />
+                          {/* Texto sobre imagen solo si NO está en hover */}
+                          {!isHovered && (
+                            <Box
+                              sx={{
+                                position: 'absolute',
+                                left: 0,
+                                bottom: 0,
+                                width: '100%',
+                                background: 'rgba(0,0,0,0.55)',
+                                color: '#fff',
+                                py: 2,
+                                px: 0,
+                                fontWeight: 700,
+                                fontSize: '1.1rem',
+                                letterSpacing: '1px',
+                                textAlign: 'center',
+                                textShadow: '1px 1px 4px #222',
+                                zIndex: 4,
+                              }}
+                            >
+                              <Typography variant="h6" sx={{
+                                fontWeight: 700,
+                                fontSize: '1.1rem',
+                                textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
+                                lineHeight: 1.2,
+                                mb: 0.5,
+                                width: '100%',
+                                textAlign: 'center',
+                              }}>
+                                {game.name}
+                              </Typography>
+                              {isAuthenticated && playsByGame && playsByGame[game.name] > 0 && (
+                                <Typography variant="body2" sx={{
+                                  fontSize: '0.85rem',
+                                  opacity: 0.9,
+                                  textAlign: 'center',
+                                  width: '100%',
+                                  textShadow: '1px 1px 2px rgba(0,0,0,0.8)'
+                                }}>
+                                  ({playsByGame[game.name]} partidas)
+                                </Typography>
+                              )}
+                            </Box>
+                          )}
+                        </Box>
+                        {/* Panel lateral visible solo en hover */}
+                        {isHovered && (
+                          <Box
+                            sx={{
+                              flex: '1 1 0%',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              justifyContent: 'center',
+                              alignItems: 'flex-start',
+                              bgcolor: 'rgba(255,255,255,0.98)',
+                              px: 3,
+                              py: 2,
+                              minWidth: 140,
+                              maxWidth: 220,
+                              height: '100%',
+                              position: 'relative',
+                              zIndex: 5,
+                            }}
+                          >
+                            <Typography
+                              variant="h6"
+                              sx={{
+                                color: '#6d3186',
+                                fontWeight: 700,
+                                mb: 1,
+                                textAlign: 'left',
+                                width: '100%',
+                                whiteSpace: 'normal',
+                              }}
+                            >
+                              {game.name}
+                            </Typography>
+                            {isAuthenticated && playsByGame && playsByGame[game.name] > 0 && (
+                              <Typography
+                                variant="body2"
+                                sx={{
+                                  fontSize: '1rem',
+                                  color: '#333',
+                                  opacity: 0.9,
+                                }}
+                              >
+                                {playsByGame[game.name]} partidas
+                              </Typography>
+                            )}
+                          </Box>
+                        )}
+                      </Box>
                     </Box>
-                  </Box>
-                </Grid>
-              ))}
+                  </Grid>
+                );
+              })}
             </Grid>
           </Box>
         ))}
