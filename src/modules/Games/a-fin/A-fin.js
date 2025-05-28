@@ -12,7 +12,7 @@ const ERROR_THRESHOLD = {
 };
 
 const LEVEL_TIME = {
-  1: 6,
+  1: 60,
   2: 60,
   3: 45,
   4: 45,

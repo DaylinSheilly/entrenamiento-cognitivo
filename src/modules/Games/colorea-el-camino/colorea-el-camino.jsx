@@ -646,7 +646,7 @@ const ColoreaElCamino = ({ onGameEnd }) => {
     gridTemplateColumns: `repeat(${numCols}, ${cellSize}px)`,
     gridTemplateRows: `repeat(${numRows}, ${cellSize}px)`,
     gap: '2px',
-    margin: '20px auto',
+    margin: '2.5px auto',
     width: `${numCols * (cellSize + 2)}px`
   };
 

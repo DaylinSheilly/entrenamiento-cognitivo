@@ -2,51 +2,131 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
-  Box, Button, Grid, Typography, Paper, CircularProgress, Snackbar, Alert
+  Box, Grid, Typography, Paper, CircularProgress, Snackbar, Alert
 } from '@mui/material';
 import { useAuth0 } from "@auth0/auth0-react";
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 
-// Listado base de juegos por dominio
+import matrizImg from './assets/matriz-de-memoria.png';
+import sigueImg from './assets/sigue-la-secuencia.png';
+import recuerdaImg from './assets/recuerda-objetos.png';
+
+import concentrateImg from './assets/concentrate-en-objetivo.png';
+import noPierdasImg from './assets/no-pierdas-objetos.png';
+import observaImg from './assets/observa-y-compara.png';
+
+import comparacionImg from './assets/comparacion-de-colores.png';
+import colorAccionImg from './assets/color-accion.png';
+import miraDireccionImg from './assets/mira-la-direccion.png';
+
+import sopaImg from './assets/sopa-de-letras.png';
+import afinImg from './assets/a-fin.png';
+import sentidoImg from './assets/que-sentido-tiene.png';
+
+import apuntaImg from './assets/apunta-acierta.png';
+import caneriaImg from './assets/construye-la-cañeria.png';
+import coloreaImg from './assets/colorea-el-camino.png';
+
+// Listado base de juegos por dominio con imágenes
 const gamesByDomain = [
   {
     domain: "Memoria",
     games: [
-      { name: "Matriz de memoria", path: "/games/matriz-de-memoria" },
-      { name: "Sigue la secuencia", path: "/games/sigue-la-secuencia" },
-      { name: "Recuerda los objetos", path: "/games/recuerda-los-objetos" },
+      {
+        name: "Matriz de memoria",
+        path: "/games/matriz-de-memoria",
+        image: matrizImg
+      },
+      {
+        name: "Sigue la secuencia",
+        path: "/games/sigue-la-secuencia",
+        image: sigueImg
+      },
+      {
+        name: "Recuerda los objetos",
+        path: "/games/recuerda-los-objetos",
+        image: recuerdaImg
+      },
     ]
   },
   {
     domain: "Atención",
     games: [
-      { name: "Concéntrate en el objetivo", path: "/games/concentrate-en-objetivo" },
-      { name: "No pierdas los objetos", path: "/games/no-pierdas-los-objetos" },
-      { name: "Observa y compara", path: "/games/observa-y-compara" },
+      {
+        name: "Concéntrate en el objetivo",
+        path: "/games/concentrate-en-objetivo",
+        image: concentrateImg
+      },
+      {
+        name: "No pierdas los objetos",
+        path: "/games/no-pierdas-los-objetos",
+        image: noPierdasImg
+      },
+      {
+        name: "Observa y compara",
+        path: "/games/observa-y-compara",
+        image: observaImg
+      },
     ]
   },
   {
     domain: "Funciones ejecutivas",
     games: [
-      { name: "Comparación de colores", path: "/games/comparacion-de-colores" },
-      { name: "Color y acción", path: "/games/color-y-accion" },
-      { name: "Mira la dirección", path: "/games/mira-la-direccion" },
+      {
+        name: "Comparación de colores",
+        path: "/games/comparacion-de-colores",
+        image: comparacionImg
+      },
+      {
+        name: "Color y acción",
+        path: "/games/color-y-accion",
+        image: colorAccionImg
+      },
+      {
+        name: "Mira la dirección",
+        path: "/games/mira-la-direccion",
+        image: miraDireccionImg
+      },
     ]
   },
   {
     domain: "Lenguaje",
     games: [
-      { name: "Sopa de letras", path: "/games/sopa-de-letras" },
-      { name: "A fin", path: "/games/a-fin" },
-      { name: "¿Qué sentido tiene?", path: "/games/que-sentido-tiene" },
+      {
+        name: "Sopa de letras",
+        path: "/games/sopa-de-letras",
+        image: sopaImg
+      },
+      {
+        name: "A fin",
+        path: "/games/a-fin",
+        image: afinImg
+      },
+      {
+        name: "¿Qué sentido tiene?",
+        path: "/games/que-sentido-tiene",
+        image: sentidoImg
+      },
     ]
   },
   {
     domain: "Habilidades visoconstructivas",
     games: [
-      { name: "Apunta y acierta", path: "/games/apunta-acierta" },
-      { name: "Construye la cañería", path: "/games/construye-la-tuberia" },
-      { name: "Colorea el camino", path: "/games/colorea-el-camino" },
+      {
+        name: "Apunta y acierta",
+        path: "/games/apunta-acierta",
+        image: apuntaImg
+      },
+      {
+        name: "Construye la cañería",
+        path: "/games/construye-la-tuberia",
+        image: caneriaImg
+      },
+      {
+        name: "Colorea el camino",
+        path: "/games/colorea-el-camino",
+        image: coloreaImg
+      },
     ]
   },
 ];
@@ -63,7 +143,7 @@ function Games() {
   useEffect(() => {
     const fetchPlayCounts = async () => {
       if (!isAuthenticated) {
-        setSortedDomains(gamesByDomain); // Muestra listado por defecto
+        setSortedDomains(gamesByDomain);
         return;
       }
       try {
@@ -78,19 +158,15 @@ function Games() {
         });
         setPlaysByGame(response.data);
 
-        // Ordenar dominios y juegos basado en conteos
         const orderedDomains = [...gamesByDomain].map(domain => {
-          // Ordenar juegos dentro del dominio
           const sortedGames = [...domain.games].sort((a, b) =>
             (response.data[b.name] || 0) - (response.data[a.name] || 0)
           );
-          // Calcular total de juegos por dominio
           const totalPlays = sortedGames.reduce((sum, game) =>
             sum + (response.data[game.name] || 0), 0
           );
           return { ...domain, games: sortedGames, totalPlays };
         });
-        // Ordenar dominios por total de juegos
         orderedDomains.sort((a, b) => b.totalPlays - a.totalPlays);
         setSortedDomains(orderedDomains);
       } catch (err) {
@@ -102,7 +178,6 @@ function Games() {
     fetchPlayCounts();
   }, [isAuthenticated, getAccessTokenSilently]);
 
-  // Botón de jugar: si no autenticado, redirige a login
   const handleStartGame = (path) => {
     if (!isAuthenticated) {
       loginWithRedirect({ appState: { returnTo: "/games" } });
@@ -181,40 +256,87 @@ function Games() {
             <Grid container spacing={3}>
               {group.games.map((game) => (
                 <Grid item xs={12} sm={6} md={4} key={game.name}>
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    color="secondary"
-                    size="large"
+                  <Box
+                    className="game-card"
                     onClick={() => handleStartGame(game.path)}
-                    disabled={loading}
                     sx={{
-                      py: 3,
-                      borderRadius: 2,
-                      fontSize: '1.1rem',
-                      textTransform: 'none',
-                      boxShadow: 3,
-                      transition: 'transform 0.2s',
+                      width: '100%',
+                      maxWidth: 340,
+                      minWidth: 200,
+                      height: 0,
+                      paddingBottom: '100%', // cuadrado responsivo
+                      position: 'relative',
+                      backgroundImage: `url(${game.image})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      borderRadius: 3,
+                      boxShadow: 4,
+                      overflow: 'hidden',
+                      cursor: 'pointer',
+                      transition: 'transform 0.3s, box-shadow 0.3s',
                       '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: 6
-                      },
-                      '&:disabled': {
-                        bgcolor: 'action.disabledBackground',
-                        color: 'text.disabled'
+                        transform: 'scale(1.05)',
+                        boxShadow: 8,
                       }
                     }}
                   >
-                    {game.name}
-                    {isAuthenticated && playsByGame && playsByGame[game.name] > 0 && (
-                      <Typography
-                        component="span"
-                        sx={{ ml: 1, fontSize: '0.8rem', opacity: 0.8 }}
-                      >
-                        ({playsByGame[game.name]})
+                    <Box
+                      className="game-card-overlay"
+                      sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        background: 'rgba(0,0,0,0.18)',
+                        zIndex: 1,
+                        transition: 'background 0.2s',
+                      }}
+                    />
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        left: 0,
+                        bottom: 0,
+                        width: '100%',
+                        height: 'auto',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center', // <-- centra horizontalmente
+                        justifyContent: 'center',
+                        background: 'rgba(0,0,0,0.55)',
+                        color: '#fff',
+                        py: 2,
+                        px: 0,
+                        fontWeight: 700,
+                        fontSize: '1.1rem',
+                        letterSpacing: '1px',
+                        textAlign: 'center',
+                        textShadow: '1px 1px 4px #222',
+                        zIndex: 2,
+                      }}
+                    >
+                      <Typography variant="h6" sx={{
+                        fontWeight: 700,
+                        fontSize: '1.1rem',
+                        textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
+                        lineHeight: 1.2,
+                        mb: 0.5,
+                        width: '100%',
+                        textAlign: 'center',
+                      }}>
+                        {game.name}
                       </Typography>
-                    )}
-                  </Button>
+                      {isAuthenticated && playsByGame && playsByGame[game.name] > 0 && (
+                        <Typography variant="body2" sx={{
+                          fontSize: '0.85rem',
+                          opacity: 0.9,
+                          textAlign: 'center',
+                          width: '100%',
+                          textShadow: '1px 1px 2px rgba(0,0,0,0.8)'
+                        }}>
+                          ({playsByGame[game.name]} partidas)
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
                 </Grid>
               ))}
             </Grid>

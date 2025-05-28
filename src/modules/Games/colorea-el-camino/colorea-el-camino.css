@@ -137,8 +137,8 @@
   box-shadow: 0 4px 6px #8e44ad22;
   width: fit-content;
   max-width: 98vw;
-  margin: 1.2rem auto 1.2rem auto;
   padding: 0.1rem 1.2rem;
+  margin: 2.5px auto;
   font-size: 1rem;
   font-weight: 500;
   line-height: 1.1;
@@ -241,7 +241,6 @@
   /* Centrar todo verticalmente */
   justify-content: center;
   /* Centrar todo horizontalmente */
-  gap: 40px;
   height: 100vh;
   /* Para que todo el contenido se mantenga centrado */
 }
