@@ -59,6 +59,13 @@ const WordSearch = ({ onGameEnd }) => {
     }
   }, [gameOver]);
 
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => setMessage(""), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
+
   const getLevelConfig = useCallback((level) => {
     switch (level) {
       case 1:
@@ -441,7 +448,7 @@ const WordSearch = ({ onGameEnd }) => {
           }, 1500);
         }
       } else {
-        alert(`La palabra "${randomWord}" no está en el tablero.`);
+        setMessage(`La palabra "${randomWord}" no está en el tablero.`);
       }
     }
   }, [words, wordsFound, findWordCoordinate]);
@@ -482,7 +489,7 @@ const WordSearch = ({ onGameEnd }) => {
     }
     if (wordsFound.length + 1 === words.length) {
       setTimeout(() => {
-        alert(`¡Nivel ${level} completado!`);
+        setMessage(`¡Nivel ${level} completado!`);
 
         // Resetea el estilo de las celdas
         resetGridStyles();
