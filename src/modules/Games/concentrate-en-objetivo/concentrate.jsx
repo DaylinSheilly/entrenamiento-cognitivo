@@ -212,35 +212,47 @@ const ConcentranteEnElObjetivo = ({ onGameEnd }) => {
         setTargetDirection(targetDir);
         targetDirectionRef.current = targetDir;
 
-        // console.log(`Debes presionar la flecha correcta: ${targetDir}`);
+        let isValid = false;
+        let attempts = 0;
+        let directionsSet = [];
 
-        // Generar direcciones aleatorias excluyendo la dirección objetivo
-        const directionsSet = Array.from({ length: numColumns }).map(() => {
-          let randomDir;
-          do {
-            randomDir = directions[Math.floor(Math.random() * directions.length)];
-          } while (randomDir === targetDir); // Evitar la dirección objetivo
-          return randomDir;
-        });
+        do {
+          // 1. Genera todas las direcciones excluyendo el objetivo
+          directionsSet = Array.from({ length: numColumns }).map(() => {
+            let randomDir;
+            do {
+              randomDir = directions[Math.floor(Math.random() * directions.length)];
+            } while (randomDir === targetDir);
+            return randomDir;
+          });
 
-        // Elegir dos posiciones aleatorias para asignarles la dirección objetivo
-        const indices = [];
-        while (indices.length < 2) {
-          const randomIndex = Math.floor(Math.random() * numColumns);
-          if (!indices.includes(randomIndex)) indices.push(randomIndex);
-        }
+          // 2. Elige 2 posiciones aleatorias para poner la dirección objetivo
+          const indices = [];
+          while (indices.length < 2) {
+            const idx = Math.floor(Math.random() * numColumns);
+            if (!indices.includes(idx)) indices.push(idx);
+          }
+          indices.forEach(idx => directionsSet[idx] = targetDir);
 
-        // Asignar la dirección objetivo a esas posiciones
-        indices.forEach(index => directionsSet[index] = targetDir);
+          // 3. Valida: solo la dirección objetivo debe aparecer exactamente 2 veces
+          const counts = {};
+          for (const dir of directionsSet) {
+            counts[dir] = (counts[dir] || 0) + 1;
+          }
+          isValid =
+            counts[targetDir] === 2 &&
+            Object.entries(counts).filter(([dir, count]) => dir !== targetDir && count === 2).length === 0;
 
-        // Crear los círculos con las direcciones asignadas
+          attempts++;
+        } while (!isValid && attempts < 100);
+
+        // 4. Crea los círculos
         newCircles = directionsSet.map(direction => ({
           direction,
-          color: 'black', // Color de fondo
-          arrowColor: 'white' // Color de flecha por defecto
+          color: 'black',
+          arrowColor: 'white'
         }));
-
-        // Mezclar los círculos para mayor aleatoriedad
+        // Mezclar para mayor aleatoriedad (opcional)
         newCircles = newCircles.sort(() => Math.random() - 0.5);
         break;
 
@@ -249,13 +261,52 @@ const ConcentranteEnElObjetivo = ({ onGameEnd }) => {
         setTargetDirection(targetDir);
         targetDirectionRef.current = targetDir;
 
-        // console.log(`Debes deducir la dirección correcta: ${targetDir}`);
+        // Parámetros para agrupar los círculos hacia la dirección objetivo
+        const biasFactor = 0.7; // 70% de los círculos estarán "sesgados" hacia la dirección objetivo
+        newCircles = Array.from({ length: numColumns }).map((_, idx) => {
+          let x = 0, y = 0;
 
-        newCircles = Array.from({ length: numColumns }).map(() => ({
-          direction: '', // No hay flecha visible
-          color: 'black', // Color de fondo
-          arrowColor: 'white' // Color de flecha por defecto
-        }));
+          // Decide si este círculo estará sesgado o no
+          const isBiased = Math.random() < biasFactor;
+
+          // Genera la posición según la dirección objetivo
+          if (isBiased) {
+            switch (targetDir) {
+              case '↑': // Agrupa hacia arriba
+                x = Math.random();
+                y = Math.random() * 0.4;
+                break;
+              case '↓': // Agrupa hacia abajo
+                x = Math.random();
+                y = 0.6 + Math.random() * 0.4;
+                break;
+              case '←': // Agrupa hacia la izquierda
+                x = Math.random() * 0.4;
+                y = Math.random();
+                break;
+              case '→': // Agrupa hacia la derecha
+                x = 0.6 + Math.random() * 0.4;
+                y = Math.random();
+                break;
+              default:
+                x = Math.random();
+                y = Math.random();
+            }
+          } else {
+            // Posición completamente aleatoria
+            x = Math.random();
+            y = Math.random();
+          }
+
+          // Convierte a píxeles
+          return {
+            direction: '',
+            color: 'black',
+            arrowColor: 'white',
+            x: Math.floor(x * (GRID_SIZE - circleSize)),
+            y: Math.floor(y * (GRID_SIZE - circleSize)),
+          };
+        });
         break;
 
       case 5:
@@ -368,7 +419,7 @@ const ConcentranteEnElObjetivo = ({ onGameEnd }) => {
         if ((newConsecutive % 4) === 0) {
           const bonus = Math.floor(newConsecutive / 4) * 50;
 
-          clearTimeout(timeoutRef.current); 
+          clearTimeout(timeoutRef.current);
           setStage(prevStage => {
             const newStage = Math.min(prevStage + 1, 5);
             setScore(s => s + 50 + bonus);
