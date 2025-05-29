@@ -137,8 +137,37 @@ function Games() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [playsByGame, setPlaysByGame] = useState(null);
+  const [maxScores, setMaxScores] = useState({});
   const [sortedDomains, setSortedDomains] = useState([]);
   const [hoveredGame, setHoveredGame] = useState(null);
+
+  useEffect(() => {
+    const fetchGameStats = async () => {
+      if (!isAuthenticated) return;
+      try {
+        const token = await getAccessTokenSilently({
+          authorizationParams: { audience: "https://api.neurosite.com" }
+        });
+        // Obtener máximo puntaje por juego
+        const maxScoresResponse = await axios.get('http://localhost:5000/games/max-scores', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const maxScoresData = maxScoresResponse.data.reduce((acc, item) => {
+          acc[item.game_name] = item.max_score;
+          return acc;
+        }, {});
+        setMaxScores(maxScoresData);
+        // Obtener conteo de partidas por juego
+        const playsResponse = await axios.get('http://localhost:5000/games/plays-by-game', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setPlaysByGame(playsResponse.data);
+      } catch (error) {
+        console.error('Error fetching game stats:', error);
+      }
+    };
+    fetchGameStats();
+  }, [isAuthenticated, getAccessTokenSilently]);
 
   // Cargar conteo de juegos solo si está autenticado
   useEffect(() => {
@@ -288,7 +317,7 @@ function Games() {
                       <Box
                         className="game-card"
                         sx={{
-                          width: isHovered ? 580 : 220,
+                          width: isHovered ? 676.6 : 220,
                           minWidth: 140,
                           maxWidth: 580,
                           height: isHovered ? 406 : 220, // o el alto que prefieras
@@ -304,12 +333,12 @@ function Games() {
                           transition: 'width 0.3s, height 0.3s, box-shadow 0.3s',
                           zIndex: isHovered ? 1301 : 1,
                         }}
-                        onClick={() => handleStartGame(game.path)} 
+                        onClick={() => handleStartGame(game.path)}
                       >
                         {/* Imagen */}
                         <Box
                           sx={{
-                            width: isHovered ? '70%' : 220, // cambia el ancho, no el scale
+                            width: isHovered ? '60%' : 220, // cambia el ancho, no el scale
                             height: isHovered ? '100%' : 220,
                             backgroundImage: `url(${game.image})`,
                             backgroundSize: 'cover',
@@ -373,7 +402,7 @@ function Games() {
                                   width: '100%',
                                   textShadow: '1px 1px 2px rgba(0,0,0,0.8)'
                                 }}>
-                                  ({playsByGame[game.name]} partidas)
+                                  {playsByGame[game.name]} partidas
                                 </Typography>
                               )}
                             </Box>
@@ -401,27 +430,44 @@ function Games() {
                             <Typography
                               variant="h6"
                               sx={{
-                                color: '#6d3186',
+                                color: 'primary.dark',
                                 fontWeight: 700,
                                 mb: 1,
-                                textAlign: 'left',
+                                textAlign: 'center',
                                 width: '100%',
                                 whiteSpace: 'normal',
                               }}
                             >
                               {game.name}
                             </Typography>
-                            {isAuthenticated && playsByGame && playsByGame[game.name] > 0 && (
-                              <Typography
-                                variant="body2"
-                                sx={{
-                                  fontSize: '1rem',
-                                  color: '#333',
-                                  opacity: 0.9,
-                                }}
-                              >
-                                {playsByGame[game.name]} partidas
-                              </Typography>
+                            {playsByGame[game.name] > 0 && (
+                              <Box sx={{ width: '100%', mb: 1 }}>
+                                <Typography variant="body2" sx={{ fontWeight: 500, color: '#666' }}>
+                                  Partidas jugadas:
+                                </Typography>
+                                <Typography variant="body1" sx={{ color: '#333' }}>
+                                  {playsByGame[game.name]}
+                                </Typography>
+                              </Box>
+                            )}
+
+                            {/* Máximo puntaje */}
+                            {maxScores[game.name] && (
+                              <Box sx={{ width: '100%', mb: 1 }}>
+                                <Typography variant="body2" sx={{ fontWeight: 500, color: '#666' }}>
+                                  Récord personal:
+                                </Typography>
+                                <Typography
+                                  variant="body1"
+                                  sx={{
+                                    color: '#2e7d32',
+                                    fontWeight: 700,
+                                    fontSize: '1.1rem'
+                                  }}
+                                >
+                                  {maxScores[game.name]} pts
+                                </Typography>
+                              </Box>
                             )}
                           </Box>
                         )}
