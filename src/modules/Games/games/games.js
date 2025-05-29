@@ -304,6 +304,7 @@ function Games() {
                           transition: 'width 0.3s, height 0.3s, box-shadow 0.3s',
                           zIndex: isHovered ? 1301 : 1,
                         }}
+                        onClick={() => handleStartGame(game.path)} 
                       >
                         {/* Imagen */}
                         <Box
