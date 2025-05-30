@@ -42,7 +42,7 @@ const checkSessionOwnership = async (req, res, next) => {
     // Opción 2: Crea una tabla de mapeo Auth0ID -> UserID
 
     const userMapping = await pool.query(
-      `SELECT id_usuario FROM "Users" WHERE auth0_id = $1`,
+      `SELECT user_id FROM "Users" WHERE auth0_id = $1`,
       [req.auth.payload.sub]
     );
 
@@ -50,7 +50,7 @@ const checkSessionOwnership = async (req, res, next) => {
       return res.status(403).json({ error: 'Usuario no encontrado' });
     }
 
-    const internalUserId = userMapping.rows[0].id_usuario;
+    const internalUserId = userMapping.rows[0].user_id;
 
     const session = await pool.query(
       `SELECT 1 FROM "Sessions" WHERE id_session = $1 AND id_usuario = $2`,
@@ -76,7 +76,7 @@ const getInternalUserId = async (req, res, next) => {
     const auth0UserId = req.auth.payload.sub;
 
     const userResult = await client.query(
-      'SELECT id_usuario FROM "Users" WHERE auth0_id = $1 LIMIT 1',
+      'SELECT user_id FROM "Users" WHERE auth0_id = $1 LIMIT 1',
       [auth0UserId]
     );
 
@@ -84,7 +84,7 @@ const getInternalUserId = async (req, res, next) => {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
 
-    req.internalUserId = userResult.rows[0].id_usuario;
+    req.internalUserId = userResult.rows[0].user_id;
     next();
   } catch (error) {
     console.error('Error en getInternalUserId:', error.message); // 🐛
@@ -102,13 +102,13 @@ router.get('/active', checkJwt, async (req, res, next) => {
   try {
     const auth0UserId = req.auth.payload.sub;
     const userResult = await pool.query(
-      'SELECT id_usuario FROM "Users" WHERE auth0_id = $1',
+      'SELECT user_id FROM "Users" WHERE auth0_id = $1',
       [auth0UserId]
     );
     if (!userResult.rows.length) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
-    const internalUserId = userResult.rows[0].id_usuario;
+    const internalUserId = userResult.rows[0].user_id;
     const result = await pool.query(
       `SELECT id_session FROM "Sessions"
        WHERE id_usuario = $1 AND end_time IS NULL
@@ -180,13 +180,13 @@ router.post('/start', checkJwt, getInternalUserId, async (req, res) => {
     await client.query('BEGIN');
     const auth0UserId = req.auth.payload.sub;
     const userResult = await pool.query(
-      'SELECT id_usuario FROM "Users" WHERE auth0_id = $1',
+      'SELECT user_id FROM "Users" WHERE auth0_id = $1',
       [auth0UserId]
     );
     if (!userResult.rows.length) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
-    const internalUserId = userResult.rows[0].id_usuario;
+    const internalUserId = userResult.rows[0].user_id;
 
     // 1. Verificar sesión activa existente
     const activeSession = await client.query(
@@ -217,8 +217,8 @@ router.post('/start', checkJwt, getInternalUserId, async (req, res) => {
       `UPDATE "Users" 
        SET 
          total_sessions = total_sessions + 1,
-         ultima_sesion = NOW()
-       WHERE id_usuario = $1`,
+         last_session = NOW()
+       WHERE user_id = $1`,
       [internalUserId]
     );
 
@@ -295,10 +295,10 @@ router.get('/user-history/:id_usuario',
     try {
       const auth0UserId = req.auth.payload.sub;
       const userResult = await pool.query(
-        'SELECT id_usuario FROM "Users" WHERE auth0_id = $1',
+        'SELECT user_id FROM "Users" WHERE auth0_id = $1',
         [auth0UserId]
       );
-      if (!userResult.rows.length || userResult.rows[0].id_usuario !== id_usuario) {
+      if (!userResult.rows.length || userResult.rows[0].user_id !== id_usuario) {
         return res.status(403).json({ error: 'Acceso no autorizado' });
       }
 
@@ -346,7 +346,7 @@ router.put('/end', checkJwt, async (req, res) => {
 
     // 1. Cerrar sesión en la base de datos
     const userResult = await client.query(
-      'SELECT id_usuario FROM "Users" WHERE auth0_id = $1',
+      'SELECT user_id FROM "Users" WHERE auth0_id = $1',
       [auth0UserId]
     );
 
@@ -354,7 +354,7 @@ router.put('/end', checkJwt, async (req, res) => {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
 
-    const userId = userResult.rows[0].id_usuario;
+    const userId = userResult.rows[0].user_id;
 
     // Cerrar TODAS las sesiones activas del usuario
     await client.query(

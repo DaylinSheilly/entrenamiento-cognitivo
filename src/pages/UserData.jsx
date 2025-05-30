@@ -50,25 +50,25 @@ const PerfilUsuario = () => {
     const [originalFormData, setOriginalFormData] = useState(null);
 
     const [formData, setFormData] = useState({
-        nombre_usuario: '',
+        user_name: '',
         correo_electronico: '',
-        fecha_nacimiento: '',
-        genero: '',
-        nivel_educativo: '',
-        pais: ''
+        birthdate: '',
+        gender: '',
+        educational_level: '',
+        country: ''
     });
 
     // Campos editables
     const camposEditables = {
-        nombre_usuario: 'Nombre de usuario',
-        fecha_nacimiento: 'Fecha de nacimiento',
-        genero: 'Género',
-        nivel_educativo: 'Nivel educativo',
-        pais: 'País'
+        user_name: 'Nombre de usuario',
+        birthdate: 'Fecha de nacimiento',
+        gender: 'Género',
+        educational_level: 'Nivel educativo',
+        country: 'País'
     };
 
     // Opciones para selects
-    const opcionesGenero = ["Masculino", "Femenino", "No binario", "Prefiero no decir"
+    const opcionesGender = ["Masculino", "Femenino", "No binario", "Prefiero no decir"
     ];
     const opcionesNivelEducativo = [
         "Sin estudios formales",
@@ -204,7 +204,7 @@ const PerfilUsuario = () => {
     }
 
     // Si no hay datos después de cargar
-    if (!formData?.nombre_usuario && !loading) {
+    if (!formData?.user_name && !loading) {
         console.log("[PerfilUsuario] No se encontraron datos del usuario, mostrando mensaje.");
         return (
             <Box sx={{ p: 3, textAlign: 'center' }}>
@@ -241,7 +241,7 @@ const PerfilUsuario = () => {
                                 {Object.entries(camposEditables).map(([campo, label]) => (
                                     <Grid item xs={12} key={campo}>
                                         {/* Fecha de nacimiento: SIEMPRE solo lectura */}
-                                        {campo === 'fecha_nacimiento' ? (
+                                        {campo === 'birthdate' ? (
                                             <TextField
                                                 fullWidth
                                                 label={label}
@@ -266,7 +266,7 @@ const PerfilUsuario = () => {
                                                 }}
                                                 disabled
                                             />
-                                        ) : campo === 'genero' || campo === 'nivel_educativo' || campo === 'pais' ? (
+                                        ) : campo === 'gender' || campo === 'educational_level' || campo === 'country' ? (
                                             editMode ? (
                                                 <FormControl fullWidth>
                                                     <InputLabel>{label}</InputLabel>
@@ -276,9 +276,9 @@ const PerfilUsuario = () => {
                                                         onChange={handleChange}
                                                         label={label}
                                                     >
-                                                        {(campo === 'genero'
-                                                            ? opcionesGenero
-                                                            : campo === 'nivel_educativo'
+                                                        {(campo === 'gender'
+                                                            ? opcionesGender
+                                                            : campo === 'educational_level'
                                                                 ? opcionesNivelEducativo
                                                                 : paises).map(opcion => (
                                                                     <MenuItem key={opcion} value={opcion}>
@@ -465,7 +465,7 @@ const PerfilUsuario = () => {
                                     Última sesión
                                 </Typography>
                                 <Typography variant="h5" color="secondary">
-                                    {formData?.ultima_sesion ? new Date(formData.ultima_sesion).toLocaleDateString() : 'N/A'}
+                                    {formData?.last_session ? new Date(formData.last_session).toLocaleDateString() : 'N/A'}
                                 </Typography>
                             </Grid>
                         </Grid>

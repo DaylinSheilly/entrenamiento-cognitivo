@@ -101,11 +101,11 @@ router.get('/user/:id_usuario', checkJwt, async (req, res) => {
   const auth0UserId = req.auth.payload.sub;
   try {
     const userResult = await pool.query(
-      'SELECT id_usuario FROM "Users" WHERE auth0_id = $1',
+      'SELECT user_id FROM "Users" WHERE auth0_id = $1',
       [auth0UserId]
     );
 
-    if (userResult.rows[0].id_usuario !== id_usuario) {
+    if (userResult.rows[0].user_id !== id_usuario) {
       return res.status(403).json({ error: 'Acceso no autorizado' });
     }
 
@@ -144,7 +144,7 @@ router.get('/progress', checkJwt, async (req, res) => {
         COUNT(g.score) as games_count
       FROM "Games" g
       JOIN "Sessions" s ON g.session_id = s.id_session
-      JOIN "Users" u ON s.id_usuario = u.id_usuario
+      JOIN "Users" u ON s.id_usuario = u.user_id
       WHERE u.auth0_id = $1
       GROUP BY g.game_name, DATE(s.start_time AT TIME ZONE 'UTC')
       ORDER BY g.game_name, session_date DESC
@@ -166,7 +166,7 @@ router.get('/max-scores', checkJwt, async (req, res) => {
         MAX(g.score) as max_score
       FROM "Games" g
       JOIN "Sessions" s ON g.session_id = s.id_session
-      JOIN "Users" u ON s.id_usuario = u.id_usuario
+      JOIN "Users" u ON s.id_usuario = u.user_id
       WHERE u.auth0_id = $1
       GROUP BY g.game_name
       ORDER BY MAX(g.score) DESC
@@ -185,17 +185,17 @@ router.get('/plays-by-game', checkJwt, async (req, res) => {
       SELECT g.game_name, COUNT(*) as plays
       FROM "Games" g
       JOIN "Sessions" s ON g.session_id = s.id_session
-      JOIN "Users" u ON s.id_usuario = u.id_usuario
+      JOIN "Users" u ON s.id_usuario = u.user_id
       WHERE u.auth0_id = $1
       GROUP BY g.game_name
     `, [req.auth.payload.sub]);
-    
+
     // Convertir a objeto para fácil acceso en el frontend
     const playsByGame = {};
     result.rows.forEach(row => {
       playsByGame[row.game_name] = parseInt(row.plays, 10);
     });
-    
+
     res.json(playsByGame);
   } catch (error) {
     console.error('Error al obtener conteo de juegos:', error);

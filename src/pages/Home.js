@@ -45,8 +45,6 @@ function Home() {
     fetchUserData();
   }, [isAuthenticated, getAccessTokenSilently]);
 
-  console.log(window.location.origin)
-
   const handleLogout = async () => {
     try {
       if (isAuthenticated) {
@@ -100,13 +98,10 @@ function Home() {
           ) : isAuthenticated && userData ? (
             <Box sx={{ mt: 3 }}>
               <Typography variant="h5" gutterBottom>
-                {userData.nombre_usuario}
-              </Typography>
-              <Typography variant="body1" color="textSecondary">
-                <strong>Correo:</strong> {auth0User.email}
+                {userData.user_name}
               </Typography>
               <Typography variant="body1" color="textSecondary" sx={{ mt: 1 }}>
-                Miembro desde: {new Date(userData.fecha_registro).toLocaleDateString('es-ES')}
+                Miembro desde: {new Date(userData.registration_date).toLocaleDateString('es-ES')}
               </Typography>
 
               <Box sx={{ mt: 4, display: 'flex', flexDirection: 'column', gap: 2 }}>
