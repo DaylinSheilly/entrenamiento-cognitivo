@@ -137,7 +137,12 @@ function Home() {
                 <Button
                   variant="contained"
                   color="primary"
-                  onClick={() => loginWithRedirect({ screen_hint: "signup" })}
+                  onClick={() =>
+                    loginWithRedirect({
+                      authorizationParams: { screen_hint: "signup" },
+                      appState: { returnTo: window.location.origin + "/register" }
+                    })
+                  }
                 >
                   Crear cuenta
                 </Button>
