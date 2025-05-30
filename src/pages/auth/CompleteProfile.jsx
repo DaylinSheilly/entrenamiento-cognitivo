@@ -12,12 +12,11 @@ const CompleteProfile = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    nombre_usuario: "",
-    fecha_nacimiento: "",
-    correo_electronico: "",
-    genero: "",
-    nivel_educativo: "",
-    pais: ""
+    user_name: "",
+    birthdate: "",
+    gender: "",
+    educational_level: "",
+    country: ""
   });
   const [error, setError] = useState("");
 
@@ -76,12 +75,12 @@ const CompleteProfile = () => {
     e.preventDefault();
     setError("");
     setLoading(true);
-  
+
     try {
       const token = await getAccessTokenSilently();
       const payload = {
         ...formData,
-        fecha_nacimiento: new Date(formData.fecha_nacimiento).toISOString(),
+        birthdate: new Date(formData.birthdate).toISOString(), // Solo birthdate en inglés
       };
       await axios.post(
         'http://localhost:5000/auth/profile',
@@ -123,19 +122,8 @@ const CompleteProfile = () => {
         <form onSubmit={handleSubmit}>
           <TextField
             label="Nombre de usuario"
-            name="nombre_usuario"
-            value={formData.nombre_usuario}
-            onChange={handleChange}
-            fullWidth
-            margin="normal"
-            required
-          />
-
-          <TextField
-            label="Correo electrónico"
-            name="correo_electronico"
-            type="email"
-            value={formData.correo_electronico}
+            name="user_name"
+            value={formData.user_name}
             onChange={handleChange}
             fullWidth
             margin="normal"
@@ -144,9 +132,9 @@ const CompleteProfile = () => {
 
           <TextField
             label="Fecha de nacimiento"
-            name="fecha_nacimiento"
+            name="birthdate"
             type="date"
-            value={formData.fecha_nacimiento}
+            value={formData.birthdate}
             onChange={handleChange}
             fullWidth
             margin="normal"
@@ -158,8 +146,8 @@ const CompleteProfile = () => {
             <InputLabel id="genero-label">Género</InputLabel>
             <Select
               labelId="genero-label"
-              name="genero"
-              value={formData.genero}
+              name="gender"
+              value={formData.gender}
               onChange={handleChange}
               label="Género"
             >
@@ -175,8 +163,8 @@ const CompleteProfile = () => {
             <InputLabel id="nivel-educativo-label">Nivel educativo</InputLabel>
             <Select
               labelId="nivel-educativo-label"
-              name="nivel_educativo"
-              value={formData.nivel_educativo}
+              name="educational_level"
+              value={formData.educational_level}
               onChange={handleChange}
               label="Nivel educativo"
             >
@@ -192,8 +180,8 @@ const CompleteProfile = () => {
             <InputLabel id="pais-label">País</InputLabel>
             <Select
               labelId="pais-label"
-              name="pais"
-              value={formData.pais}
+              name="country"
+              value={formData.country}
               onChange={handleChange}
               label="País"
             >
