@@ -1,5 +1,18 @@
-.App {
+/* Fuente personalizada desde Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+#root, .App {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  /* overflow: hidden; /* Evita scroll innecesario */
+  background-color: #e2e2e2;
   text-align: center;
+  font-family: 'Poppins', sans-serif;
 }
 
 .App-logo {

@@ -1,0 +1,355 @@
+/* Estilos generales */
+.recuerda-objetos-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+  color: #ffffff;
+  margin: 0;
+  padding: 20px;
+  height: 600px;
+  width: 600px;
+}
+
+/* Contenedor principal del juego */
+.recuerda-objetos-juego-contenedor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: fit-content;
+  min-width: 320px;
+  margin: auto;
+  padding: 20px;
+  font-family: 'Arial', sans-serif;
+  text-align: center;
+  background-color: #3498db;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  animation: aparecer 0.5s ease-out;
+}
+
+/* Título del juego */
+.recuerda-objetos-juego-contenedor h1 {
+  color: #ffffff;
+  margin-bottom: 0px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.recuerda-objetos-start-screen {
+  text-align: center;
+  padding: 2rem;
+  background-color: #9ebde6;
+  border: 2px solid #8e44ad;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin: 2rem;
+}
+
+.recuerda-objetos-start-screen h2 {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.recuerda-objetos-countdown {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 6rem;
+  font-weight: bold;
+  color: #222;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+
+.recuerda-stats-table-wrapper {
+    margin: 1rem auto 2rem;
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+.recuerda-stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #f8f6fb;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(142, 68, 173, 0.2);
+}
+
+.recuerda-stats-table th {
+    background: #8e44ad;
+    color: #fff;
+    padding: 0.8rem;
+    font-weight: bold;
+    border-bottom: 2px solid #6c3483;
+}
+
+.recuerda-stats-table td {
+    padding: 12px;
+    font-size: 0.9rem;
+    background: #f3eafc;
+    border-bottom: 1px solid rgba(142, 68, 173, 0.2);
+    color: black;
+}
+
+.recuerda-stats-table tr:nth-child(even) td {
+    background: #ede1f8;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+
+  .recuerda-stats-table th,
+  .recuerda-stats-table td {
+    padding: 0.5rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* Barra de estadísticas durante el juego */
+.recuerda-info-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(248, 246, 251, 0.95);
+  border: 2px solid #8e44ad;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(142, 68, 173, 0.2);
+  width: fit-content;
+  max-width: 98vw;
+  margin: 0.5rem auto;
+  padding: 0.5rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  gap: 1.5rem;
+  color: #2c3e50;
+}
+
+.stat-item {
+    flex: none;
+    text-align: center;
+    white-space: nowrap;
+    padding: 0 0.5rem;
+}
+
+.recuerda-objetos-mensaje {
+  color: #e74c3c;
+  background: #fff3f3;
+  border: 1px solid #e74c3c;
+  border-radius: 8px;
+  padding: 10px 18px;
+  margin: 12px auto;
+  font-size: 1.1em;
+  max-width: 400px;
+  text-align: center;
+  transition: opacity 0.3s;
+}
+
+.recuerda-objetos-mensaje.info {
+  color: #1565c0;
+  /* Azul amigable */
+  background: #e3f0ff;
+  border: 1px solid #1565c0;
+}
+
+/* Contenedor de los objetos */
+.recuerda-objetos-objetos-contenedor {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  /* Dos columnas con ancho igual */
+  gap: 20px;
+  /* Espacio entre los elementos */
+  background-color: #abd9f5;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 20px auto;
+  width: fit-content;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  border: 1px solid #3477db;
+}
+
+.fila-horizontal {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 10px;
+  /* Espaciado entre elementos */
+  flex-wrap: nowrap;
+  /* Evita que los elementos salten a una nueva línea */
+}
+
+/* Estilo de los objetos (texto o botones) */
+.recuerda-objetos-objeto {
+  font-size: 2em;
+  color: #ffffff;
+  background-color: #2ecc71;
+  border: 2px solid #27ae60;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.recuerda-objetos-objeto:hover {
+  background-color: #27ae60;
+  transform: scale(1.1);
+}
+
+.recuerda-objetos-objeto.clicked {
+  animation: clickEffect 0.3s ease;
+}
+
+@keyframes clickEffect {
+  0% {
+    transform: scale(1);
+    background-color: #2ecc71;
+  }
+
+  50% {
+    transform: scale(0.9);
+    background-color: #27ae60;
+  }
+
+  100% {
+    transform: scale(1);
+    background-color: #2ecc71;
+  }
+}
+
+/* Estilo para los botones de selección */
+.recuerda-objetos-seleccion-boton {
+  padding: 12px 30px;
+  font-size: 16px;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  text-transform: uppercase;
+  font-weight: bold;
+  letter-spacing: 1px;
+  margin: 10px;
+  color: white;
+  background-color: #3498db;
+  transition: all 0.3s ease;
+}
+
+.recuerda-objetos-seleccion-boton:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+}
+
+/* Contenedor del marcador */
+.recuerda-objetos-marcadores {
+
+  display: flex;
+  margin: 20px auto;
+  background-color: #1f64ca;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  border: 1px solid #163bb3;
+  height: auto;
+  width: 75px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.recuerda-objetos-marcador-item {
+  font-size: 18px;
+  font-weight: bold;
+  color: #ffffff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Estilo para la pantalla de fin de juego */
+.recuerda-objetos-fin-juego {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+  background-color: transparent;
+  border-radius: 10px;
+}
+
+.recuerda-objetos-fin-juego h1 {
+  color: #ffffff;
+  margin: 0 auto 20px auto;
+  /* Centrado horizontal y margen inferior de 20px */
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  max-width: 300px;
+  /* Limita el ancho máximo a 500px */
+  text-align: center;
+  /* Asegura que el texto se vea centrado */
+}
+
+.recuerda-objetos-fin-juego p {
+  font-size: 24px;
+  color: #cccccc;
+  margin-bottom: 30px;
+}
+
+.recuerda-objetos-fin-juego button {
+  background-color: #75e78e;
+  border: 2px solid #61bd75;
+  color: white;
+  padding: 12px 30px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  margin-top: 15px;
+  box-shadow: 0 2px 8px #0002;
+}
+
+.recuerda-objetos-fin-juego button:hover {
+  background-color: #61bd75;
+  transform: translateY(-2px);
+  color: #fff;
+  transform: translateY(-2px) scale(1.04);
+}
+
+/* Animaciones */
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Efectos interactivos */
+.recuerda-objetos-seleccion-boton:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+}
+
+.recuerda-objetos-objetos-contenedor:hover {
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
+}
+
+.recuerda-objetos-fin-juego p {
+  color: #fff;
+  /* Texto blanco */
+  margin: 8px 0;
+  /* Márgenes superior e inferior de 5px */
+  line-height: 1.4;
+  /* Espaciado de línea adecuado */
+  font-size: 1.1rem;
+  /* Tamaño de fuente ajustable */
+}

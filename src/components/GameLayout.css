@@ -1,0 +1,11 @@
+/* src/components/GameLayout.css */
+.game-layout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px; /* Ajusta el espacio entre el contenedor y el panel */
+    width: 100%;
+    height: 100vh; /* Ocupa toda la altura de la pantalla para centrar verticalmente */
+    box-sizing: border-box;
+  }
+  

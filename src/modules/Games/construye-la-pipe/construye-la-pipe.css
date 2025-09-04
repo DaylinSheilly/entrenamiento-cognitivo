@@ -1,0 +1,397 @@
+/* Estilos para "Construye la Cañería" */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+.pipe-app {
+  font-family: 'Roboto', sans-serif;
+  text-align: center;
+  flex-direction: column;
+  background-color: transparent;
+  /* Para que adopte el color del contenedor */
+  color: #ffffff;
+  margin: 0;
+  padding: 20px;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  /* Evita que el contenido se expanda más de la caja */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.pipe-game-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 600px;
+  width: 600px;
+  background-color: transparent;
+  text-align: center;
+  position: relative;
+  /* Asegura que los elementos absolutos se posicionen dentro */
+  overflow: hidden;
+  /* Previene que los elementos sobresalgan */
+}
+
+/* Estilos para títulos */
+.pipe-game-container h1 {
+  color: #ffffff;
+  margin-bottom: 0px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.pipe-game-container h2 {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.pipe-game-container h3 {
+  font-size: 1.5rem;
+  font-weight: normal;
+  color: #444;
+  margin-bottom: 6px;
+}
+
+.pipe-game-container p {
+  font-size: 1rem;
+  font-weight: bold;
+  color: black;
+  margin: 2px;
+}
+
+.pipe-score,
+.pipe-stars,
+.pipe-timer {
+  position: absolute;
+  color: white;
+  font-size: 0.875rem;
+  /* Reducido a 14px */
+  font-weight: bold;
+  white-space: nowrap;
+  /* Evita saltos de línea */
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.pipe-score {
+  top: 0.5rem;
+  left: 0.5rem;
+}
+
+.pipe-stars {
+  top: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.pipe-timer {
+  top: 0.5rem;
+  right: 0.5rem;
+}
+
+/* Evitar conflictos con los estilos globales */
+.pipe-game-container .pipe-score,
+.pipe-game-container .pipe-stars,
+.pipe-game-container .pipe-timer {
+  font-size: 1rem;
+  /* Asegurar tamaño menor dentro del contenedor */
+  color: #222 !important;
+}
+
+.pipe-countdown {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 6rem;
+  font-weight: bold;
+  color: #222;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Start Screen */
+.pipe-start-screen {
+  text-align: center;
+  padding: 2rem;
+  background-color: #9ebde6;
+  border: 2px solid #8e44ad;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin: 2rem;
+}
+
+.pipe-start-screen h1 {
+  font-size: 2.5rem;
+  color: #1565c0;
+}
+
+.pipe-start-screen button {
+  font-size: 1.2em;
+  padding: 15px 30px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.pipe-start-screen button:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+}
+
+.pipe-info-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(248, 246, 251, 0.95);
+  border: 2px solid #8e44ad;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(142, 68, 173, 0.2);
+  width: fit-content;
+  max-width: 98vw;
+  margin: 1rem auto;
+  padding: 0.5rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  gap: 1.5rem;
+  color: #2c3e50;
+}
+
+.stat-item {
+  flex: none;
+  text-align: center;
+  white-space: nowrap;
+  padding: 0 0.5rem;
+}
+
+.pipe-stats-table-wrapper {
+  margin: 1rem auto 2rem;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.pipe-stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #f8f6fb;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(142, 68, 173, 0.2);
+}
+
+.pipe-stats-table th {
+  background: #8e44ad;
+  color: #fff;
+  padding: 0.8rem;
+  font-weight: bold;
+  border-bottom: 2px solid #6c3483;
+}
+
+.pipe-stats-table td {
+  padding: 12px;
+  font-size: 0.9rem;
+  background: #f3eafc;
+  border-bottom: 1px solid rgba(142, 68, 173, 0.2);
+  color: black;
+}
+
+.pipe-stats-table tr:nth-child(even) td {
+  background: #ede1f8;
+}
+
+.pipe-game-stats {
+  display: flex;
+  justify-content: center;
+  /* Centra horizontalmente */
+  align-items: center;
+  /* Asegura alineación vertical */
+  gap: 20px;
+  /* Espacio entre "Puntaje" y "Errores" */
+}
+
+.pipe-app button {
+  background-color: #43a047;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 1.2rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-family: 'Poppins', sans-serif;
+  margin: 0rem;
+}
+
+.pipe-app button:hover {
+  background-color: #1b5e20;
+}
+
+/* Título responsivo con efecto */
+.pipe-title {
+  font-size: clamp(2rem, 6vw, 3rem);
+  margin-bottom: 10px;
+  color: #f0a500;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Separación adicional */
+.pipe-main {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 500px;
+}
+
+/* Controles */
+.pipe-controls {
+  margin-bottom: 15px;
+}
+
+.pipe-controls button {
+  font-size: 1rem;
+  padding: 10px 20px;
+  margin: 5px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: #f0a500;
+  color: #1a1a1a;
+  transition: background-color 0.3s;
+}
+
+.pipe-controls button:hover {
+  background-color: #db9400;
+}
+
+/* Estado del juego */
+.pipe-status {
+  font-size: 1.2rem;
+  margin-top: 10px;
+  color: #2e2e2e;
+}
+
+.pipe-message {
+  font-size: 1.3rem;
+  margin-top: 10px;
+  padding: 10px;
+  border: 2px solid #f0a500;
+  border-radius: 5px;
+  background-color: #2e2e2e;
+  color: #f0a500;
+  font-weight: bold;
+  max-width: 80%;
+  margin: 0 auto;
+}
+
+/* Tablero */
+.pipe-grid {
+  display: grid;
+  gap: 5px;
+  background-color: #3498db;
+  padding: 10px;
+  border: 4px solid #f0a500;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  max-width: 90%;
+  /* Limitar para que no se salga del contenedor */
+  max-height: 90%;
+  overflow: hidden;
+  /* Evitar desbordamientos */
+  margin: 5px;
+}
+
+/* Celdas */
+.pipe-cell {
+  width: 50px;
+  height: 50px;
+  max-width: 100%;
+  max-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+  border: 2px solid #ccc;
+  color: #273e46;
+  border-radius: 5px;
+  transition: transform 0.2s, border-color 0.2s ease-in-out;
+}
+
+.pipe-cell-correct-solution {
+  border-color: #38ad3c;
+  /* Verde */
+}
+
+.pipe-cell-wrong-solution {
+  border-color: #ff4d4d;
+  /* Rojo */
+}
+
+.pipe-cell img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.pipe-cell.source {
+  background-color: #87ceeb;
+}
+
+.pipe-cell.plant {
+  background-color: #98fb98;
+}
+
+.pipe-cell.pipe {
+  background-color: #dcdcdc;
+}
+
+.pipe-cell:hover {
+  cursor: pointer;
+  background-color: #eeede6;
+}
+
+.pipe-cell:active {
+  transform: scale(0.95);
+}
+
+.pipe-fin-juego-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Arial', sans-serif;
+  text-align: center;
+  background-color: #3498db;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  animation: aparecer 0.5s ease-out;
+}
+
+.pipe-fin-juego-container button {
+  background-color: #75e78e;
+  border: 2px solid #61bd75;
+  color: white;
+  padding: 12px 30px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  margin-top: 15px;
+  box-shadow: 0 2px 8px #0002;
+}
+
+.pipe-fin-juego-container button:hover {
+  background-color: #61bd75;
+  transform: translateY(-2px);
+  color: #fff;
+  transform: translateY(-2px) scale(1.04);
+}

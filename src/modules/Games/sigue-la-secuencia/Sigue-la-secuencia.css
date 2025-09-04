@@ -1,0 +1,239 @@
+.memoria-game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 600px;
+  width: 600px;
+  background-color: #fff;
+}
+
+/* Estilos para títulos */
+.memoria-game-container h1 {
+  color: #ffffff;
+  margin-bottom: 0px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.memoria-app {
+  width: 100%;
+  max-width: 600px;
+  padding: 10px;
+  background: #9ebde6;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+}
+
+.memoria-info-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(248, 246, 251, 0.95);
+  border: 2px solid #8e44ad;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(142, 68, 173, 0.2);
+  width: fit-content;
+  max-width: 98vw;
+  margin: 1rem auto;
+  padding: 0.5rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  gap: 1.5rem;
+  color: #2c3e50;
+}
+
+.stat-item {
+  flex: none;
+  text-align: center;
+  white-space: nowrap;
+  padding: 0 0.5rem;
+}
+
+.memoria-start-screen {
+  text-align: center;
+  padding: 2rem;
+  background-color: #9ebde6;
+  border: 2px solid #8e44ad;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin: 2rem;
+}
+
+.memoria-start-screen button {
+  font-size: 1.2em;
+  padding: 15px 30px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.memoria-start-screen button:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+}
+
+.memoria-fin-juego-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Arial', sans-serif;
+  text-align: center;
+  background-color: #3498db;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  animation: aparecer 0.5s ease-out;
+}
+
+.memoria-fin-juego-container button {
+  background-color: #75e78e;
+  border: 2px solid #61bd75;
+  color: white;
+  padding: 12px 30px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  margin-top: 15px;
+  box-shadow: 0 2px 8px #0002;
+}
+
+.memoria-fin-juego-container button:hover {
+  background-color: #61bd75;
+  transform: translateY(-2px);
+  color: #fff;
+  transform: translateY(-2px) scale(1.04);
+}
+
+.memoria-stats-table-wrapper {
+  margin: 1rem auto 2rem;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.memoria-stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #f8f6fb;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(142, 68, 173, 0.2);
+}
+
+.memoria-stats-table th {
+  background: #8e44ad;
+  color: #fff;
+  padding: 0.8rem;
+  font-weight: bold;
+  border-bottom: 2px solid #6c3483;
+}
+
+.memoria-stats-table td {
+  padding: 12px;
+  font-size: 0.9rem;
+  background: #f3eafc;
+  border-bottom: 1px solid rgba(142, 68, 173, 0.2);
+  color: black;
+}
+
+.memoria-stats-table tr:nth-child(even) td {
+  background: #ede1f8;
+}
+
+@media (max-width: 600px) {
+  .memoria-info-row {
+    font-size: 0.9rem;
+    padding: 0.3rem;
+    gap: 1rem;
+  }
+
+  .memoria-stats-table th,
+  .memoria-stats-table td {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+  }
+}
+
+.memoria-restart-button {
+  background-color: #75e78e;
+  border: 2px solid #61bd75;
+  color: white;
+  padding: 12px 30px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  margin-top: 15px;
+  box-shadow: 0 2px 8px #0002;
+}
+
+.memoria-restart-button:hover {
+  background-color: #61bd75;
+  transform: translateY(-2px);
+  color: #fff;
+  transform: translateY(-2px) scale(1.04);
+}
+
+.memoria-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.memoria-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  max-width: 400px;
+}
+
+.memoria-cell {
+  width: 60px;
+  height: 60px;
+  margin: 10px;
+  border-radius: 50%;
+  background-color: #1e1e1e;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4em;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.memoria-cell.highlight {
+  background-color: #4caf50;
+  color: white;
+  transform: scale(1.1);
+}
+
+.memoria-cell.correct {
+  background-color: #ffd700;
+  animation: pulse 0.5s ease-in-out;
+}
+
+.memoria-cell.incorrect {
+  background-color: #ff4136;
+  animation: shake 0.5s ease;
+}
+
+.memoria-notification {
+  margin-top: 20px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  display: inline-block;
+}

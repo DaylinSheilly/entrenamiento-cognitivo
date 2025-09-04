@@ -1,0 +1,367 @@
+.concentrarse-body {
+  color: #ffffff;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+  color: #ffffff;
+  margin: 0;
+}
+
+.concentrarse-body-bordered {
+  border: 4px solid #8e44ad;
+  border-radius: 26px;
+}
+
+.concentrarse-game-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 600px;
+  width: 600px;
+  background-color: transparent;
+  text-align: center;
+}
+
+/* Estilos para títulos */
+.concentrarse-game-container h1 {
+  color: #ffffff;
+  margin-bottom: 0px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.concentrarse-game-container h2 {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.concentrarse-game-container h3 {
+  font-size: 1.5rem;
+  font-weight: normal;
+  color: #444;
+  margin-bottom: 6px;
+}
+
+.concentrarse-game-container p {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+/* Pantalla de inicio */
+.concentrarse-start-screen {
+  text-align: center;
+  padding: 2rem;
+  background-color: #9ebde6;
+  border: 2px solid #8e44ad;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin: 2rem;
+}
+
+.concentrarse-start-screen button {
+  font-size: 1.2em;
+  padding: 15px 30px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.concentrarse-start-screen button:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+}
+
+.concentrarse-info-row {
+
+  position: absolute;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f8f6fb;
+  border: 2px solid #8e44ad;
+  border-radius: 15px;
+  color: black;
+  font-family: 'Arial', sans-serif;
+  box-shadow: 0 4px 6px #8e44ad22;
+  width: fit-content;
+  max-width: 98vw;
+  margin: 1.2rem auto 1.2rem auto;
+  padding: 0.1rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.1;
+  gap: 1.5rem;
+  position: absolute;
+  min-height: 44px;
+  top: 0;
+}
+
+.stat-item {
+  flex: none;
+  text-align: center;
+  white-space: nowrap;
+  padding: 0 0.4rem;
+}
+
+.concentrarse-stats-table-wrapper {
+  margin: 1rem auto 2rem;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.concentrarse-stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #f8f6fb;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(142, 68, 173, 0.2);
+}
+
+.concentrarse-stats-table th {
+  background: #8e44ad;
+  color: #fff;
+  padding: 0.8rem;
+  font-weight: bold;
+  border-bottom: 2px solid #6c3483;
+}
+
+.concentrarse-stats-table td {
+  padding: 12px;
+  font-size: 0.9rem;
+  background: #f3eafc;
+  border-bottom: 1px solid rgba(142, 68, 173, 0.2);
+  color: black;
+}
+
+.concentrarse-stats-table tr:nth-child(even) td {
+  background: #ede1f8;
+}
+
+.concentrarse-stats-table td,
+.concentrarse-stats-table th {
+  padding: 0.7rem 0.4rem;
+  text-align: center;
+  border-bottom: 1px solid #8e44ad22;
+}
+
+.concentrarse-stats-table tr:last-child td {
+  border-bottom: none;
+}
+
+@media (max-width: 600px) {
+  .concentrarse-info-row {
+    font-size: 0.95rem;
+    padding: 0.15rem 0.2rem;
+    gap: 0.7rem;
+  }
+
+  .concentrarse-stats-table th,
+  .concentrarse-stats-table td {
+    font-size: 0.97rem;
+    padding: 0.5rem 0.1rem;
+  }
+}
+
+/* Score */
+.concentrarse-score {
+  margin: 10px 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+/* Contenedor de círculos */
+.concentrarse-circle-container {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+/* Círculos */
+.concentrarse-circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  position: relative;
+  transition: transform 0.2s ease;
+}
+
+.concentrarse-circle.yellow {
+  background-color: yellow;
+}
+
+.concentrarse-circle.green {
+  background-color: green;
+}
+
+/* Movimiento de círculos */
+.concentrarse-move {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.concentrarse-move.up {
+  animation: concentrarse-moveUp 2s linear infinite;
+}
+
+.concentrarse-move.down {
+  animation: concentrarse-moveDown 2s linear infinite;
+}
+
+.concentrarse-move.left {
+  animation: concentrarse-moveLeft 2s linear infinite;
+}
+
+.concentrarse-move.right {
+  animation: concentrarse-moveRight 2s linear infinite;
+}
+
+/* Animaciones */
+@keyframes concentrarse-moveUp {
+  from {
+    top: 50%;
+  }
+
+  to {
+    top: -50%;
+  }
+}
+
+@keyframes concentrarse-moveDown {
+  from {
+    top: 50%;
+  }
+
+  to {
+    top: 150%;
+  }
+}
+
+@keyframes concentrarse-moveLeft {
+  from {
+    left: 50%;
+  }
+
+  to {
+    left: -50%;
+  }
+}
+
+@keyframes concentrarse-moveRight {
+  from {
+    left: 50%;
+  }
+
+  to {
+    left: 150%;
+  }
+}
+
+.concentrarse-fin-juego-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Arial', sans-serif;
+  text-align: center;
+  background-color: #3498db;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  animation: aparecer 0.5s ease-out;
+}
+
+.fin-juego-titulo {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.concentrarse-fin-juego {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.fin-juego-texto {
+  font-size: 1.25rem;
+  margin: 0.5rem 0;
+}
+
+.fin-juego-boton {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #3b82f6;
+  color: white;
+  font-size: 1.125rem;
+  border-radius: 8px;
+  transition: background-color 0.2s ease-in-out;
+  border: none;
+  cursor: pointer;
+}
+
+.fin-juego-boton:hover {
+  background-color: #1e40af;
+}
+
+.concentrarse-fin-juego-container button {
+  background-color: #75e78e;
+  border: 2px solid #61bd75;
+  color: white;
+  padding: 12px 30px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  margin-top: 15px;
+  box-shadow: 0 2px 8px #0002;
+}
+
+.concentrarse-fin-juego-container button:hover {
+  background-color: #61bd75;
+  transform: translateY(-2px);
+  color: #fff;
+  transform: translateY(-2px) scale(1.04);
+}
+
+.concentrarse-countdown {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 6rem;
+  font-weight: bold;
+  color: #222;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -60%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}

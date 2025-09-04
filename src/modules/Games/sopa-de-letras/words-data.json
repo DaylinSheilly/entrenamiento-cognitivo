@@ -1,0 +1,29 @@
+{
+  "niveles": [
+    {
+      "nivel": 1,
+      "tamano_matriz": "7x7",
+      "palabras": [
+        "SOL", "LUZ", "PAZ", "CIELO", "MAR", "RIO", "FLOR", "AMOR", "LAGO", "NUBE",
+        "PERRO", "GATO", "LUNA", "VINO", "DULCE", "CASA", "PIEDRA", "AGUA", "VERDE", "ROJO"
+      ]
+    },
+    {
+      "nivel": 2,
+      "tamano_matriz": "11x11",
+      "palabras": [
+        "COMPUTADORA", "PANTALLA", "TECLADO", "PROGRAMA", "CODIGO", "JAVASCRIPT", "SERVIDOR", 
+        "ALGORITMO", "FUNCION", "VARIABLE", "INTERNET", "DESARROLLAR", "TECNOLOGIA", "ARCHIVO", 
+        "NAVEGADOR", "SISTEMA", "PROYECTO", "CONSOLA", "EJECUTAR", "DEPURAR"
+      ]
+    },
+    {
+      "nivel": 3,
+      "tamano_matriz": "14x14",
+      "palabras": [
+        "1234", "5678", "91011", "31415", "27182", "16180", "20230", "10293", "40404", "77777",
+        "24680", "13579", "98765", "54321", "11223", "89012", "45678", "34567", "32109", "11122"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+/* Estilos para la vista de Home */
+
+.home-body {
+    background-color: #e2e2e2; /* Fondo suave */
+    color: #333333; /* Texto oscuro */
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+    }
+
+.home-container {
+    position: fixed; /* Mantener el contenedor centrado en la pantalla */
+    top: 50%; /* Centrar verticalmente */
+    left: 50%; /* Centrar horizontalmente */
+    transform: translate(-50%, -50%); /* Ajustar al centro exacto */
+    max-width: 1000px; /* Ancho máximo */
+    margin: auto; /* Asegurar que esté centrado */
+    padding: 20px; /* Espaciado interno */
+    background-color: #ffffff; /* Fondo blanco limpio */
+    border-radius: 10px; /* Bordes redondeados */
+    box-shadow: 0px 12px 24px rgba(0, 0, 0, 0.2), 
+                0px -8px 16px rgba(0, 0, 0, 0.05); /* Sombra por todos lados */
+    text-align: center;
+}
+
+.home-container h1 {
+    color: #333333; /* Texto oscuro */
+    margin-bottom: 30px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    font-size: 2rem;
+}
+
+/* Contenedor para los botones de Home */
+.home-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+/* Botones de navegación en Home */
+.home-buttons button {
+    padding: 12px 24px;
+    font-size: 16px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 1px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    min-width: 200px;
+}
+
+.home-buttons button:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+}
+
+.home-buttons button:focus {
+    outline: none;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
